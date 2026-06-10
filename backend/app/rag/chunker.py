@@ -1,16 +1,22 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 import json
 
 def chunk_strategy(strategy_dict):
-    text_content = json.dumps(strategy_dict, indent=2)
+    """
+    Zero-dependency recursive character text splitter to avoid PyTorch DLL issues.
+    """
+    text = json.dumps(strategy_dict, indent=2)
+    chunk_size = 600
+    chunk_overlap = 100
     
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=600,
-        chunk_overlap=100,
-        separators=["\n\n", "\n", " ", ""]
-    )
-    
-    chunks = splitter.split_text(text_content)
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = start + chunk_size
+        chunk = text[start:end]
+        chunks.append(chunk)
+        if end >= len(text):
+            break
+        start += (chunk_size - chunk_overlap)
     
     return [
         {
