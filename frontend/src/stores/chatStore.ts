@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Message } from '../types'
+import type { Message } from '../types'
 import { sendChatMessage } from '../services/api'
 
 interface ChatState {
@@ -30,7 +30,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }))
     }
   },
-  appendToken: (token) => set((state) => {
+  appendToken: (_token) => set((state) => {
     return state;
   })
 }))

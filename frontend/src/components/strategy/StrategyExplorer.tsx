@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const StrategyExplorer = () => {
   const strategies = [
     { name: 'Short Strangle', category: 'Options Selling', performance: '+15.2%' },

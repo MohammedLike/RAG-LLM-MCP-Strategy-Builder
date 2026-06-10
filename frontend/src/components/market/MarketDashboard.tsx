@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useMarketStore } from '../../stores/marketStore';
 import { fetchQuote } from '../../services/api';
 

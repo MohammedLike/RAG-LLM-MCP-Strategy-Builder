@@ -1,4 +1,3 @@
-import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const mockData = Array.from({length: 30}, (_, i) => ({

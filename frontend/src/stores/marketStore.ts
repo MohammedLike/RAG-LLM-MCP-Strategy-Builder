@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Quote } from '../types'
+import type { Quote } from '../types'
 
 interface MarketState {
   niftyQuote: Quote | null;

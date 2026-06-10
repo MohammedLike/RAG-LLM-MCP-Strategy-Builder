@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useChatStore } from '../../stores/chatStore';
 
 export const ChatPanel = () => {
