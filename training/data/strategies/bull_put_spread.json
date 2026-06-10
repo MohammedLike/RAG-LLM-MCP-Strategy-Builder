@@ -1,0 +1,30 @@
+{
+  "name": "Directional Bull Put Spread",
+  "category": "directional",
+  "underlying": ["NIFTY", "BANKNIFTY"],
+  "hypothesis": "Bullish view on the index with a defined risk. Profitable if index stays above the sold put strike.",
+  "entry_rules": {
+    "conditions": ["Index bounces from 200 EMA", "RSI > 40 and sloping up"],
+    "position_sizing": "Sell ATM put, Buy OTM put (200 points below). Risk 2% of account."
+  },
+  "exit_rules": {
+    "stop_loss": "Close of daily candle below 200 EMA.",
+    "target": "80% of max profit.",
+    "time_exit": "None"
+  },
+  "risk_params": {
+    "max_loss_per_trade": "Width of spread - premium collected",
+    "margin_required": "Approx 30k per lot"
+  },
+  "market_conditions": {
+    "volatility_regime": "Any",
+    "trend": "Uptrend"
+  },
+  "backtest_results": {
+    "period": "2020-2023",
+    "sharpe": 1.1,
+    "max_drawdown": 15.0,
+    "win_rate": 55
+  },
+  "notes": "High probability directional play."
+}

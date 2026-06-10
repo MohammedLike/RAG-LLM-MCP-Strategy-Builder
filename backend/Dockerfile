@@ -1,30 +1,28 @@
-# ══════════════════════════════════════════
-#  Quant AI Agent — Backend Dockerfile
-# ══════════════════════════════════════════
-
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# System dependencies for numpy/scipy/vectorbt
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install system dependencies (needed for vectorbt and psycopg2 if necessary)
+RUN apt-get update && apt-get install -y \
     build-essential \
-    curl \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY pyproject.toml .
-RUN pip install --no-cache-dir -e ".[dev]"
+# Install uv for fast dependency resolution
+RUN pip install uv
+
+# Copy project files
+COPY pyproject.toml ./
+
+# Install dependencies
+RUN uv pip install --system -r pyproject.toml
 
 # Copy application code
-COPY . .
+COPY ./app ./app
+COPY ./scripts ./scripts
 
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
-# Run with uvicorn
+# Start server
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

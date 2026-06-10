@@ -1,0 +1,30 @@
+{
+  "name": "BankNifty Weekly Short Strangle",
+  "category": "options_selling",
+  "underlying": ["BANKNIFTY"],
+  "hypothesis": "BankNifty options tend to overprice implied volatility. Selling far OTM calls and puts captures time decay (Theta) provided the index stays within a defined range.",
+  "entry_rules": {
+    "conditions": ["IV Rank > 50", "Days to expiry <= 7", "Time: 09:30 AM on Friday"],
+    "position_sizing": "Sell 1 lot of 15-delta Call and 15-delta Put per 2 lakh capital."
+  },
+  "exit_rules": {
+    "stop_loss": "Combined premium reaches 150% of initial collected premium.",
+    "target": "Hold until expiry or exit at 10% remaining premium.",
+    "time_exit": "Exit at 3:15 PM on expiry day."
+  },
+  "risk_params": {
+    "max_loss_per_trade": "Undefined theoretically, managed to 2% of capital via stop loss.",
+    "margin_required": "Approx 1.5L per lot"
+  },
+  "market_conditions": {
+    "volatility_regime": "High IV dropping to Normal IV",
+    "trend": "Sideways to mildly directional"
+  },
+  "backtest_results": {
+    "period": "2020-2023",
+    "sharpe": 1.2,
+    "max_drawdown": 8.5,
+    "win_rate": 68
+  },
+  "notes": "Monitor GEX levels to avoid gamma squeezes on 0DTE."
+}

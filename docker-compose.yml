@@ -1,178 +1,108 @@
-# ══════════════════════════════════════════════════════════════
-#  Quant AI Agent — Docker Compose
-#  Orchestrates all services for local development
-# ══════════════════════════════════════════════════════════════
+version: '3.8'
 
 services:
-  # ──────────────────────────────────────
-  #  PostgreSQL + TimescaleDB
-  #  Time-series store for OHLCV + options
-  # ──────────────────────────────────────
   postgres:
     image: timescale/timescaledb:latest-pg16
-    container_name: quantagent-postgres
-    restart: unless-stopped
+    container_name: quant_postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-quantagent}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_strong_password}
-      POSTGRES_DB: ${POSTGRES_DB:-quantagent}
+      POSTGRES_USER: ${POSTGRES_USER:-quant_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-quant_password}
+      POSTGRES_DB: ${POSTGRES_DB:-quant_db}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-quantagent}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
     networks:
-      - quantagent
+      - quant_network
 
-  # ──────────────────────────────────────
-  #  Redis
-  #  Cache + pub/sub for live market data
-  # ──────────────────────────────────────
   redis:
     image: redis:7-alpine
-    container_name: quantagent-redis
-    restart: unless-stopped
+    container_name: quant_redis
+    command: redis-server /usr/local/etc/redis/redis.conf
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
-      - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
-      - redisdata:/data
-    command: redis-server /usr/local/etc/redis/redis.conf
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - redis_data:/data
+      - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    restart: unless-stopped
     networks:
-      - quantagent
+      - quant_network
 
-  # ──────────────────────────────────────
-  #  Qdrant
-  #  Vector store for strategy embeddings
-  # ──────────────────────────────────────
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: quantagent-qdrant
-    restart: unless-stopped
+    container_name: quant_qdrant
     ports:
       - "${QDRANT_PORT:-6333}:6333"
-      - "6334:6334"   # gRPC port
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
     volumes:
-      - qdrantdata:/qdrant/storage
+      - qdrant_data:/qdrant/storage
+      - ./infra/qdrant/config.yaml:/qdrant/config/custom_config.yaml
     environment:
-      QDRANT__SERVICE__GRPC_PORT: 6334
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:6333/readyz"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      QDRANT__CONFIG_PATH: /qdrant/config/custom_config.yaml
+    restart: unless-stopped
     networks:
-      - quantagent
+      - quant_network
 
-  # ──────────────────────────────────────
-  #  Ollama
-  #  LLM model server (Mistral 7B)
-  # ──────────────────────────────────────
   ollama:
     image: ollama/ollama:latest
-    container_name: quantagent-ollama
-    restart: unless-stopped
+    container_name: quant_ollama
     ports:
-      - "11434:11434"
+      - "${OLLAMA_PORT:-11434}:11434"
     volumes:
-      - ollamadata:/root/.ollama
-    # Uncomment for GPU support (NVIDIA):
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
     networks:
-      - quantagent
+      - quant_network
 
-  # ──────────────────────────────────────
-  #  FastAPI Backend
-  #  MCP server + LLM agent + REST API
-  # ──────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: quantagent-backend
-    restart: unless-stopped
+    container_name: quant_backend
     ports:
       - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-quant_user}:${POSTGRES_PASSWORD:-quant_password}@postgres:5432/${POSTGRES_DB:-quant_db}
+      - REDIS_URL=redis://redis:6379/0
+      - QDRANT_URL=http://qdrant:6333
+      - OLLAMA_BASE_URL=http://ollama:11434
     volumes:
       - ./backend:/app
-      - ./training/data:/app/training_data:ro
-    env_file:
-      - .env
-    environment:
-      - PYTHONUNBUFFERED=1
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      qdrant:
-        condition: service_healthy
-      ollama:
-        condition: service_healthy
+      - postgres
+      - redis
+      - qdrant
+      - ollama
+    restart: unless-stopped
     networks:
-      - quantagent
+      - quant_network
 
-  # ──────────────────────────────────────
-  #  React Frontend (dev server)
-  # ──────────────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: quantagent-frontend
-    restart: unless-stopped
+    container_name: quant_frontend
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5075}:5075" # Using 5075 as requested
     volumes:
       - ./frontend:/app
-      - /app/node_modules  # anonymous volume to avoid overwrite
+      - /app/node_modules
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000
-      - VITE_WS_BASE_URL=ws://localhost:8000
+      - VITE_API_URL=http://localhost:${BACKEND_PORT:-8000}
     depends_on:
       - backend
+    restart: unless-stopped
     networks:
-      - quantagent
+      - quant_network
 
-# ──────────────────────────────────────
-#  Persistent volumes
-# ──────────────────────────────────────
 volumes:
-  pgdata:
-    name: quantagent-pgdata
-  redisdata:
-    name: quantagent-redisdata
-  qdrantdata:
-    name: quantagent-qdrantdata
-  ollamadata:
-    name: quantagent-ollamadata
+  postgres_data:
+  redis_data:
+  qdrant_data:
+  ollama_data:
 
-# ──────────────────────────────────────
-#  Network
-# ──────────────────────────────────────
 networks:
-  quantagent:
-    name: quantagent-network
+  quant_network:
     driver: bridge

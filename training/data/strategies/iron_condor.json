@@ -1,0 +1,30 @@
+{
+  "name": "Nifty Monthly Iron Condor",
+  "category": "options_selling",
+  "underlying": ["NIFTY"],
+  "hypothesis": "Limits the theoretical infinite risk of a strangle by buying further OTM wings. Suitable for strictly defined risk profiles in neutral markets.",
+  "entry_rules": {
+    "conditions": ["IV Rank > 40", "Days to expiry > 25"],
+    "position_sizing": "Sell 20-delta Call/Put, Buy 10-delta Call/Put. Iron Condor wings width = 500 points."
+  },
+  "exit_rules": {
+    "stop_loss": "Exit if underlying breaches the sold strike.",
+    "target": "50% of max profit.",
+    "time_exit": "Exit 7 days before expiry to avoid gamma risk."
+  },
+  "risk_params": {
+    "max_loss_per_trade": "Distance between strikes - net premium.",
+    "margin_required": "Approx 50k per lot (hedged)"
+  },
+  "market_conditions": {
+    "volatility_regime": "Normal to High",
+    "trend": "Range-bound"
+  },
+  "backtest_results": {
+    "period": "2020-2023",
+    "sharpe": 0.9,
+    "max_drawdown": 12.0,
+    "win_rate": 60
+  },
+  "notes": "Lower profitability than strangle but strictly defined risk."
+}
