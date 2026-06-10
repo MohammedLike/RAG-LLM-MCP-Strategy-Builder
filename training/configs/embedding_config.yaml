@@ -1,0 +1,6 @@
+embedding_model: "BAAI/bge-m3"
+chunk_size: 600
+chunk_overlap: 100
+qdrant_collection_name: "strategies"
+vector_size: 1024
+distance_metric: "Cosine"

@@ -7,13 +7,13 @@ from .tool_analyse_greeks import analyse_greeks_tool, AnalyseGreeksInput
 TOOLS = [
     {
         "name": "fetch_market",
-        "description": "Fetch live or historical market data",
+        "description": "Fetch live or historical market data for Equity, Futures, and Options",
         "schema": FetchMarketInput,
         "func": fetch_market_data
     },
     {
         "name": "query_strategy",
-        "description": "Query strategy knowledge base via RAG",
+        "description": "Query strategy knowledge base via RAG for Equity, Futures, and Options",
         "schema": QueryStrategyInput,
         "func": query_strategy_data
     },

@@ -1,0 +1,29 @@
+{
+  "name": "Options Buying Scalping",
+  "category": "options_buying",
+  "underlying": ["BANKNIFTY Weekly Options"],
+  "hypothesis": "Capture fast delta moves during 9:15-10:30 AM volatility window.",
+  "entry_rules": {
+    "conditions": ["Breakout of first 15m range", "High Volume", "Positive Delta"],
+    "position_sizing": "Fixed 5 lots"
+  },
+  "exit_rules": {
+    "stop_loss": "20 points on premium",
+    "target": "40-60 points",
+    "time_exit": "Maximum 30 mins holding"
+  },
+  "risk_params": {
+    "max_loss_per_trade": "Premium decay risk",
+    "margin_required": "Premium amount only"
+  },
+  "market_conditions": {
+    "volatility_regime": "High",
+    "trend": "Strong Momentum"
+  },
+  "backtest_results": {
+    "period": "2023",
+    "sharpe": 0.8,
+    "max_drawdown": -25.0
+  },
+  "notes": "High risk due to theta decay; only for active traders."
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Nifty Futures Trend Following",
+  "category": "futures_trading",
+  "underlying": ["NIFTY Futures"],
+  "hypothesis": "Ride the trend in Nifty futures using supertrend and VWAP.",
+  "entry_rules": {
+    "conditions": ["Price > VWAP", "Supertrend (7, 3) gives Buy signal on 15m chart"],
+    "position_sizing": "1-2 lots per 10L capital"
+  },
+  "exit_rules": {
+    "stop_loss": "Supertrend reversal",
+    "target": "2R ratio",
+    "time_exit": "Intraday EOD"
+  },
+  "risk_params": {
+    "max_loss_per_trade": "0.5% of capital",
+    "margin_required": "Standard span + exposure"
+  },
+  "market_conditions": {
+    "volatility_regime": "Moderate to High",
+    "trend": "Trending"
+  },
+  "backtest_results": {
+    "period": "2022-2024",
+    "sharpe": 1.1,
+    "max_drawdown": -12.0
+  },
+  "notes": "Requires strict discipline with stop losses."
+}

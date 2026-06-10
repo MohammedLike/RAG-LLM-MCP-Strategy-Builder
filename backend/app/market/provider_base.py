@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import pandas as pd
 from datetime import datetime
+from typing import Optional, Dict, Any
 
 class MarketDataProvider(ABC):
     
@@ -17,4 +18,14 @@ class MarketDataProvider(ABC):
     @abstractmethod
     async def get_options_chain(self, symbol: str, expiry: str) -> dict:
         """Fetch options chain for a given symbol and expiry."""
+        pass
+
+    @abstractmethod
+    async def get_futures_data(self, symbol: str, expiry: Optional[str] = None) -> Dict[str, Any]:
+        """Fetch futures data."""
+        pass
+
+    @abstractmethod
+    async def get_equity_meta(self, symbol: str) -> Dict[str, Any]:
+        """Fetch equity metadata."""
         pass

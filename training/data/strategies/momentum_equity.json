@@ -1,0 +1,29 @@
+{
+  "name": "Equity Momentum Strategy",
+  "category": "equity_buying",
+  "underlying": ["NIFTY 50 Stocks"],
+  "hypothesis": "Focus on stocks showing high relative strength and volume expansion above 200 DMA.",
+  "entry_rules": {
+    "conditions": ["Price > 200 DMA", "RSI (14) > 60", "Volume > 20-day average"],
+    "position_sizing": "Max 5% per stock"
+  },
+  "exit_rules": {
+    "stop_loss": "Trailing 10% from peak",
+    "target": "Open-ended",
+    "time_exit": "N/A"
+  },
+  "risk_params": {
+    "max_loss_per_trade": "1% of portfolio",
+    "margin_required": "Cash basis"
+  },
+  "market_conditions": {
+    "volatility_regime": "Any",
+    "trend": "Bullish"
+  },
+  "backtest_results": {
+    "period": "2020-2024",
+    "sharpe": 1.4,
+    "max_drawdown": -18.0
+  },
+  "notes": "Best suited for structural bull markets."
+}
