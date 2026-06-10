@@ -35,7 +35,7 @@ docker compose up -d postgres redis qdrant ollama
 
 ### 3. Pull the base model
 ```bash
-ollama pull mistral:7b-instruct-v0.3-q4_K_M
+ollama pull deepseek-r1:14b
 ```
 
 ### 4. Start the backend
