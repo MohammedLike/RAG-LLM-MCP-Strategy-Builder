@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     
     # Ollama
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    LLM_MODEL_NAME: str = "mistral:instruct"
-    EMBEDDING_MODEL_NAME: str = "BAAI/bge-m3"
+    LLM_MODEL_NAME: str = "deepseek-r1:14b"
+    EMBEDDING_MODEL_NAME: str = "mxbai-embed-large"
     
     # Market Data
     MARKET_DATA_PROVIDER: str = "yfinance" # nse, yfinance, broker
