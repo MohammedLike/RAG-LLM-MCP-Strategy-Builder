@@ -1,0 +1,35 @@
+# ══════════════════════════════════════════
+#  Quant AI Agent — Qdrant Configuration
+# ══════════════════════════════════════════
+
+# This file is used by the indexer script to create/configure the collection.
+# Qdrant itself uses its default config — this is application-level config.
+
+collection:
+  name: strategies
+  vectors:
+    size: 1024        # BGE-M3 embedding dimension
+    distance: Cosine
+    on_disk: false     # Keep in memory for fast retrieval
+
+  # Payload fields to index for filtered search
+  payload_indexes:
+    - field_name: strategy_name
+      field_type: keyword
+    - field_name: category
+      field_type: keyword
+    - field_name: underlying
+      field_type: keyword
+    - field_name: chunk_type
+      field_type: keyword    # "strategy" | "backtest" | "note"
+
+  # Optimizers
+  optimizers:
+    default_segment_number: 2
+    indexing_threshold: 20000
+
+  # HNSW index parameters
+  hnsw:
+    m: 16
+    ef_construct: 100
+    full_scan_threshold: 10000
