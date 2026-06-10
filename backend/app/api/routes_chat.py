@@ -1,5 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, WebSocket
 from pydantic import BaseModel
+from ..llm import generate_chat_response
+from ..agent.memory import memory
+from langchain_core.messages import AIMessage, HumanMessage
 
 class ChatRequest(BaseModel):
     message: str
@@ -9,21 +12,25 @@ router = APIRouter()
 
 @router.post("/chat")
 async def chat_endpoint(request: ChatRequest):
-    """
-    Synchronous chat endpoint
-    """
-    from ..agent.graph import graph
-    from langchain_core.messages import HumanMessage
-    
-    # Very basic simulation
-    return {"response": f"Mock response to: {request.message}"}
+    history = memory.get_messages(request.session_id)
+    message_history = []
+    for msg in history:
+        if hasattr(msg, "type") and msg.type == "human":
+            message_history.append({"role": "user", "content": msg.content})
+        else:
+            message_history.append({"role": "assistant", "content": msg.content})
+
+    response_text = generate_chat_response(request.message, message_history)
+
+    memory.add_messages(request.session_id, [HumanMessage(content=request.message)])
+    memory.add_messages(request.session_id, [AIMessage(content=response_text)])
+
+    return {"response": response_text}
 
 @router.websocket("/ws/chat")
-async def websocket_chat(websocket):
-    """
-    WebSocket streaming endpoint
-    """
+async def websocket_chat(websocket: WebSocket):
     await websocket.accept()
     while True:
         data = await websocket.receive_text()
-        await websocket.send_text(f"Echo: {data}")
+        response = generate_chat_response(data, [])
+        await websocket.send_text(response)
