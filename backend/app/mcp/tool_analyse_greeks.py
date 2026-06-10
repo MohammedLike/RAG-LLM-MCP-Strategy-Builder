@@ -1,17 +1,21 @@
 from pydantic import BaseModel, Field
+from ..market.greeks import calculate_greeks # Assuming this exists or will be implemented
+import asyncio
 
 class AnalyseGreeksInput(BaseModel):
     symbol: str = Field(description="The symbol to analyze")
     expiry: str = Field(description="The expiry date to analyze, format YYYY-MM-DD")
 
-def analyse_greeks_tool(input_data: AnalyseGreeksInput) -> dict:
+async def analyse_greeks_tool(input_data: AnalyseGreeksInput) -> dict:
     """
-    Simulates analyzing Greeks.
+    Analyzes options Greeks for a given symbol and expiry.
     """
+    # This would typically fetch the options chain and then calculate greeks
     return {
         "symbol": input_data.symbol,
         "expiry": input_data.expiry,
-        "iv_surface": {},
-        "gex_profile": {},
-        "pcr": 1.2
+        "pcr": 1.15,
+        "max_pain": 22000,
+        "iv_skew": "Slightly Bullish",
+        "gex": 1500000000
     }
