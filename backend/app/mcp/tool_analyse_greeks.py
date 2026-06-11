@@ -1,6 +1,4 @@
 from pydantic import BaseModel, Field
-from ..market.greeks import calculate_greeks # Assuming this exists or will be implemented
-import asyncio
 
 class AnalyseGreeksInput(BaseModel):
     symbol: str = Field(description="The symbol to analyze")
