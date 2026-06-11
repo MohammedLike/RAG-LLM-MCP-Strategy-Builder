@@ -7,7 +7,7 @@ from .qdrant_client import init_collection, upsert_chunks
 def index_all_strategies(strategies_dir: str):
     init_collection()
     
-    files = glob.glob(f"{strategies_dir}/*.json")
+    files = glob.glob(f"{strategies_dir}/**/*.json", recursive=True)
     for file in files:
         if '_schema' in file:
             continue

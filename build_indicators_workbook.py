@@ -1318,6 +1318,6 @@ def build_workbook() -> Workbook:
 
 
 if __name__ == "__main__":
-    output = r"d:\Projects\Streak by Zerodha\Streak_Indicators_Final_Bullish_Bearish.xlsx"
+    output = "Streak_Indicators_Final_Bullish_Bearish.xlsx"
     build_workbook().save(output)
     print(f"Saved: {output}")

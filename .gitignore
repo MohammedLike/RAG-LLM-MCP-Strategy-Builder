@@ -43,10 +43,11 @@ training/checkpoints/
 training/data/qa_pairs/training_data.jsonl
 wandb/
 
-# ── Database ──
+# ── Database & Persistent Data ──
 *.sqlite
 *.db
 pgdata/
+data/
 
 # ── Docker ──
 docker-compose.override.yml

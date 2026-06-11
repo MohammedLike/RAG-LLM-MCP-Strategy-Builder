@@ -11,7 +11,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data
       - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
     networks:
@@ -24,7 +24,7 @@ services:
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
-      - redis_data:/data
+      - ./data/redis:/data
       - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf
     restart: unless-stopped
     networks:
@@ -37,7 +37,7 @@ services:
       - "${QDRANT_PORT:-6333}:6333"
       - "${QDRANT_GRPC_PORT:-6334}:6334"
     volumes:
-      - qdrant_data:/qdrant/storage
+      - ./data/qdrant:/qdrant/storage
       - ./infra/qdrant/config.yaml:/qdrant/config/custom_config.yaml
     environment:
       QDRANT__CONFIG_PATH: /qdrant/config/custom_config.yaml
@@ -51,7 +51,7 @@ services:
     ports:
       - "${OLLAMA_PORT:-11434}:11434"
     volumes:
-      - ollama_data:/root/.ollama
+      - ./data/ollama:/root/.ollama
     restart: unless-stopped
     networks:
       - quant_network
@@ -96,12 +96,6 @@ services:
     restart: unless-stopped
     networks:
       - quant_network
-
-volumes:
-  postgres_data:
-  redis_data:
-  qdrant_data:
-  ollama_data:
 
 networks:
   quant_network:
