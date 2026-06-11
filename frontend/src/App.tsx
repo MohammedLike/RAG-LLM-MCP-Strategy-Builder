@@ -1,63 +1,88 @@
-import { useState } from 'react'
-import { ChatPanel } from './components/chat/ChatPanel'
-import { MarketDashboard } from './components/market/MarketDashboard'
-import { StrategyExplorer } from './components/strategy/StrategyExplorer'
-import { BacktestPanel } from './components/backtest/BacktestPanel'
-
-type View = 'chat' | 'market' | 'strategies' | 'backtest'
+import { useState } from 'react';
+import { Sidebar, type AppView } from './components/layout/Sidebar';
+import { TopHeader } from './components/layout/TopHeader';
+import { PlaceholderView } from './components/layout/PlaceholderView';
+import { DashboardView } from './components/dashboard/DashboardView';
+import { StrategyExplorer } from './components/strategy/StrategyExplorer';
+import { BacktestPanel } from './components/backtest/BacktestPanel';
+import { ChatDrawer } from './components/chat/ChatDrawer';
+import { ChatFab } from './components/chat/ChatFab';
+import { Briefcase, Bot, User, Phone, HelpCircle } from 'lucide-react';
 
 function App() {
-  const [view, setView] = useState<View>('market')
+  const [view, setView] = useState<AppView>('dashboard');
+  const [chatOpen, setChatOpen] = useState(false);
+  const [tradingMode, setTradingMode] = useState<'live' | 'virtual'>('live');
+
+  const renderContent = () => {
+    switch (view) {
+      case 'dashboard':
+        return <DashboardView onNavigate={(v) => setView(v)} />;
+      case 'strategies':
+        return <StrategyExplorer />;
+      case 'backtest':
+        return <BacktestPanel />;
+      case 'portfolio':
+        return (
+          <PlaceholderView
+            title="Portfolio"
+            description="Track your deployed algos, P&L, and capital allocation across strategies."
+            icon={<Briefcase size={28} />}
+          />
+        );
+      case 'my-algos':
+        return (
+          <PlaceholderView
+            title="My Algos"
+            description="Manage your custom and deployed algorithmic strategies."
+            icon={<Bot size={28} />}
+          />
+        );
+      case 'account':
+        return (
+          <PlaceholderView
+            title="My Account"
+            description="Broker connection, API tokens, subscription, and profile settings."
+            icon={<User size={28} />}
+          />
+        );
+      case 'contact':
+        return (
+          <PlaceholderView
+            title="Contact Us"
+            description="Reach out to the StrykeX support team for help with your account."
+            icon={<Phone size={28} />}
+          />
+        );
+      case 'faq':
+        return (
+          <PlaceholderView
+            title="FAQ"
+            description="Frequently asked questions about algo trading, deployment, and backtesting."
+            icon={<HelpCircle size={28} />}
+          />
+        );
+      default:
+        return <DashboardView />;
+    }
+  };
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-950 text-slate-100 font-sans">
-      <header className="h-16 border-b border-slate-800 flex items-center px-6 shadow-sm">
-        <div className="w-8 h-8 rounded bg-accent-blue flex items-center justify-center mr-3 text-white font-bold">Q</div>
-        <h1 className="text-xl font-bold tracking-tight">Quant AI Agent</h1>
-      </header>
-      <div className="flex-1 flex overflow-hidden">
-        <aside className="w-64 border-r border-slate-800 bg-slate-900/50 p-4">
-          <nav className="space-y-2">
-            {[
-              { id: 'chat', label: 'Chat Assistant' },
-              { id: 'market', label: 'Live Market' },
-              { id: 'strategies', label: 'Strategies' },
-              { id: 'backtest', label: 'Backtesting Engine' }
-            ].map(item => (
-              <button
-                key={item.id}
-                onClick={() => setView(item.id as View)}
-                className={`w-full text-left p-3 rounded-lg font-medium transition ${view === item.id ? 'bg-accent-blue text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-        </aside>
-        
-        {/* Main Content Area */}
-        <main className="flex-1 flex overflow-hidden">
-          {/* Always show Chat Panel on the left as a sidebar if not explicitly viewing it? 
-              Let's make chat always visible as a split pane, or conditionally.
-              We'll make it a 2-pane view. Chat on left, context on right. */}
-          <div className="w-[400px] h-full shadow-2xl z-10">
-            <ChatPanel />
-          </div>
-          <div className="flex-1 h-full overflow-y-auto bg-slate-950 relative">
-            {view === 'market' && <MarketDashboard />}
-            {view === 'strategies' && <StrategyExplorer />}
-            {view === 'backtest' && <BacktestPanel />}
-            {view === 'chat' && (
-              <div className="flex items-center justify-center h-full text-slate-500 flex-col gap-4">
-                <div className="text-6xl">🤖</div>
-                <h2 className="text-xl font-semibold">How can I help you analyze the market today?</h2>
-              </div>
-            )}
-          </div>
-        </main>
+    <div className="h-screen w-screen flex bg-[#f4f6f9] overflow-hidden">
+      <Sidebar
+        activeView={view}
+        onNavigate={setView}
+        tradingMode={tradingMode}
+        onTradingModeChange={setTradingMode}
+      />
+      <div className="flex-1 flex flex-col min-w-0">
+        <TopHeader activeView={view} />
+        <main className="flex-1 overflow-hidden relative">{renderContent()}</main>
       </div>
+      <ChatFab onClick={() => setChatOpen(true)} />
+      <ChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

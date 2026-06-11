@@ -11,8 +11,13 @@ export const useMarketStore = create<MarketState>((set) => ({
   niftyQuote: null,
   bankNiftyQuote: null,
   setQuote: (quote) => set((state) => {
-    if (quote.symbol === 'NIFTY') return { niftyQuote: quote }
-    if (quote.symbol === 'BANKNIFTY') return { bankNiftyQuote: quote }
-    return state
-  })
+    const normalized: Quote = {
+      symbol: quote.symbol,
+      ltp: quote.ltp ?? 0,
+      change: quote.change ?? 0,
+    };
+    if (normalized.symbol === 'NIFTY') return { niftyQuote: normalized };
+    if (normalized.symbol === 'BANKNIFTY') return { bankNiftyQuote: normalized };
+    return state;
+  }),
 }))

@@ -1,9 +1,12 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : 'http://localhost:8001/api';
 
 export const api = axios.create({
   baseURL: API_BASE,
+  timeout: 300000,
 });
 
 export const fetchQuote = async (symbol: string) => {
@@ -13,6 +16,20 @@ export const fetchQuote = async (symbol: string) => {
 
 export const sendChatMessage = async (message: string, sessionId: string) => {
   const res = await api.post('/chat', { message, session_id: sessionId });
+  return res.data;
+};
+
+export const fetchStrategies = async () => {
+  const res = await api.get('/strategies');
+  return res.data;
+};
+
+export const runBacktest = async (symbol: string, strategy_spec: object, period = '1y') => {
+  const res = await api.post('/backtest', {
+    strategy_spec,
+    symbol,
+    period,
+  });
   return res.data;
 };
 

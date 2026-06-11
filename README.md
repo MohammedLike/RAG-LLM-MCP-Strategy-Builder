@@ -42,7 +42,7 @@ ollama pull deepseek-r1:14b
 ```bash
 cd backend
 pip install -e ".[dev]"
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
 ### 5. Start the frontend

@@ -1,18 +1,11 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-from ..backtest.engine import BacktestEngine
+from ..mcp.tool_run_backtest import run_backtest_tool, RunBacktestInput
 
 router = APIRouter()
-engine = BacktestEngine()
-
-class BacktestRequest(BaseModel):
-    strategy_spec: dict
-    symbol: str
-    period: str
 
 @router.post("/backtest")
-async def run_backtest(request: BacktestRequest):
-    return engine.run(request.strategy_spec, request.symbol, request.period)
+async def run_backtest(request: RunBacktestInput):
+    return await run_backtest_tool(request)
 
 @router.get("/backtest/{id}")
 async def get_backtest(id: str):

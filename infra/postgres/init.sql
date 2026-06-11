@@ -1,27 +1,53 @@
 -- Enable TimescaleDB extension
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
+-- Create Ticks table for high-frequency data
+CREATE TABLE IF NOT EXISTS ticks (
+    time TIMESTAMPTZ NOT NULL,
+    symbol TEXT NOT NULL,
+    price DOUBLE PRECISION NOT NULL,
+    volume INTEGER,
+    side TEXT -- 'buy', 'sell', or NULL
+);
+
+-- Create hypertable for ticks
+SELECT create_hypertable('ticks', 'time', if_not_exists => TRUE);
+CREATE INDEX IF NOT EXISTS ix_ticks_symbol_time ON ticks (symbol, time DESC);
+
 -- Create OHLCV table
 CREATE TABLE IF NOT EXISTS ohlcv (
     time TIMESTAMPTZ NOT NULL,
     symbol TEXT NOT NULL,
-    open DOUBLE PRECISION,
-    high DOUBLE PRECISION,
-    low DOUBLE PRECISION,
-    close DOUBLE PRECISION,
+    open DOUBLE PRECISION NOT NULL,
+    high DOUBLE PRECISION NOT NULL,
+    low DOUBLE PRECISION NOT NULL,
+    close DOUBLE PRECISION NOT NULL,
     volume BIGINT,
-    PRIMARY KEY (time, symbol)
+    resolution TEXT NOT NULL -- '1m', '5m', '1h', '1d'
 );
 
 -- Create hypertable for OHLCV
 SELECT create_hypertable('ohlcv', 'time', if_not_exists => TRUE);
+CREATE INDEX IF NOT EXISTS ix_ohlcv_symbol_res_time ON ohlcv (symbol, resolution, time DESC);
 
--- Create index on symbol and time
-CREATE INDEX IF NOT EXISTS ix_ohlcv_symbol_time ON ohlcv (symbol, time DESC);
+-- Enable compression for tick and ohlcv data (crucial for 8 years of data)
+ALTER TABLE ticks SET (
+  timescaledb.compress,
+  timescaledb.compress_segmentby = 'symbol'
+);
+
+ALTER TABLE ohlcv SET (
+  timescaledb.compress,
+  timescaledb.compress_segmentby = 'symbol'
+);
+
+-- Add compression policies (e.g., compress data older than 7 days)
+SELECT add_compression_policy('ticks', INTERVAL '7 days', if_not_exists => TRUE);
+SELECT add_compression_policy('ohlcv', INTERVAL '30 days', if_not_exists => TRUE);
 
 -- Create options chain table
 CREATE TABLE IF NOT EXISTS options_chain (
-    timestamp TIMESTAMPTZ NOT NULL,
+    time TIMESTAMPTZ NOT NULL,
     symbol TEXT NOT NULL,
     expiry DATE NOT NULL,
     strike DOUBLE PRECISION NOT NULL,
@@ -33,9 +59,23 @@ CREATE TABLE IF NOT EXISTS options_chain (
     greeks_json JSONB
 );
 
--- Index for querying options chain
-CREATE INDEX IF NOT EXISTS ix_options_chain_symbol_expiry_strike 
-ON options_chain (symbol, expiry, strike);
+SELECT create_hypertable('options_chain', 'time', if_not_exists => TRUE);
+CREATE INDEX IF NOT EXISTS ix_options_chain_query 
+ON options_chain (symbol, expiry, strike, time DESC);
+
+-- Create backtests table to store results
+CREATE TABLE IF NOT EXISTS backtests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    strategy_id UUID REFERENCES strategies(id),
+    user_request_json JSONB, -- The original AI/User request
+    status TEXT DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed'
+    metrics JSONB, -- Sharpe, Sortino, MaxDD, etc.
+    equity_curve JSONB, -- Time-series of portfolio value
+    trade_log JSONB, -- List of all executed trades
+    error_message TEXT,
+    started_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMPTZ
+);
 
 -- Create strategies table
 CREATE TABLE IF NOT EXISTS strategies (
@@ -47,7 +87,6 @@ CREATE TABLE IF NOT EXISTS strategies (
     entry_rules JSONB,
     exit_rules JSONB,
     risk_params JSONB,
-    backtest_results JSONB,
     metadata JSONB,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

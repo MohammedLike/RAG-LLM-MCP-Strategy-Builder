@@ -16,17 +16,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
   sessionId: crypto.randomUUID(),
   sendMessage: async (msg) => {
     set((state) => ({
-      messages: [...state.messages, { id: crypto.randomUUID(), role: 'user', content: msg, timestamp: Date.now() }]
+      messages: [...state.messages, { id: crypto.randomUUID(), role: 'user', content: msg, timestamp: Date.now() }],
+      isStreaming: true,
     }))
 
     try {
-      const { response } = await sendChatMessage(msg, get().sessionId)
+      const data = await sendChatMessage(msg, get().sessionId)
+      const content = data.response ?? data.error ?? 'No response'
       set((state) => ({
-        messages: [...state.messages, { id: crypto.randomUUID(), role: 'agent', content: response, timestamp: Date.now() }]
+        messages: [...state.messages, { id: crypto.randomUUID(), role: 'agent', content, timestamp: Date.now() }],
+        isStreaming: false,
       }))
     } catch (error) {
       set((state) => ({
-        messages: [...state.messages, { id: crypto.randomUUID(), role: 'agent', content: `Error: ${String(error)}`, timestamp: Date.now() }]
+        messages: [...state.messages, { id: crypto.randomUUID(), role: 'agent', content: `Error: ${String(error)}`, timestamp: Date.now() }],
+        isStreaming: false,
       }))
     }
   },

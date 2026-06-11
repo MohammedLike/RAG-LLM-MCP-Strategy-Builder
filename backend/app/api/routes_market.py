@@ -5,15 +5,15 @@ router = APIRouter()
 
 @router.get("/market/{symbol}/quote")
 async def get_quote(symbol: str):
-    return fetch_market_data(FetchMarketInput(symbol=symbol, data_type="quote"))
+    return await fetch_market_data(FetchMarketInput(symbol=symbol, data_type="quote"))
 
 @router.get("/market/{symbol}/ohlcv")
 async def get_ohlcv(symbol: str):
-    return fetch_market_data(FetchMarketInput(symbol=symbol, data_type="ohlcv"))
+    return await fetch_market_data(FetchMarketInput(symbol=symbol, data_type="ohlcv"))
 
 @router.get("/market/{symbol}/options")
 async def get_options(symbol: str, expiry: str = None):
-    return fetch_market_data(FetchMarketInput(symbol=symbol, data_type="options_chain", expiry=expiry))
+    return await fetch_market_data(FetchMarketInput(symbol=symbol, data_type="options_chain", expiry=expiry))
 
 @router.websocket("/ws/market")
 async def websocket_market(websocket):
