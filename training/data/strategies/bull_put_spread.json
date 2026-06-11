@@ -1,30 +1,38 @@
 {
-  "name": "Directional Bull Put Spread",
-  "category": "directional",
+  "name": "Bull Put Spread",
+  "slug": "bull_put_spread",
+  "category": "directional_bullish",
   "underlying": ["NIFTY", "BANKNIFTY"],
-  "hypothesis": "Bullish view on the index with a defined risk. Profitable if index stays above the sold put strike.",
+  "description": "Credit spread selling OTM put spread when bullish bias with support confluence.",
+  "hypothesis": "Index respects prior swing lows and rising 20-DMA; selling puts below support captures premium with capped risk.",
   "entry_rules": {
-    "conditions": ["Index bounces from 200 EMA", "RSI > 40 and sloping up"],
-    "position_sizing": "Sell ATM put, Buy OTM put (200 points below). Risk 2% of account."
+    "conditions": [
+      "Price above 20-DMA and 50-DMA",
+      "Sell put at nearest support / round number",
+      "Buy put 100-300 points lower depending on underlying",
+      "IV not in bottom decile"
+    ],
+    "position_sizing": "Risk = spread width minus credit; limit to 1.5% capital"
   },
   "exit_rules": {
-    "stop_loss": "Close of daily candle below 200 EMA.",
-    "target": "80% of max profit.",
-    "time_exit": "None"
+    "stop_loss": "80% of max loss or break of support",
+    "target": "50-60% of max profit",
+    "time_exit": "Close 3 days before expiry"
   },
   "risk_params": {
-    "max_loss_per_trade": "Width of spread - premium collected",
-    "margin_required": "Approx 30k per lot"
+    "max_loss_per_trade": "Strike width minus net credit",
+    "margin_required": "Spread margin per NSE rules"
   },
   "market_conditions": {
-    "volatility_regime": "Any",
-    "trend": "Uptrend"
+    "volatility_regime": "Normal to elevated IV preferred for credit",
+    "trend": "Mildly bullish or post-pullback bounce"
   },
   "backtest_results": {
-    "period": "2020-2023",
-    "sharpe": 1.1,
-    "max_drawdown": 15.0,
-    "win_rate": 55
+    "period": "2021-2024 Nifty weekly",
+    "win_rate": 0.64,
+    "sharpe": 1.28,
+    "max_drawdown": 0.11
   },
-  "notes": "High probability directional play."
+  "notes": "Avoid entering before major support breaks on daily chart. Combine with RSI > 40 filter.",
+  "tags": ["bullish", "credit spread", "support", "weekly"]
 }

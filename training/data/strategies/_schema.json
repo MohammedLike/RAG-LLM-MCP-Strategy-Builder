@@ -1,17 +1,21 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Options Strategy",
   "type": "object",
+  "required": ["name", "slug", "category", "description"],
   "properties": {
     "name": { "type": "string" },
+    "slug": { "type": "string" },
     "category": { "type": "string" },
     "underlying": { "type": "array", "items": { "type": "string" } },
+    "description": { "type": "string" },
     "hypothesis": { "type": "string" },
     "entry_rules": { "type": "object" },
     "exit_rules": { "type": "object" },
     "risk_params": { "type": "object" },
     "market_conditions": { "type": "object" },
     "backtest_results": { "type": "object" },
-    "notes": { "type": "string" }
-  },
-  "required": ["name", "category", "hypothesis"]
+    "notes": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  }
 }

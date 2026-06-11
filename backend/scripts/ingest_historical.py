@@ -3,6 +3,8 @@ import sys
 import os
 from datetime import datetime, timedelta
 
+import pandas as pd
+
 # Add the 'app' directory to the path so we can import modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -24,8 +26,9 @@ async def ingest_historical(symbol: str, years: int = 10):
         return
 
     print(f"Fetched {len(df)} records. Ingesting into database...")
-    
-    records = df.to_dict(orient='records')
+
+    df["time"] = pd.to_datetime(df["time"], utc=True)
+    records = df.to_dict(orient="records")
     
     async with async_session() as session:
         # Upsert into PostgreSQL (TimescaleDB)
@@ -46,7 +49,10 @@ async def ingest_historical(symbol: str, years: int = 10):
     
     print(f"Successfully ingested {symbol} historical data.")
 
+async def main():
+    for sym in ["NIFTY", "BANKNIFTY"]:
+        await ingest_historical(sym, years=14)
+
+
 if __name__ == "__main__":
-    symbols = ["NIFTY", "BANKNIFTY"]
-    for sym in symbols:
-        asyncio.run(ingest_historical(sym, years=14)) # back to 2010
+    asyncio.run(main())

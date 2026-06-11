@@ -48,6 +48,31 @@ class YFinanceProvider(MarketDataProvider):
         return df
 
     async def get_options_chain(self, symbol: str, expiry: str) -> dict:
-        # yfinance doesn't natively support NSE options chain easily,
-        # but this provides a placeholder/fallback interface
         return {"error": "Options chain not fully supported via yfinance for NSE"}
+
+    async def get_futures_data(self, symbol: str, expiry: str | None = None) -> dict:
+        ticker = self._get_ticker(symbol)
+        def _fetch():
+            t = yf.Ticker(ticker)
+            info = t.fast_info
+            return {
+                "symbol": symbol,
+                "ltp": info.last_price,
+                "expiry": expiry,
+                "provider": "yfinance",
+            }
+        return await asyncio.to_thread(_fetch)
+
+    async def get_equity_meta(self, symbol: str) -> dict:
+        ticker = self._get_ticker(symbol)
+        def _fetch():
+            t = yf.Ticker(ticker)
+            info = t.info
+            return {
+                "symbol": symbol,
+                "name": info.get("shortName") or info.get("longName"),
+                "exchange": info.get("exchange"),
+                "currency": info.get("currency"),
+                "provider": "yfinance",
+            }
+        return await asyncio.to_thread(_fetch)

@@ -2,29 +2,28 @@ import ollama
 from app.config import settings
 import asyncio
 
-async def embed_texts_async(texts: list[str]) -> list[list[float]]:
-    """
-    Uses Ollama's Python library to generate embeddings.
-    """
+async def embed_texts_async(texts: list[str], batch_size: int = 32) -> list[list[float]]:
+    """Generate embeddings via Ollama in batches."""
     client = ollama.AsyncClient(host=settings.OLLAMA_BASE_URL)
-    embeddings = []
-    
-    for text in texts:
+    embeddings: list[list[float]] = []
+
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i : i + batch_size]
         try:
-            # Use the official embed method
             response = await client.embed(
                 model=settings.EMBEDDING_MODEL_NAME,
-                input=text
+                input=batch,
             )
-            # Ollama Python library returns 'embeddings'
-            if hasattr(response, 'embeddings'):
+            if hasattr(response, "embeddings"):
                 embeddings.extend(response.embeddings)
-            elif 'embeddings' in response:
-                embeddings.extend(response['embeddings'])
+            elif isinstance(response, dict) and "embeddings" in response:
+                embeddings.extend(response["embeddings"])
+            else:
+                raise ValueError("Unexpected Ollama embed response")
         except Exception as e:
-            print(f"Ollama Embedding Error: {e}")
-            embeddings.append([0.0] * 1024) 
-                
+            print(f"Ollama Embedding Error (batch {i // batch_size + 1}): {e}")
+            embeddings.extend([[0.0] * 1024 for _ in batch])
+
     return embeddings
 
 def embed_texts(texts: list[str]) -> list[list[float]]:

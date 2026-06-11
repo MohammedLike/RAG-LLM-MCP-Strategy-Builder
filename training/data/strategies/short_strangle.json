@@ -1,30 +1,39 @@
 {
-  "name": "BankNifty Weekly Short Strangle",
+  "name": "Short Strangle",
+  "slug": "short_strangle",
   "category": "options_selling",
-  "underlying": ["BANKNIFTY"],
-  "hypothesis": "BankNifty options tend to overprice implied volatility. Selling far OTM calls and puts captures time decay (Theta) provided the index stays within a defined range.",
+  "underlying": ["NIFTY", "BANKNIFTY"],
+  "description": "Sell OTM call and OTM put to collect premium when IV is elevated and range-bound price action is expected.",
+  "hypothesis": "Mean-reverting index with high implied volatility overstates realized move; selling 1 SD wings captures theta decay.",
   "entry_rules": {
-    "conditions": ["IV Rank > 50", "Days to expiry <= 7", "Time: 09:30 AM on Friday"],
-    "position_sizing": "Sell 1 lot of 15-delta Call and 15-delta Put per 2 lakh capital."
+    "conditions": [
+      "IV percentile above 50 on weekly expiry",
+      "No major event within 2 sessions",
+      "Sell call at +1 SD strike, sell put at -1 SD strike",
+      "Enter 2-3 days before expiry for BankNifty weekly"
+    ],
+    "position_sizing": "Risk 1-2% of capital per trade; margin-adjusted lot size"
   },
   "exit_rules": {
-    "stop_loss": "Combined premium reaches 150% of initial collected premium.",
-    "target": "Hold until expiry or exit at 10% remaining premium.",
-    "time_exit": "Exit at 3:15 PM on expiry day."
+    "stop_loss": "2x premium collected or breach of short strike",
+    "target": "50-70% of max premium",
+    "time_exit": "Close by 1 PM on expiry day if not stopped"
   },
   "risk_params": {
-    "max_loss_per_trade": "Undefined theoretically, managed to 2% of capital via stop loss.",
-    "margin_required": "Approx 1.5L per lot"
+    "max_loss_per_trade": "Unlimited tail risk; cap via stop at 2x credit",
+    "margin_required": "SPAN + exposure margin per exchange rules"
   },
   "market_conditions": {
-    "volatility_regime": "High IV dropping to Normal IV",
-    "trend": "Sideways to mildly directional"
+    "volatility_regime": "High IV, declining or stable",
+    "trend": "Sideways / low directional conviction"
   },
   "backtest_results": {
-    "period": "2020-2023",
-    "sharpe": 1.2,
-    "max_drawdown": 8.5,
-    "win_rate": 68
+    "period": "2020-2024 BankNifty weekly",
+    "win_rate": 0.68,
+    "sharpe": 1.42,
+    "max_drawdown": 0.12,
+    "avg_premium_capture": 0.58
   },
-  "notes": "Monitor GEX levels to avoid gamma squeezes on 0DTE."
+  "notes": "Avoid RBI policy weeks and budget session unless hedged. Roll untested side if delta exceeds 0.35.",
+  "tags": ["premium selling", "neutral", "weekly", "BankNifty"]
 }

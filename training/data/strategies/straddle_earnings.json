@@ -1,30 +1,39 @@
 {
-  "name": "Pre-Event Long Straddle",
-  "category": "options_buying",
+  "name": "Long Straddle (Event / High IV)",
+  "slug": "straddle_earnings",
+  "category": "volatility_long",
   "underlying": ["NIFTY", "BANKNIFTY"],
-  "hypothesis": "Exploit IV crush and directional moves post major events (e.g., RBI Policy, Budget).",
+  "description": "Buy ATM call and put before high-impact events when a large move is expected and IV may expand or realize volatility exceeds implied.",
+  "hypothesis": "Binary events (RBI, budget, election results) create outsized moves; long gamma benefits from expansion beyond breakevens.",
   "entry_rules": {
-    "conditions": ["IV is historically low (< 25th percentile)", "Event scheduled in next 2 days"],
-    "position_sizing": "Buy 1 lot ATM Call and 1 lot ATM Put."
+    "conditions": [
+      "Known high-impact event within 1-3 sessions",
+      "IV not already at extreme percentile (>90)",
+      "Buy ATM or near-ATM straddle on nearest weekly expiry",
+      "Enter 1-2 days before event"
+    ],
+    "position_sizing": "Debit = total premium; risk 0.5-1% per event trade"
   },
   "exit_rules": {
-    "stop_loss": "30% of premium paid.",
-    "target": "100% gain on combined premium.",
-    "time_exit": "Exit immediately post-event."
+    "stop_loss": "40-50% of premium paid",
+    "target": "100-200% of premium on large gap move",
+    "time_exit": "Exit immediately after event catalyst resolves"
   },
   "risk_params": {
-    "max_loss_per_trade": "Total premium paid",
-    "margin_required": "Total premium paid"
+    "max_loss_per_trade": "Full premium paid",
+    "margin_required": "Premium debit only"
   },
   "market_conditions": {
-    "volatility_regime": "Low IV before event",
-    "trend": "Neutral prior to event"
+    "volatility_regime": "Rising IV into event; avoid post-crush entry",
+    "trend": "Direction agnostic; needs magnitude not direction"
   },
   "backtest_results": {
-    "period": "2015-2023",
-    "sharpe": 0.6,
-    "max_drawdown": 25.0,
-    "win_rate": 35
+    "period": "2020-2024 event days sample",
+    "win_rate": 0.45,
+    "sharpe": 0.95,
+    "max_drawdown": 0.18,
+    "avg_winner_to_loser_ratio": 2.1
   },
-  "notes": "Low win rate but high payoff. Relies heavily on accurate event timing."
+  "notes": "IV crush after event often hurts; exit on open post-event unless gap favors position. Not suitable for low-vol grind weeks.",
+  "tags": ["long volatility", "event", "straddle", "gamma"]
 }

@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS ohlcv (
     high DOUBLE PRECISION,
     low DOUBLE PRECISION,
     close DOUBLE PRECISION,
-    volume BIGINT
+    volume BIGINT,
+    PRIMARY KEY (time, symbol)
 );
 
 -- Create hypertable for OHLCV

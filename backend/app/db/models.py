@@ -43,5 +43,5 @@ class Strategy(Base):
     exit_rules = Column(JSONB)
     risk_params = Column(JSONB)
     backtest_results = Column(JSONB)
-    metadata = Column(JSONB)
+    strategy_metadata = Column(JSONB)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
