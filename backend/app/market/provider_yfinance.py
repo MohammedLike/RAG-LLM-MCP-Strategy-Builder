@@ -37,13 +37,16 @@ class YFinanceProvider(MarketDataProvider):
         
         df = await asyncio.to_thread(_fetch)
         
-        # Format columns properly (yf.download returns MultiIndex columns sometimes)
+        # Format columns properly
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.droplevel(1)
             
         df = df.reset_index()
-        # Ensure column names match our schema lowercase
-        df.columns = [c.lower() if c != 'Date' and c != 'Datetime' else 'time' for c in df.columns]
+        # The index column is typically 'Date' or 'Datetime', but let's be explicit
+        df = df.rename(columns={df.columns[0]: 'time'})
+        
+        # Ensure remaining column names match our schema lowercase
+        df.columns = [c.lower() for c in df.columns]
         df['symbol'] = symbol
         return df
 
