@@ -14,6 +14,11 @@ export const fetchQuote = async (symbol: string) => {
   return res.data;
 };
 
+export const fetchCompanies = async () => {
+  const res = await api.get('/market/companies');
+  return res.data;
+};
+
 export const sendChatMessage = async (message: string, sessionId: string) => {
   const res = await api.post('/chat', { message, session_id: sessionId });
   return res.data;

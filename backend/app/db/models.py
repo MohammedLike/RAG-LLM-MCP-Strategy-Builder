@@ -11,6 +11,7 @@ class OHLCV(Base):
     
     time = Column(DateTime(timezone=True), primary_key=True)
     symbol = Column(String, primary_key=True)
+    resolution = Column(String, primary_key=True) # '1m', '5m', '1h', '1d'
     open = Column(Float)
     high = Column(Float)
     low = Column(Float)

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Message } from '../types'
 import { sendChatMessage } from '../services/api'
+import { useBacktestStore } from './backtestStore'
 
 interface ChatState {
   messages: Message[];
@@ -27,6 +28,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         messages: [...state.messages, { id: crypto.randomUUID(), role: 'agent', content, timestamp: Date.now() }],
         isStreaming: false,
       }))
+      
+      // Refresh backtest data from the backend in case the agent ran a backtest
+      await useBacktestStore.getState().fetchLatestBacktest();
     } catch (error) {
       set((state) => ({
         messages: [...state.messages, { id: crypto.randomUUID(), role: 'agent', content: `Error: ${String(error)}`, timestamp: Date.now() }],
@@ -38,3 +42,4 @@ export const useChatStore = create<ChatState>((set, get) => ({
     return state;
   })
 }))
+

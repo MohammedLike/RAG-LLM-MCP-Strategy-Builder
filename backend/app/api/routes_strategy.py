@@ -19,19 +19,32 @@ class StrategyCreate(BaseModel):
 def _load_strategies():
     strategies = []
     for path in glob.glob(f"{STRATEGIES_DIR}/**/*.json", recursive=True):
-        if "_schema" in path:
+        if "_schema" in path or "auto_generated" in path:
             continue
-        with open(path, "r") as f:
-            data = json.load(f)
-        strategies.append({
-            "name": data.get("name"),
-            "slug": data.get("slug", ""),
-            "category": data.get("category", ""),
-            "description": data.get("description", ""),
-            "tags": data.get("tags", []),
-            "backtest_results": data.get("backtest_results", {}),
-        })
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+            
+            # Auto-extract slug from filename if not explicit
+            file_slug = os.path.basename(path).replace(".json", "")
+            slug = data.get("slug") or file_slug
+            
+            strategies.append({
+                "name": data.get("name") or file_slug.replace("_", " ").title(),
+                "slug": slug,
+                "category": data.get("category", "General"),
+                "description": data.get("description") or data.get("hypothesis", ""),
+                "hypothesis": data.get("hypothesis") or data.get("description", ""),
+                "tags": data.get("tags") or [data.get("category", "General")],
+                "backtest_results": data.get("backtest_results", {}),
+                "backtest_spec": data.get("backtest_spec", {}),
+                "entry_rules": data.get("entry_rules", {}),
+                "exit_rules": data.get("exit_rules", {})
+            })
+        except Exception as e:
+            print(f"Error loading strategy file {path}: {e}")
     return strategies
+
 
 @router.get("/strategies")
 async def list_strategies():

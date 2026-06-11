@@ -1,7 +1,42 @@
+import os
+import csv
 from fastapi import APIRouter
 from ..mcp.tool_fetch_market import fetch_market_data, FetchMarketInput
 
 router = APIRouter()
+
+CSV_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../company_profiles.csv"))
+
+@router.get("/market/companies")
+async def get_companies():
+    """Returns all available companies and indices from company_profiles.csv."""
+    companies = []
+    if os.path.exists(CSV_PATH):
+        try:
+            with open(CSV_PATH, mode='r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    companies.append({
+                        "symbol": row.get("ticker"),
+                        "name": row.get("name"),
+                        "sector": row.get("sector") or "Index/General",
+                        "industry": row.get("industry") or "General"
+                    })
+        except Exception as e:
+            print(f"Error loading companies CSV: {e}")
+            
+    # Default fallback list if CSV has issues
+    if not companies:
+        companies = [
+            {"symbol": "NIFTY", "name": "Nifty 50 Index", "sector": "Index", "industry": "Index"},
+            {"symbol": "BANKNIFTY", "name": "Nifty Bank Index", "sector": "Index", "industry": "Banking"},
+            {"symbol": "RELIANCE", "name": "Reliance Industries Ltd", "sector": "Energy", "industry": "Oil & Gas"},
+            {"symbol": "TCS", "name": "Tata Consultancy Services Ltd", "sector": "Technology", "industry": "IT Services"},
+            {"symbol": "INFY", "name": "Infosys Ltd", "sector": "Technology", "industry": "IT Services"},
+            {"symbol": "HDFCBANK", "name": "HDFC Bank Ltd", "sector": "Financial Services", "industry": "Banking"},
+        ]
+    return companies
+
 
 @router.get("/market/{symbol}/quote")
 async def get_quote(symbol: str):

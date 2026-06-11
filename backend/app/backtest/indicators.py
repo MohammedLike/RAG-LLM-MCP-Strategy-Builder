@@ -1,6 +1,7 @@
 import talib
 import pandas as pd
 import numpy as np
+from .indicator_db import INDICATORS_DB
 
 class IndicatorManager:
     """
@@ -10,13 +11,13 @@ class IndicatorManager:
     
     @staticmethod
     def get_indicators_list():
-        """Returns a list of all available TA-Lib functions."""
-        return talib.get_functions()
+        """Returns the complete structured indicator database."""
+        return INDICATORS_DB
 
     @staticmethod
     def apply_indicator(df: pd.DataFrame, name: str, params: dict = None) -> pd.Series:
         """
-        Applies a TA-Lib indicator to a DataFrame.
+        Applies a TA-Lib or custom indicator to a DataFrame.
         Expected columns: 'open', 'high', 'low', 'close', 'volume'
         """
         if params is None:
@@ -24,54 +25,103 @@ class IndicatorManager:
             
         name = name.upper()
         
-        # Mapping common indicator requests to TA-Lib functions
-        # This can be expanded to cover the full 100+ functions
-        
-        # Momentum Indicators
-        if name == "RSI":
-            return talib.RSI(df['close'], timeperiod=params.get('timeperiod', 14))
-        elif name == "MACD":
-            macd, macdsignal, macdhist = talib.MACD(
-                df['close'], 
-                fastperiod=params.get('fastperiod', 12), 
-                slowperiod=params.get('slowperiod', 26), 
-                signalperiod=params.get('signalperiod', 9)
-            )
-            return macd # Return main line by default, can be customized
-        elif name == "ADX":
-            return talib.ADX(df['high'], df['low'], df['close'], timeperiod=params.get('timeperiod', 14))
-        
-        # Volatility Indicators
-        elif name == "BBANDS":
-            upper, middle, lower = talib.BBANDS(
-                df['close'], 
-                timeperiod=params.get('timeperiod', 5), 
-                nbdevup=params.get('nbdevup', 2), 
-                nbdevdn=params.get('nbdevdn', 2)
-            )
-            return middle # Return middle band by default
-            
-        # Overlap Studies
-        elif name == "SMA":
-            return talib.SMA(df['close'], timeperiod=params.get('timeperiod', 30))
-        elif name == "EMA":
-            return talib.EMA(df['close'], timeperiod=params.get('timeperiod', 30))
-        elif name == "VWAP":
-            # VWAP isn't in standard TA-Lib, calculate manually or use pandas-ta
+        # 1. Custom Indicators (non-TA-Lib)
+        if name == "VWAP":
             pv = df['close'] * df['volume']
             return pv.cumsum() / df['volume'].cumsum()
             
-        # Generic fallback for any other TA-Lib function
+        # 2. Look up TA-Lib function
         func = getattr(talib, name, None)
-        if func:
-            # Most TA-Lib functions take (close, timeperiod)
-            try:
-                return func(df['close'], **params)
-            except:
-                # Some take (high, low, close)
-                try:
-                    return func(df['high'], df['low'], df['close'], **params)
-                except Exception as e:
-                    raise ValueError(f"Indicator {name} failed: {str(e)}")
+        if not func:
+            raise ValueError(f"Indicator {name} not found in TA-Lib or custom indicators.")
+            
+        # Extract output index mapping if a multiple-output indicator is queried
+        # (e.g., MACD returns macd, signal, hist; BBANDS returns upper, middle, lower)
+        output_index = params.pop('output_index', None)
         
-        raise ValueError(f"Indicator {name} not supported or not found in TA-Lib.")
+        # 3. Dynamic signatures execution: try executing in order of parameter counts
+        result = None
+        executed = False
+        
+        # Signature A: (open, high, low, close) - standard patterns and price transforms
+        if not executed:
+            try:
+                result = func(df['open'], df['high'], df['low'], df['close'], **params)
+                executed = True
+            except Exception:
+                pass
+                
+        # Signature B: (high, low, close, volume) - MFI, AD, ADOSC
+        if not executed:
+            try:
+                result = func(df['high'], df['low'], df['close'], df['volume'], **params)
+                executed = True
+            except Exception:
+                pass
+                
+        # Signature C: (high, low, close) - ADX, ATR, CCI, WILLR, NATR
+        if not executed:
+            try:
+                result = func(df['high'], df['low'], df['close'], **params)
+                executed = True
+            except Exception:
+                pass
+                
+        # Signature D: (close, volume) - OBV
+        if not executed:
+            try:
+                result = func(df['close'], df['volume'], **params)
+                executed = True
+            except Exception:
+                pass
+                
+        # Signature E: (close) - SMA, EMA, RSI, STDDEV, TSF, KAMA
+        if not executed:
+            try:
+                result = func(df['close'], **params)
+                executed = True
+            except Exception:
+                pass
+                
+        # Signature F: (high, low) - SAR, AROON
+        if not executed:
+            try:
+                result = func(df['high'], df['low'], **params)
+                executed = True
+            except Exception:
+                pass
+
+        if not executed:
+            raise ValueError(f"Failed to execute TA-Lib indicator {name}. Check that the parameter values are valid.")
+
+        # 4. Handle multiple-output tuple results (like BBANDS, MACD, STOCH)
+        if isinstance(result, tuple):
+            mapped_idx = 0
+            if output_index is not None:
+                if isinstance(output_index, int):
+                    mapped_idx = output_index
+                elif isinstance(output_index, str):
+                    output_str = output_index.lower()
+                    if name == "BBANDS":
+                        mapping = {"upper": 0, "middle": 1, "lower": 2}
+                        mapped_idx = mapping.get(output_str, 1)
+                    elif name == "MACD":
+                        mapping = {"macd": 0, "signal": 1, "hist": 2}
+                        mapped_idx = mapping.get(output_str, 0)
+                    elif name == "STOCH":
+                        mapping = {"slowk": 0, "slowd": 1}
+                        mapped_idx = mapping.get(output_str, 0)
+                    elif name == "STOCHRSI":
+                        mapping = {"fastk": 0, "fastd": 1}
+                        mapped_idx = mapping.get(output_str, 0)
+                    elif name == "AROON":
+                        mapping = {"down": 0, "up": 1}
+                        mapped_idx = mapping.get(output_str, 0)
+            
+            # Extract the correct array from the tuple
+            if 0 <= mapped_idx < len(result):
+                return pd.Series(result[mapped_idx], index=df.index)
+            return pd.Series(result[0], index=df.index)
+            
+        return pd.Series(result, index=df.index)
+
