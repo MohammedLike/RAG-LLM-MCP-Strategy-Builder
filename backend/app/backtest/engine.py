@@ -138,6 +138,14 @@ class BacktestEngine:
         Runs a vectorized backtest on the given DataFrame.
         Supports entry/exit signals + stop loss and take profit.
         """
+        # 0. Route to Options Engine if necessary
+        instrument_type = strategy_spec.get('instrument_type', 'EQUITY').upper()
+        if instrument_type == 'OPTION':
+            # Local import to prevent circular dependency
+            from .options_engine import OptionsEngine
+            opt_engine = OptionsEngine()
+            return opt_engine.run(df, strategy_spec)
+
         # 1. Generate Signals
         entries = self.evaluate_rules(df, strategy_spec.get('entry', {}))
         exits = self.evaluate_rules(df, strategy_spec.get('exit', {}))
@@ -222,12 +230,26 @@ class BacktestEngine:
             print(f"Error parsing trades: {e}")
             trades_list = []
 
+        # Extended metrics calculation
+        total_return = safe_float(stats.get('Total Return [%]'))
+        max_dd = safe_float(stats.get('Max Drawdown [%]'))
+        
+        # Approximate CAGR
+        days = len(value_curve)
+        years = max(days / 252.0, 0.01)
+        cagr = (((1 + (total_return / 100.0)) ** (1 / years)) - 1) * 100.0
+        
+        # Approximate Calmar
+        calmar = cagr / abs(max_dd) if max_dd < 0 else 0.0
+
         return {
-            "total_return": safe_float(stats.get('Total Return [%]')),
+            "total_return": total_return,
             "benchmark_return": safe_float(stats.get('Benchmark Return [%]')),
+            "cagr": float(cagr),
+            "calmar": float(calmar),
             "sharpe": safe_float(stats.get('Sharpe Ratio')),
             "sortino": safe_float(stats.get('Sortino Ratio')),
-            "max_drawdown": safe_float(stats.get('Max Drawdown [%]')),
+            "max_drawdown": max_dd,
             "win_rate": safe_float(stats.get('Win Rate [%]')),
             "profit_factor": safe_float(stats.get('Profit Factor')),
             "expectancy": safe_float(stats.get('Expectancy')),

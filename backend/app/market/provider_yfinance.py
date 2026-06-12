@@ -61,8 +61,86 @@ class YFinanceProvider(MarketDataProvider):
         df['symbol'] = symbol
         return df
 
+    async def get_historical_data(self, symbol: str, period: str = "1y", interval: str = "1d") -> pd.DataFrame:
+        """
+        Fetch historical data with local Parquet caching.
+        """
+        ticker = self._get_ticker(symbol)
+        
+        # Local File Cache Logic
+        import os
+        import time
+        cache_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../data/ohlcv_cache"))
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        # Sanitize filename
+        safe_ticker = ticker.replace("^", "").replace(".", "_")
+        cache_file = os.path.join(cache_dir, f"{safe_ticker}_{period}_{interval}.parquet")
+        
+        use_cache = False
+        if os.path.exists(cache_file):
+            file_age = time.time() - os.path.getmtime(cache_file)
+            if file_age < 3600 * 12: # 12 hours cache
+                use_cache = True
+                
+        def _fetch():
+            if use_cache:
+                try:
+                    df = pd.read_parquet(cache_file)
+                    if not df.empty:
+                        return df
+                except Exception as e:
+                    print(f"Parquet Cache Read Error: {e}")
+                    
+            # Fallback to YFinance
+            t = yf.Ticker(ticker)
+            df = t.history(period=period, interval=interval)
+            
+            if df.empty:
+                return df
+                
+            df = df.reset_index()
+            df = df.rename(columns={df.columns[0]: 'time'})
+            df.columns = [c.lower() for c in df.columns]
+            df['symbol'] = symbol
+            
+            # Save to Cache
+            try:
+                df.to_parquet(cache_file, index=False)
+            except Exception as e:
+                print(f"Parquet Cache Write Error: {e}")
+                
+            return df
+            
+        return await asyncio.to_thread(_fetch)
+
     async def get_options_chain(self, symbol: str, expiry: str) -> dict:
-        return {"error": "Options chain not fully supported via yfinance for NSE"}
+        ticker = self._get_ticker(symbol)
+        def _fetch():
+            try:
+                t = yf.Ticker(ticker)
+                # If expiry is not provided, use the first available expiry
+                if not expiry:
+                    expirations = t.options
+                    if not expirations:
+                        return {"error": "No options expirations found."}
+                    expiry = expirations[0]
+                
+                chain = t.option_chain(expiry)
+                calls = chain.calls.to_dict(orient="records") if not chain.calls.empty else []
+                puts = chain.puts.to_dict(orient="records") if not chain.puts.empty else []
+                
+                return {
+                    "symbol": symbol,
+                    "expiry": expiry,
+                    "calls": calls,
+                    "puts": puts,
+                    "provider": "yfinance"
+                }
+            except Exception as e:
+                return {"error": str(e)}
+                
+        return await asyncio.to_thread(_fetch)
 
     async def get_futures_data(self, symbol: str, expiry: str | None = None) -> dict:
         ticker = self._get_ticker(symbol)

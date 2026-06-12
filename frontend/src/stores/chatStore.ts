@@ -8,13 +8,13 @@ interface ChatState {
   isStreaming: boolean;
   sessionId: string;
   sendMessage: (msg: string) => Promise<void>;
-  appendToken: (token: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   isStreaming: false,
   sessionId: crypto.randomUUID(),
+
   sendMessage: async (msg) => {
     set((state) => ({
       messages: [...state.messages, { id: crypto.randomUUID(), role: 'user', content: msg, timestamp: Date.now() }],
@@ -28,9 +28,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         messages: [...state.messages, { id: crypto.randomUUID(), role: 'agent', content, timestamp: Date.now() }],
         isStreaming: false,
       }))
-      
-      // Refresh backtest data from the backend in case the agent ran a backtest
-      await useBacktestStore.getState().fetchLatestBacktest();
+      await useBacktestStore.getState().fetchLatestBacktest()
     } catch (error) {
       set((state) => ({
         messages: [...state.messages, { id: crypto.randomUUID(), role: 'agent', content: `Error: ${String(error)}`, timestamp: Date.now() }],
@@ -38,8 +36,4 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }))
     }
   },
-  appendToken: (_token) => set((state) => {
-    return state;
-  })
 }))
-

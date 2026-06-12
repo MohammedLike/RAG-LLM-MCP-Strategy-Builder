@@ -63,20 +63,6 @@ SELECT create_hypertable('options_chain', 'time', if_not_exists => TRUE);
 CREATE INDEX IF NOT EXISTS ix_options_chain_query 
 ON options_chain (symbol, expiry, strike, time DESC);
 
--- Create backtests table to store results
-CREATE TABLE IF NOT EXISTS backtests (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    strategy_id UUID REFERENCES strategies(id),
-    user_request_json JSONB, -- The original AI/User request
-    status TEXT DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed'
-    metrics JSONB, -- Sharpe, Sortino, MaxDD, etc.
-    equity_curve JSONB, -- Time-series of portfolio value
-    trade_log JSONB, -- List of all executed trades
-    error_message TEXT,
-    started_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMPTZ
-);
-
 -- Create strategies table
 CREATE TABLE IF NOT EXISTS strategies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -92,3 +78,17 @@ CREATE TABLE IF NOT EXISTS strategies (
 );
 
 CREATE INDEX IF NOT EXISTS ix_strategies_category ON strategies (category);
+
+-- Create backtests table to store results
+CREATE TABLE IF NOT EXISTS backtests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    strategy_id UUID REFERENCES strategies(id),
+    user_request_json JSONB, -- The original AI/User request
+    status TEXT DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed'
+    metrics JSONB, -- Sharpe, Sortino, MaxDD, etc.
+    equity_curve JSONB, -- Time-series of portfolio value
+    trade_log JSONB, -- List of all executed trades
+    error_message TEXT,
+    started_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMPTZ
+);

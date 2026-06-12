@@ -38,6 +38,16 @@ export const runBacktest = async (symbol: string, strategy_spec: object, period 
   return res.data;
 };
 
+export const runBacktestAsync = async (requests: any[]) => {
+  const res = await api.post('/backtest/async', requests);
+  return res.data;
+};
+
+export const pollBacktestResult = async (taskId: string) => {
+  const res = await api.get(`/backtest/async/${taskId}`);
+  return res.data;
+};
+
 export const fetchMcpTools = async () => {
   const res = await api.get('/mcp/tools');
   return res.data;
