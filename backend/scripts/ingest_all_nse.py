@@ -111,7 +111,7 @@ async def db_writer_task(db_queue, finish_event):
                     async with async_session() as session:
                         stmt = insert(OHLCV).values(chunk)
                         stmt = stmt.on_conflict_do_update(
-                            index_elements=['time', 'symbol', 'resolution'],
+                            constraint='ohlcv_unique_pk',
                             set_={
                                 'open': stmt.excluded.open,
                                 'high': stmt.excluded.high,
