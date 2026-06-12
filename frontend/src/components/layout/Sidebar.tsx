@@ -15,7 +15,6 @@ import {
 
 export type AppView =
   | 'dashboard'
-  | 'portfolio'
   | 'strategies'
   | 'my-algos'
   | 'backtest'
@@ -32,7 +31,6 @@ interface SidebarProps {
 
 const navItems: { id: AppView; label: string; icon: ReactNode; section?: string }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-  { id: 'portfolio', label: 'Portfolio', icon: <Briefcase size={18} /> },
   { id: 'strategies', label: 'Pre-Built Algos', icon: <Layers size={18} />, section: 'algos' },
   { id: 'my-algos', label: 'My Algos', icon: <Bot size={18} />, section: 'algos' },
   { id: 'backtest', label: 'Strategy Builder', icon: <Wrench size={18} /> },
@@ -112,9 +110,6 @@ export const Sidebar = ({ activeView, onNavigate, tradingMode, onTradingModeChan
           <div className="flex-1 min-w-0">
             <div className="text-xs font-semibold text-slate-900 truncate">Mohammed Like</div>
           </div>
-          <button className="p-1 text-muted hover:text-slate-700">
-            <Settings size={16} />
-          </button>
         </div>
       </div>
     </aside>

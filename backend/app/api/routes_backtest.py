@@ -1,6 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel
-from ..mcp.tool_run_backtest import run_backtest_tool, RunBacktestInput, LAST_BACKTEST
+from ..mcp.tool_run_backtest import run_backtest_tool, RunBacktestInput
+from ..mcp import tool_run_backtest
 from ..backtest.indicators import IndicatorManager
 from ..backtest.engine import BacktestEngine
 from ..backtest.cache import backtest_cache
@@ -33,14 +34,14 @@ async def get_indicators():
 
 @router.get("/backtest/latest")
 async def get_latest_backtest():
-    return LAST_BACKTEST
+    return tool_run_backtest.LAST_BACKTEST
 
 @router.post("/backtest")
 async def run_backtest(request: RunBacktestInput):
     summary = await run_backtest_tool(request)
     if "error" in summary:
         return summary
-    return LAST_BACKTEST
+    return tool_run_backtest.LAST_BACKTEST
 
 @router.post("/backtest/async")
 async def run_backtest_async(requests: list[AsyncBacktestRequest], background_tasks: BackgroundTasks):

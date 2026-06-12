@@ -42,6 +42,42 @@ class YFinanceProvider(MarketDataProvider):
         return await asyncio.to_thread(_fetch)
 
     async def get_ohlcv(self, symbol: str, interval: str, start: datetime, end: datetime) -> pd.DataFrame:
+        # Check database first
+        from ..db.session import async_session, is_db_available
+        from sqlalchemy import text
+        
+        if is_db_available():
+            try:
+                async with async_session() as session:
+                    # Normalize symbol (e.g., NIFTY instead of ^NSEI or NIFTY.NS)
+                    clean_symbol = symbol.replace("^", "").replace(".NS", "").upper()
+                    query = text("""
+                        SELECT time, open, high, low, close, volume
+                        FROM ohlcv
+                        WHERE (symbol = :symbol OR symbol = :clean_symbol)
+                          AND resolution = :resolution
+                          AND time >= :start
+                          AND time <= :end
+                        ORDER BY time ASC
+                    """)
+                    result = await session.execute(query, {
+                        "symbol": symbol,
+                        "clean_symbol": clean_symbol,
+                        "resolution": interval,
+                        "start": start,
+                        "end": end
+                    })
+                    rows = result.fetchall()
+                    if rows:
+                        print(f"Loaded {len(rows)} OHLCV rows for {symbol} ({interval}) from DB.")
+                        df = pd.DataFrame(rows, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
+                        df['symbol'] = symbol
+                        # Ensure column names are lowercase
+                        df.columns = [c.lower() for c in df.columns]
+                        return df
+            except Exception as e:
+                print(f"Error loading OHLCV from DB: {e}. Falling back to yfinance.")
+
         ticker = self._get_ticker(symbol)
         def _fetch():
             return yf.download(ticker, start=start, end=end, interval=interval)
@@ -60,6 +96,7 @@ class YFinanceProvider(MarketDataProvider):
         df.columns = [c.lower() for c in df.columns]
         df['symbol'] = symbol
         return df
+
 
     async def get_historical_data(self, symbol: str, period: str = "1y", interval: str = "1d") -> pd.DataFrame:
         """
