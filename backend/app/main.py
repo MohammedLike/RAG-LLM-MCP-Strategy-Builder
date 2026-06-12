@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .api import api_router
 
-app = FastAPI(title="Quant AI Agent API")
+app = FastAPI(title="Streak AI Quant API")
 
 app.add_middleware(
     CORSMiddleware,

@@ -18,17 +18,24 @@ class IndicatorManager:
     def apply_indicator(df: pd.DataFrame, name: str, params: dict = None) -> pd.Series:
         """
         Applies a TA-Lib or custom indicator to a DataFrame.
-        Expected columns: 'open', 'high', 'low', 'close', 'volume'
         """
         if params is None:
             params = {}
             
         name = name.upper()
         
-        # 1. Custom Indicators (non-TA-Lib)
+        # 1. Custom & Options Indicators
         if name == "VWAP":
             pv = df['close'] * df['volume']
             return pv.cumsum() / df['volume'].cumsum()
+
+        # Options Greeks (Assuming columns exist or need calculation)
+        if name in ["DELTA", "GAMMA", "THETA", "VEGA", "IV"]:
+            col_name = name.lower()
+            if col_name in df.columns:
+                return df[col_name]
+            # Fallback to zero if not provided in the data stream
+            return pd.Series(0.0, index=df.index)
             
         # 2. Look up TA-Lib function
         func = getattr(talib, name, None)

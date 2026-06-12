@@ -136,6 +136,7 @@ class BacktestEngine:
     def run(self, df: pd.DataFrame, strategy_spec: dict) -> dict:
         """
         Runs a vectorized backtest on the given DataFrame.
+        Supports entry/exit signals + stop loss and take profit.
         """
         # 1. Generate Signals
         entries = self.evaluate_rules(df, strategy_spec.get('entry', {}))
@@ -145,17 +146,24 @@ class BacktestEngine:
         entries = entries.astype(bool)
         exits = exits.astype(bool)
 
-        # 2. Run VectorBT Portfolio
+        # 2. Stop Loss and Take Profit
+        # These should be decimal fractions (e.g., 0.02 for 2%)
+        stop_loss = strategy_spec.get('stop_loss')
+        take_profit = strategy_spec.get('take_profit')
+        
+        # 3. Run VectorBT Portfolio
         portfolio = vbt.Portfolio.from_signals(
             df['close'],
             entries,
             exits,
+            sl_stop=stop_loss,
+            tp_stop=take_profit,
             fees=strategy_spec.get('fees', 0.001),
             slippage=strategy_spec.get('slippage', 0.001),
             freq='D'
         )
 
-        # 3. Extract Metrics
+        # 4. Extract Metrics
         stats = portfolio.stats()
         
         # Format returns to avoid NaN/Inf issues

@@ -11,11 +11,22 @@ class YFinanceProvider(MarketDataProvider):
         "NIFTY": "^NSEI",
         "BANKNIFTY": "^NSEBANK",
         "FINNIFTY": "CNXFIN.NS",
-        "SENSEX": "^BSESN"
+        "SENSEX": "^BSESN",
+        "NIFTY100": "^CNX100",
+        "NIFTY500": "^CRSLDX"
     }
 
     def _get_ticker(self, symbol: str) -> str:
-        return self.SYMBOL_MAP.get(symbol.upper(), f"{symbol.upper()}.NS")
+        symbol = symbol.upper()
+        if symbol in self.SYMBOL_MAP:
+            return self.SYMBOL_MAP[symbol]
+        
+        # If user explicitly provided suffix
+        if symbol.endswith(".NS") or symbol.endswith(".BO") or symbol.startswith("^"):
+            return symbol
+            
+        # Default to NSE
+        return f"{symbol}.NS"
 
     async def get_quote(self, symbol: str) -> dict:
         ticker = self._get_ticker(symbol)

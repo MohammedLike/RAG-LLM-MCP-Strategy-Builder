@@ -9,10 +9,10 @@ export const ChatPanel = () => {
   const [showThinkingMap, setShowThinkingMap] = useState<Record<string, boolean>>({});
 
   const suggestions = [
-    { label: "RSI Mean Reversion AAPL", text: "Run a backtest on AAPL using RSI below 30 to buy and RSI above 70 to exit." },
-    { label: "SMA Crossover RELIANCE", text: "Backtest a strategy on RELIANCE where SMA 20 crosses above SMA 50 to buy, and exits when it crosses below." },
-    { label: "Bollinger Breakout BTC", text: "Run a Bollinger Bands breakout backtest on BTC-USD for the past 5 years." },
-    { label: "How to optimize Sharpe?", text: "Analyze the last backtest results and suggest parameter changes to maximize the Sharpe ratio." }
+    { label: "RSI Bullish NIFTY 50", text: "Backtest NIFTY when RSI crosses above 40 and exit at 1% target profit." },
+    { label: "SMA Crossover RELIANCE", text: "Backtest RELIANCE where SMA 20 crosses above SMA 50. Use 2% stop loss." },
+    { label: "Supertrend BANKNIFTY", text: "Run a backtest on BANKNIFTY using Supertrend (7, 3) signals for the past 2 years." },
+    { label: "Optimization Advice", text: "Analyze the last backtest results and suggest parameter changes to maximize the Win Rate." }
   ];
 
   // Scroll to bottom on new messages
@@ -46,50 +46,53 @@ export const ChatPanel = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0b0f19] border border-slate-800 rounded-xl overflow-hidden shadow-xl text-slate-100">
+    <div className="flex flex-col h-full bg-[#0a0e17] text-slate-100">
       
       {/* Header */}
-      <div className="px-4 py-3.5 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
-            <Bot size={18} />
+      <div className="px-5 py-4 border-b border-slate-800/80 bg-slate-900/40 backdrop-blur-md flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded bg-[#00d09c]/10 border border-[#00d09c]/20 flex items-center justify-center text-[#00d09c]">
+            <Bot size={20} />
           </div>
           <div>
-            <div className="font-bold text-xs text-slate-100">AI Strategy Assistant</div>
-            <div className="text-[9px] text-slate-500 font-mono">DeepSeek-R1 Model Active</div>
+            <div className="font-black text-xs text-white uppercase tracking-tight">STREAK <span className="text-[#00d09c]">AI</span> ASSISTANT</div>
+            <div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">PRO SIMULATOR ACTIVE</div>
           </div>
         </div>
         <span className="flex h-2 w-2 relative">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00d09c] opacity-40"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00d09c]"></span>
         </span>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-950/20 scrollbar-thin scrollbar-thumb-slate-800">
+      <div className="flex-1 overflow-y-auto p-5 space-y-6 bg-slate-950/10 scrollbar-thin scrollbar-thumb-slate-800">
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col justify-center items-center text-center p-6 space-y-6">
-            <div className="h-12 w-12 rounded-full bg-blue-600/5 border border-blue-500/20 flex items-center justify-center text-blue-500/60">
-              <Bot size={28} />
+          <div className="h-full flex flex-col justify-center items-center text-center p-6 space-y-8">
+            <div className="h-16 w-16 rounded-3xl bg-[#00d09c]/5 border border-[#00d09c]/10 flex items-center justify-center text-[#00d09c]/40">
+              <Sparkles size={32} />
             </div>
             <div>
-              <h4 className="font-bold text-sm text-slate-300">Interact Directly with AI Backtester</h4>
-              <p className="text-xs text-slate-500 mt-1.5 max-w-xs leading-relaxed">
-                Describe a strategy in plain English, and the assistant will convert it to rules, execute the backtest, and display the charts!
+              <h4 className="font-black text-sm text-slate-200 uppercase tracking-tight">NLP QUANT ENGINE</h4>
+              <p className="text-xs text-slate-500 mt-2 max-w-[240px] leading-relaxed font-medium">
+                Describe any Indian market strategy in plain English. I'll transform it into vectors and simulate performance instantly.
               </p>
             </div>
             
             {/* Quick Actions suggestions */}
-            <div className="w-full space-y-2 text-left">
-              <div className="text-[9px] font-bold uppercase text-slate-600 tracking-wider mb-2 flex items-center gap-1">
-                <Sparkles size={10} /> Suggested Operations
+            <div className="w-full space-y-2.5 text-left">
+              <div className="text-[9px] font-black uppercase text-slate-600 tracking-widest mb-3 flex items-center gap-2">
+                <div className="h-px flex-1 bg-slate-800/80"></div>
+                Suggested Prompts
+                <div className="h-px flex-1 bg-slate-800/80"></div>
               </div>
               {suggestions.map((s, i) => (
                 <button
                   key={i}
                   onClick={() => handleSend(s.text)}
-                  className="w-full text-left bg-slate-900/50 hover:bg-[#11192e] border border-slate-800/80 hover:border-slate-700/60 p-2.5 rounded-lg text-[11px] text-slate-300 transition-all cursor-pointer"
+                  className="w-full text-left bg-slate-900/30 hover:bg-slate-800/50 border border-slate-800/80 hover:border-[#00d09c]/30 p-3 rounded-lg text-[11px] text-slate-400 font-bold transition-all cursor-pointer group"
                 >
+                  <span className="text-[#00d09c]/60 group-hover:text-[#00d09c] transition-colors mr-2">/</span>
                   {s.label}
                 </button>
               ))}
@@ -105,24 +108,24 @@ export const ChatPanel = () => {
               <div key={msg.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
                 {/* Message Bubble */}
                 <div
-                  className={`max-w-[90%] px-3.5 py-2.5 rounded-xl text-xs leading-relaxed shadow-sm ${
+                  className={`max-w-[92%] px-4 py-3 rounded-lg text-xs leading-relaxed shadow-lg ${
                     isUser
-                      ? 'bg-blue-600 text-white rounded-br-none'
-                      : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'
+                      ? 'bg-[#00d09c] text-[#06090f] font-bold rounded-tr-none'
+                      : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'
                   }`}
                 >
                   {/* Thinking Section */}
                   {thinking && !isUser && (
-                    <div className="mb-3 border-b border-slate-800/80 pb-2">
+                    <div className="mb-4 border-b border-slate-800/80 pb-3">
                       <button
                         onClick={() => toggleThinking(msg.id)}
-                        className="flex items-center gap-1 text-[9px] text-slate-400 font-bold uppercase tracking-wider hover:text-slate-200 cursor-pointer"
+                        className="flex items-center gap-2 text-[9px] text-[#00d09c] font-black uppercase tracking-widest hover:text-[#00d09c]/80 cursor-pointer"
                       >
                         {isThinkingOpen ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
-                        Reasoning Process
+                        REASONING LOG
                       </button>
                       {isThinkingOpen && (
-                        <div className="mt-1.5 font-mono text-[9px] text-slate-500 bg-slate-950 p-2 rounded max-h-[120px] overflow-y-auto whitespace-pre-wrap leading-normal border border-slate-950">
+                        <div className="mt-2.5 font-mono text-[10px] text-slate-500 bg-slate-950 p-3 rounded leading-normal border border-slate-900 overflow-x-auto">
                           {thinking}
                         </div>
                       )}
@@ -130,7 +133,7 @@ export const ChatPanel = () => {
                   )}
 
                   {/* Main Text Content */}
-                  <div className="whitespace-pre-wrap text-slate-200 font-sans leading-relaxed">
+                  <div className="whitespace-pre-wrap font-medium leading-relaxed">
                     {mainContent}
                   </div>
                 </div>
@@ -140,40 +143,41 @@ export const ChatPanel = () => {
         )}
         
         {isStreaming && (
-          <div className="flex items-center gap-2 text-slate-400 text-xs bg-slate-900/40 p-3 rounded-lg border border-slate-800/60 max-w-[150px]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            <span className="font-mono text-[10px]">Thinking...</span>
+          <div className="flex items-center gap-3 text-slate-500 bg-slate-900/50 p-3 rounded-lg border border-slate-800/80 max-w-[160px]">
+            <div className="flex gap-1">
+              <span className="h-1 w-1 bg-[#00d09c] rounded-full animate-bounce" style={{ animationDelay: '0s' }}></span>
+              <span className="h-1 w-1 bg-[#00d09c] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+              <span className="h-1 w-1 bg-[#00d09c] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+            </div>
+            <span className="font-black text-[9px] uppercase tracking-widest">Simulating...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Form */}
-      <div className="p-3 border-t border-slate-800/80 bg-slate-900/40 backdrop-blur-md">
+      <div className="p-4 border-t border-slate-800/80 bg-slate-900/40">
         <div className="flex gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Type strategy rules or questions..."
+            placeholder="Type strategy (e.g. Backtest SBI RSI > 40)..."
             disabled={isStreaming}
-            className="flex-1 bg-slate-950 border border-slate-850 rounded-lg pl-3 pr-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+            className="flex-1 bg-slate-950 border border-slate-800 rounded pl-4 pr-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-[#00d09c]/50 disabled:opacity-50 font-medium"
           />
           <button
             onClick={() => handleSend()}
             disabled={isStreaming || !input.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 disabled:text-slate-500 text-white p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+            className="bg-[#00d09c] hover:bg-[#00b386] disabled:bg-slate-800 disabled:text-slate-600 text-[#06090f] p-2.5 rounded transition-all flex items-center justify-center cursor-pointer disabled:cursor-not-allowed shadow-lg"
           >
-            <Send size={14} />
+            <Send size={16} />
           </button>
         </div>
-        <div className="flex items-center gap-1 text-[9px] text-slate-500 mt-2 px-1">
+        <div className="flex items-center gap-2 text-[9px] text-slate-600 mt-3 font-bold uppercase tracking-tighter px-1">
           <AlertCircle size={10} />
-          <span>Formulates strategy JSON parameters dynamically.</span>
+          <span>Vectorized order execution based on NLP input</span>
         </div>
       </div>
     </div>

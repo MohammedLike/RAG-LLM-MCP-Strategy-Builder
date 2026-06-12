@@ -32,28 +32,33 @@ function App() {
   };
 
   return (
-    <div className="h-screen w-screen bg-[#070b13] flex flex-col font-sans overflow-hidden select-none">
+    <div className="h-screen w-screen bg-[#06090f] flex flex-col font-sans overflow-hidden select-none text-slate-200">
       {/* Top Glassmorphic Navigation Header */}
-      <header className="h-14 bg-[#0a0f1d]/75 border-b border-slate-800/80 px-6 flex items-center justify-between backdrop-blur-md z-10">
+      <header className="h-14 bg-[#0a0e17] border-b border-slate-800/60 px-6 flex items-center justify-between z-10">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-            <Cpu size={18} className="animate-pulse" />
+          <div className="h-8 w-8 rounded bg-[#00d09c] flex items-center justify-center text-[#06090f] shadow-lg shadow-[#00d09c]/20">
+            <Cpu size={18} />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-slate-100 tracking-wide">ANTIGRAVITY</span>
-              <span className="bg-blue-600/20 text-blue-400 text-[8px] font-bold font-mono px-1.5 py-0.5 rounded border border-blue-500/35">
-                LABS v2.0
+              <span className="text-sm font-black text-white tracking-tighter">STREAK <span className="text-[#00d09c]">AI</span></span>
+              <span className="bg-[#00d09c]/10 text-[#00d09c] text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border border-[#00d09c]/30">
+                PRO v3.0
               </span>
             </div>
-            <p className="text-[10px] text-slate-500 mt-0.5">AI-Integrated Quantitative Backtesting Engine</p>
+            <p className="text-[10px] text-slate-500 font-medium">Next-Gen Indian Market Backtesting Engine</p>
           </div>
         </div>
         
         {/* Connection status */}
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-pulse"></span>
-          <span className="text-[10px] font-mono text-slate-400">NSE Provider: Online</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 px-3 py-1 bg-slate-800/40 rounded-full border border-slate-700/50">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#00d09c] shadow-[0_0_8px_rgba(0,208,156,0.6)]"></span>
+            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">NSE LIVE</span>
+          </div>
+          <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 hover:bg-slate-700 transition cursor-pointer">
+            <Settings2 size={14} className="text-slate-400" />
+          </div>
         </div>
       </header>
 
@@ -64,50 +69,50 @@ function App() {
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           
           {/* Workstation Tabs */}
-          <div className="flex bg-[#0b0f19] p-1 border border-slate-800 rounded-xl max-w-fit shadow-md">
+          <div className="flex bg-[#0a0e17] p-1 border border-slate-800/80 rounded-lg max-w-fit">
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded text-xs font-bold transition cursor-pointer ${
                 activeTab === 'dashboard'
-                  ? 'bg-blue-600 text-white shadow-sm'
+                  ? 'bg-[#00d09c] text-[#06090f]'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <LineChart size={14} />
-              Performance Visualizer
+              DASHBOARD
             </button>
             <button
               onClick={() => setActiveTab('builder')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded text-xs font-bold transition cursor-pointer ${
                 activeTab === 'builder'
-                  ? 'bg-blue-600 text-white shadow-sm'
+                  ? 'bg-[#00d09c] text-[#06090f]'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <Settings2 size={14} />
-              Strategy Builder
+              STRATEGY BUILDER
             </button>
             <button
               onClick={() => setActiveTab('gallery')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded text-xs font-bold transition cursor-pointer ${
                 activeTab === 'gallery'
-                  ? 'bg-blue-600 text-white shadow-sm'
+                  ? 'bg-[#00d09c] text-[#06090f]'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <Layers size={14} />
-              Prebuilt Gallery
+              DISCOVER
             </button>
             <button
               onClick={() => setActiveTab('indicators')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded text-xs font-bold transition cursor-pointer ${
                 activeTab === 'indicators'
-                  ? 'bg-blue-600 text-white shadow-sm'
+                  ? 'bg-[#00d09c] text-[#06090f]'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <BookOpen size={14} />
-              Indicators Catalog
+              INDICATORS
             </button>
           </div>
 
@@ -129,7 +134,7 @@ function App() {
         </div>
 
         {/* Right Side: AI Assistant Panel */}
-        <div className="w-[380px] min-w-[380px] h-full flex flex-col">
+        <div className="w-[400px] min-w-[400px] h-full flex flex-col bg-[#0a0e17] border border-slate-800/80 rounded-xl overflow-hidden shadow-2xl">
           <ChatPanel />
         </div>
       </div>
