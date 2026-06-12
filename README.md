@@ -29,9 +29,9 @@
    - 5.1 [Parsing Pipeline — AST Construction](#51-parsing-pipeline--ast-construction)
    - 5.2 [Operator Dispatch Table](#52-operator-dispatch-table)
    - 5.3 [Compiler State Machine](#53-compiler-state-machine)
-6. [VectorBT Execution Engine](#6-vectorbt-execution-engine)
+6. [VectorBT & Option Execution Engines](#6-vectorbt--option-execution-engines)
    - 6.1 [Signal Matrix Architecture](#61-signal-matrix-architecture)
-   - 6.2 [Portfolio Simulation Parameters](#62-portfolio-simulation-parameters)
+   - 6.2 [Option P&L Simulator & Greeks Modeller](#62-option-pl-simulator--greeks-modeller)
    - 6.3 [Performance Metrics Taxonomy](#63-performance-metrics-taxonomy)
 7. [Caching Architecture](#7-caching-architecture)
 8. [API Reference](#8-api-reference)
@@ -73,7 +73,7 @@ The platform architecture integrates five horizontally decoupled subsystems:
                        STRYKE X — SYSTEM LAYERS                              
 
                     L5 — PRESENTATION LAYER                               
-     index.html  Vanilla JS  High-DPI Canvas  Heatmap  Monaco IDE    
+     index.html  Vanilla JS  High-DPI Canvas  Heatmap  Custom DSL Input    
     
                                    REST / WebSocket (JSON)                  
     
@@ -86,7 +86,7 @@ The platform architecture integrates five horizontally decoupled subsystems:
     L3a — COGNITIVE LAYER           L3b — ANALYTICS ENGINE              
     Ollama  DeepSeek-R1             VectorBT  TA-Lib  NumPy           
     vLLM (prod)  BGE-M3             Dynamic Rule Compiler               
-    Qdrant (RAG)                     IndicatorManager                    
+    Qdrant (RAG)                     IndicatorManager  OptionsEngine     
       
                                                                             
       
@@ -110,7 +110,7 @@ flowchart TB
         UI[/"index.html  Vanilla JS Client"/]
         Canvas["High-DPI HTML5 Canvas\nEquity Curve  Drawdown Plot"]
         Heatmap["Monthly Return\nAnalytics Heatmap"]
-        Editor["Monaco-like\nStrategy DSL Editor"]
+        Editor["Custom DSL Input Box\nwith FinStocks.ai Styling"]
         UI --> Canvas
         UI --> Heatmap
         UI --> Editor
@@ -297,8 +297,9 @@ User NL Strategy Input
 | **Cache** | Redis 7 | 7.x | Sub-millisecond serialized JSON payloads; Lua scripting for atomic metric updates; native sorted sets for leaderboard analytics |
 | **Vector Store** | Qdrant | 1.9+ | HNSW index; hybrid dense+sparse retrieval; payload filtering; Rust core for zero-copy deserialization |
 | **Embeddings** | BGE-M3 | 1024-dim | Multi-lingual, multi-granularity; outperforms OpenAI `text-embedding-3-small` on MTEB financial retrieval benchmarks |
-| **LLM (Dev)** | Ollama + DeepSeek-R1 | R1-7B | On-prem; zero API cost; chain-of-thought reasoning tokens improve strategy hypothesis quality |
+| **LLM (Dev)** | Ollama + DeepSeek-R1 | R1-8B | On-prem; zero API cost; chain-of-thought reasoning tokens improve strategy hypothesis quality |
 | **LLM (Prod)** | vLLM | 0.5+ | Continuous batching; PagedAttention KV cache; 24x throughput over naive Transformers inference |
+| **Frontend UI** | HTML5 / CSS3 / Vanilla JS | — | Responsive client styled after the **FinStocks.ai** dark scheme, with canvas-based charting and custom inputs. |
 | **Containerization** | Docker Compose | v2 | Service isolation; reproducible builds; volume mounts for persistent data |
 
 ---
@@ -622,7 +623,7 @@ STAGE 4 — BOOLEAN SIGNAL MATRIX GENERATION
 
 ---
 
-## 6. VectorBT Execution Engine
+## 6. VectorBT & Option Execution Engines
 
 ### 6.1 Signal Matrix Architecture
 
@@ -633,7 +634,7 @@ OHLCV DataFrame [T  5]          Entry Conditions             Exit Conditions
   t    ...  ...   ...  c                              AND   
   t    ...  ...   ...  c         bool_array_E                bool_array_X
   ...                               [entry_condition_2]           [exit_condition_2]
-  t    ...  ...   ...  c                                AND   
+  t    ...  ...   ...  c         
                                     bool_array_E                bool_array_X
                                                                       
                                           logical_operator            logical_operator
@@ -653,28 +654,20 @@ OHLCV DataFrame [T  5]          Entry Conditions             Exit Conditions
                                           )
 ```
 
-### 6.2 Portfolio Simulation Parameters
+### 6.2 Option P&L Simulator & Greeks Modeller
 
-| Parameter | Symbol | Type | Description |
-|---|---|---|---|
-| `sl_stop` | δ_SL | `float` | Stop-loss as fraction of entry price: `exit if price < entry  (1 - δ_SL)` |
-| `tp_stop` | δ_TP | `float` | Take-profit fraction: `exit if price > entry  (1 + δ_TP)` |
-| `fees` | f | `float` | One-way commission fraction applied at entry AND exit |
-| `slippage` | s | `float` | Symmetric price impact applied as fraction of execution price |
-| `freq` | — | `str` | Pandas offset alias for annualisation of Sharpe/Sortino: `'D'` = 252 trading days |
-| `init_cash` | C | `float` | Starting capital; default `100.0` (returns normalised) |
-| `size` | — | `float` | Position size as fraction of portfolio equity; default `1.0` (full Kelly) |
+For option strategy templates (e.g. weekly ATM Straddles or Strangles), the backend routes simulations to `backend/app/backtest/options_engine.py` which models option premium decay, stop loss, and take profit targets.
 
-**Effective round-trip cost model:**
-```
-Net Return per Trade = (P_exit / P_entry) - 1
-                     - 2  fees             (entry + exit commission)
-                     - 2  slippage         (bilateral price impact)
-
-At fees=0.001, slippage=0.001:
-  Gross edge required to break even:  0.40% per trade
-  NSE F&O realistic estimate: 0.03–0.05% (STT + brokerage + impact)
-```
+When live or historical options premiums are unavailable, the system invokes `backend/app/market/greeks.py` to calculate option pricing and Greeks on-the-fly using the Black-Scholes-Merton model:
+* **Volatility (σ)**: Rolling 20-day historical volatility computed from underlying spot returns.
+* **Risk-free rate (r)**: Constant `6.0%` - `6.5%`.
+* **Time-to-expiry (T)**: Normalized days to expiration (DTE) in years.
+* **Greeks calculated**:
+  * **Delta (Δ)**: Spot price sensitivity.
+  * **Gamma (Γ)**: Delta sensitivity to spot price.
+  * **Theta (Θ)**: Decaying time value.
+  * **Vega (ν)**: Volatility sensitivity.
+  * **Rho (ρ)**: Interest rate sensitivity.
 
 ### 6.3 Performance Metrics Taxonomy
 
@@ -746,7 +739,6 @@ Request arrives at BacktestEngine
 **Redis Cache Policy:**
 * `SET cache_key payload EX 3600` — 1-hour TTL for backtest results.
 * `SET ohlcv:{sym}:{res} payload EX 86400` — 24-hour TTL for raw OHLCV.
-* `ZSET leaderboard:sharpe {run_id: sharpe}` — Sorted set for ranking.
 
 ---
 
@@ -846,19 +838,6 @@ interface BacktestResponse {
   computation_ms:   number;
 }
 ```
-
-### Endpoint: `POST /api/strategy/generate`
-Uses the LLM + RAG pipeline to synthesise a strategy spec from a natural-language hypothesis.
-
-**Request:**
-```json
-{
-  "hypothesis": "Buy NIFTY when RSI is oversold below 30 and price is above 200 EMA, sell when RSI reaches 70",
-  "risk_profile": "conservative",
-  "universe": "NIFTY"
-}
-```
-**Response:** Full `BacktestRequest.strategy_spec` JSONB, plus the chain-of-thought reasoning tokens.
 
 ---
 
@@ -1074,7 +1053,7 @@ Signal matrix, 3 conditions, 1260 T   2  ms        —
 VectorBT simulation, 1260 T           8  ms        —
 Full backtest (cache miss)            ~80 ms       ~12 RPS
 Full backtest (cache hit, Redis)      <1 ms        >1,000 RPS
-LLM strategy generation (R1-7B)       3–8 sec      ~0.2 RPS
+LLM strategy generation (R1-8B)       3–8 sec      ~0.2 RPS
 Qdrant top-5 retrieval (1M vectors)   ~2 ms        —
 ```
 
@@ -1094,15 +1073,13 @@ Q3 2025 — CORE ENGINE HARDENING
   [ ] Monte Carlo stress testing module
   [ ] Parameter sensitivity surface charts
 
-Q4 2025 — OPTIONS ANALYTICS LAYER
-  [ ] Black-Scholes-Merton pricing engine
-  [ ] Greeks computation: Δ, Γ, Θ, ν, ρ
-  [ ] IV surface builder (strike  expiry grid)
+Q4 2025 — OPTIONS ANALYTICS & GREEKS ENGINE
+  [x] Black-Scholes-Merton option pricing engine
+  [x] Greeks computation: Delta (Δ), Gamma (Γ), Theta (Θ), Vega (ν), Rho (ρ)
+  [x] Options strategy P&L simulator (ATM/OTM straddles, Strangles)
+  [ ] Live IV surface builder (strike  expiry grid)
   [ ] Max Pain calculator (NSE weekly expiry)
-  [ ] PCR (Put-Call Ratio) analytics
-  [ ] Options strategy P&L simulator:
-        Short Straddle, Iron Condor, Iron Fly,
-        Calendar Spread, Ratio Spread
+  [ ] Put-Call Ratio (PCR) analytics
 
 Q1 2026 — EXECUTION INTELLIGENCE
   [ ] DhanHQ WebSocket live feed integration
@@ -1187,7 +1164,7 @@ CACHE_TTL_OHLCV=86400
 
 # LLM
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=deepseek-r1:7b
+OLLAMA_MODEL=deepseek-r1:8b
 VLLM_BASE_URL=http://localhost:8080    # production
 
 # Vector Store
@@ -1230,7 +1207,7 @@ docker exec -it quant_backend python scripts/ingest_historical.py \
 
 # 5. Pull and serve the reasoning model
 docker compose up -d ollama
-docker exec -it stryke-ollama ollama pull deepseek-r1:7b
+docker exec -it stryke-ollama ollama pull deepseek-r1:8b
 
 # 6. Seed strategy templates
 docker exec -it quant_backend python scripts/seed_auto_strategies.py
