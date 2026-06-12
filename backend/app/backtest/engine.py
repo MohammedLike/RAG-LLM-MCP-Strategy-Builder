@@ -146,6 +146,10 @@ class BacktestEngine:
             opt_engine = OptionsEngine()
             return opt_engine.run(df, strategy_spec)
 
+        # Set index to time for VectorBT to handle timestamps correctly
+        if 'time' in df.columns:
+            df = df.set_index('time')
+
         # 1. Generate Signals
         entries = self.evaluate_rules(df, strategy_spec.get('entry', {}))
         exits = self.evaluate_rules(df, strategy_spec.get('exit', {}))
@@ -184,7 +188,7 @@ class BacktestEngine:
                 return default
 
         # Map index elements to ISO date strings for charts
-        time_index = df['time']
+        time_index = df.index
         
         # Build clean lists of value curve and drawdowns
         value_curve = portfolio.value()
@@ -192,7 +196,7 @@ class BacktestEngine:
         
         equity_curve = []
         for i, val in enumerate(value_curve):
-            t_val = time_index.iloc[i]
+            t_val = time_index[i]
             # convert timestamp/datetime to string
             if hasattr(t_val, 'strftime'):
                 date_str = t_val.strftime('%Y-%m-%d')
@@ -202,7 +206,7 @@ class BacktestEngine:
             
         drawdown_list = []
         for i, val in enumerate(drawdown_curve):
-            t_val = time_index.iloc[i]
+            t_val = time_index[i]
             if hasattr(t_val, 'strftime'):
                 date_str = t_val.strftime('%Y-%m-%d')
             else:
@@ -215,16 +219,16 @@ class BacktestEngine:
             trades_list = []
             for _, r in trades_df.iterrows():
                 trades_list.append({
-                    "id": int(r.get('Trade Id', 0)),
+                    "id": int(r.get('Exit Trade Id', 0)),
                     "entry_date": str(r.get('Entry Timestamp')).split(' ')[0],
                     "exit_date": str(r.get('Exit Timestamp')).split(' ')[0],
-                    "direction": "Long",
-                    "entry_price": safe_float(r.get('Entry Price')),
-                    "exit_price": safe_float(r.get('Exit Price')),
+                    "direction": r.get('Direction', 'Long'),
+                    "entry_price": safe_float(r.get('Avg Entry Price')),
+                    "exit_price": safe_float(r.get('Avg Exit Price')),
                     "pnl": safe_float(r.get('PnL')),
-                    "pnl_pct": safe_float(r.get('Return [%]')),
+                    "pnl_pct": safe_float(r.get('Return')) * 100.0,
                     "size": safe_float(r.get('Size')),
-                    "duration_days": safe_float(r.get('Duration'))
+                    "duration_days": str(r.get('Duration'))
                 })
         except Exception as e:
             print(f"Error parsing trades: {e}")

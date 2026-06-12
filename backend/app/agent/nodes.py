@@ -27,7 +27,11 @@ async def reason_node(state: AgentState):
         tool_calls = [{
             "id": "call_nl_parsed",
             "name": "run_backtest",
-            "args": parsed.get("params", {})
+            "args": {
+                "strategy_spec": parsed.get("strategy_spec"),
+                "symbol": parsed.get("symbol"),
+                "period": parsed.get("period", "1y")
+            }
         }]
         ai_msg.tool_calls = tool_calls
         return {"messages": [ai_msg], "tool_calls": tool_calls, "retrieved_context": []}
