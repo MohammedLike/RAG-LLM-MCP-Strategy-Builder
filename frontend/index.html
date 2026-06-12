@@ -1831,7 +1831,7 @@
       <!-- 2. STRATEGY TEMPLATES VIEW (Strategy Library) -->
       <div id="view-templates" class="view">
         <div class="page-header">
-          <div class="page-title">Strategy Library</div>
+          <div class="page-title">Indicator Based Library</div>
           <div class="page-sub">Pre-built, battle-tested strategies. Click to inspect performance, then load into the backtest engine.</div>
         </div>
         <div class="filter-bar">
@@ -2052,153 +2052,8 @@
   const API_BASE = `${window.location.protocol}//${window.location.hostname}:8001/api`;
 
   // Fallback Templates Dataset (Page 1 to 4, total 36 items)
-  let TEMPLATES = [
-    {
-      id: 1, category: 'swing', name: 'MACD Histogram Rising + Uptrend Swing',
-      pnl: '+22.8%', wr: '82%', symbol: 'NIFTY100',
-      desc: 'Buy when MACD histogram > prev bar AND histogram > 0 AND EMA50 > EMA200 AND ADX > 22 AND RSI >= 45. Indicator exit when histogram turns negative.',
-      strategy: 'Buy when macd_histogram > prev_macd_histogram AND macd_histogram > 0 AND ema50 > ema200 AND adx_14 > 22 AND rsi14 >= 45. Exit when macd_histogram < 0. Hard TP 10%, SL 7%.',
-      metrics: { total: '+22.80%', best: 'May: +8.28%', worst: 'Oct: -7.30%' },
-      heatmap: {
-        2025: [5.24, 0.15, -0.77, -3.66, 8.28, 2.37, 6.22, -4.23, 4.77, -7.30, 3.40, -3.00],
-        2024: [4.12, -1.20, 3.45, 2.10, 6.15, -2.10, 5.30, 1.05, -0.50, 4.20, 2.30, 3.10]
-      }
-    },
-    {
-      id: 2, category: 'swing', name: 'MFI Oversold + EMA Trend',
-      pnl: '+14.8%', wr: '81%', symbol: 'NIFTY50',
-      desc: 'Buy when MFI(14) < 40 AND EMA50 > EMA200 AND close > EMA50 AND ADX > 20 AND RSI >= 40. Momentum exit.',
-      strategy: 'Buy NIFTY when MFI(14) is below 40, price above 50 and 200 EMA, ADX above 20. Exit when MFI crosses above 70 or price drops below 50 EMA.',
-      metrics: { total: '+14.80%', best: 'Mar: +6.12%', worst: 'Sep: -5.10%' },
-      heatmap: {
-        2025: [3.10, 1.80, 6.12, -2.30, 4.50, 1.20, 3.80, -1.50, -5.10, 2.10, 0.90, -0.50],
-        2024: [1.20, 2.45, -0.80, 1.50, 4.10, 1.90, 3.20, -2.10, 1.10, -3.10, 1.85, 2.15]
-      }
-    },
-    {
-      id: 3, category: 'swing', name: 'ATR Expansion + Breakout Swing',
-      pnl: '+13.0%', wr: '81%', symbol: 'NIFTY50',
-      desc: 'Buy when ATR(14) > prev ATR AND close > EMA21 AND EMA50 > EMA200 AND ADX > 22. Volatility expansion entry.',
-      strategy: 'Buy NIFTY when ATR is expanding (ATR > previous ATR), price above 21 EMA and 200 EMA, ADX above 22. Exit when ATR contracts or price falls below 21 EMA.',
-      metrics: { total: '+13.00%', best: 'Jul: +5.90%', worst: 'Nov: -4.20%' },
-      heatmap: {
-        2025: [2.40, 3.10, -1.20, 1.80, 5.90, 0.60, 5.90, -2.80, 1.30, -4.20, 1.70, -2.30],
-        2024: [1.80, 1.20, 2.40, -1.50, 3.60, 1.10, 4.20, 0.90, -2.10, -3.10, 1.40, 1.80]
-      }
-    },
-    {
-      id: 4, category: 'intraday', name: 'Opening Range Breakout — BANKNIFTY',
-      pnl: '+19.2%', wr: '67%', symbol: 'BANKNIFTY',
-      desc: 'Buy when price breaks above first 15-min candle high. Short when it breaks below low. Mandatory EOD exit at 3:15 PM.',
-      strategy: 'Intraday BANKNIFTY: Enter long when price breaks above the first 15-minute candle high with volume surge. Short when price breaks below first candle low. Exit EOD at 3:15 PM or 1% stop loss.',
-      metrics: { total: '+19.20%', best: 'Jan: +9.10%', worst: 'Jun: -6.40%' },
-      heatmap: {
-        2025: [9.10, -2.30, 4.50, 3.20, -1.80, -6.40, 5.60, 2.10, 3.80, -4.50, 1.20, 3.70],
-        2024: [3.40, 4.10, -2.10, 6.20, 1.80, -4.50, 5.10, 1.95, -3.10, 2.10, 1.10, 2.80]
-      }
-    },
-    {
-      id: 5, category: 'options', name: 'Weekly Short Straddle — NIFTY',
-      pnl: '+31.4%', wr: '74%', symbol: 'NIFTY OPT',
-      desc: 'Sell ATM CE + PE every Monday at 9:45 AM. Close at Thursday 3 PM or 50% profit or 2x premium loss.',
-      strategy: 'Sell NIFTY ATM straddle every Monday at 9:45 AM. Target 50% of premium collected. Stop loss at 2x premium. Close position Thursday 3 PM if not triggered.',
-      metrics: { total: '+31.40%', best: 'Oct: +12.1%', worst: 'Feb: -9.80%' },
-      heatmap: {
-        2025: [-9.80, 4.20, 6.10, 3.80, 5.50, 2.10, 4.90, -2.30, 3.70, 12.10, 1.80, -0.70],
-        2024: [5.20, -6.10, 7.80, 4.10, 3.90, 1.10, 6.40, -1.25, 4.20, 8.50, 2.10, -0.50]
-      }
-    },
-    {
-      id: 6, category: 'swing', name: 'Pivot Support + RSI Confirmation',
-      pnl: '+10.9%', wr: '86%', symbol: 'NIFTY50',
-      desc: 'Buy when price bounces from pivot S1 support AND RSI > 42 AND EMA50 > EMA200. High win rate regime filter.',
-      strategy: 'Buy NIFTY when price is near pivot S1 support level, RSI(14) above 42, and 50 EMA above 200 EMA. Exit at pivot R1 or when RSI drops below 35.',
-      metrics: { total: '+10.90%', best: 'May: +4.80%', worst: 'Aug: -3.20%' },
-      heatmap: {
-        2025: [1.80, 0.90, 2.30, -1.20, 4.80, 1.10, 2.50, -3.20, 1.90, 0.70, -0.50, -0.20],
-        2024: [0.90, 1.10, 1.50, -0.80, 3.10, 0.95, 1.80, -2.10, 1.40, 0.90, 0.30, 0.15]
-      }
-    },
-    {
-      id: 7, category: 'intraday', name: 'VWAP Reversal — NIFTY',
-      pnl: '+16.5%', wr: '71%', symbol: 'NIFTY50',
-      desc: 'Long when price dips to VWAP and bounces with bullish candle. Short when rejected at VWAP. 5-min timeframe.',
-      strategy: 'Buy NIFTY on 5-min chart when price touches VWAP from above and shows bullish rejection (hammer, engulfing). Short when price tests VWAP from below and shows bearish rejection. SL 0.3%, target 0.6%.',
-      metrics: { total: '+16.50%', best: 'Mar: +7.20%', worst: 'May: -5.10%' },
-      heatmap: {
-        2025: [3.40, 2.10, 7.20, -1.90, -5.10, 2.80, 4.10, -0.80, 2.30, 1.50, 0.60, 0.30],
-        2024: [1.80, 1.20, 5.10, -2.30, -3.10, 1.90, 3.20, -0.40, 1.65, 2.10, 0.80, 0.50]
-      }
-    },
-    {
-      id: 8, category: 'longterm', name: 'EMA50 Reclaim + Momentum',
-      pnl: '+25.4%', wr: '79%', symbol: 'NIFTY100',
-      desc: 'Buy when NIFTY 100 stocks reclaim 50-day EMA after being below it for 5+ days. Momentum + volume confirmation.',
-      strategy: 'Buy NIFTY 100 stocks when price reclaims the 50-day EMA after being below it for at least 5 trading sessions. Requires volume 1.5x the 20-day average. Hold until price drops below 50 EMA again.',
-      metrics: { total: '+25.40%', best: 'Nov: +8.30%', worst: 'Apr: -4.10%' },
-      heatmap: {
-        2025: [4.20, 2.80, 3.10, -4.10, 5.60, 1.90, 2.40, -1.30, 3.80, 2.10, 8.30, -3.40],
-        2024: [2.10, 3.40, 2.90, -3.10, 4.25, 1.10, 1.80, -0.90, 2.30, 3.10, 6.40, -2.10]
-      }
-    },
-    {
-      id: 9, category: 'options', name: 'Iron Condor — Monthly Expiry',
-      pnl: '+28.7%', wr: '76%', symbol: 'NIFTY OPT',
-      desc: 'Sell OTM strangle + 2 strike hedge. Entry on 1st Monday of expiry month. Target 40% premium, stop at 100% loss.',
-      strategy: 'Sell NIFTY iron condor on first Monday of each monthly expiry. Sell 200-point OTM CE and PE, buy 300-point OTM for hedge. Close at 40% profit or 100% loss. No intraday adjustments.',
-      metrics: { total: '+28.70%', best: 'Jul: +7.10%', worst: 'Mar: -8.60%' },
-      heatmap: {
-        2025: [3.10, 2.40, -8.60, 4.20, 5.90, 1.70, 7.10, -2.30, 4.80, 3.30, 2.10, 5.00],
-        2024: [2.10, 1.80, -6.10, 3.10, 4.20, 1.15, 5.40, -1.10, 3.10, 2.10, 1.80, 4.10]
-      }
-    }
-  ];
-
-  // Helper generator to scale deterministic mock data for templates 10 to 36 (fallbacks)
-  function generateRemainingData() {
-    const categories = ['swing', 'intraday', 'options', 'longterm'];
-    const symbols = ['NIFTY', 'BANKNIFTY', 'RELIANCE', 'TCS', 'INFY'];
-    
-    for (let i = 10; i <= 36; i++) {
-      let seed = i;
-      function random() {
-        let x = Math.sin(seed++) * 10000;
-        return x - Math.floor(x);
-      }
-      
-      const cat = categories[Math.floor(random() * categories.length)];
-      const symbol = symbols[Math.floor(random() * symbols.length)];
-      const pnlNum = 8 + Math.floor(random() * 25);
-      const wrNum = 60 + Math.floor(random() * 28);
-      
-      let heatmap2025 = [];
-      let heatmap2024 = [];
-      for (let m = 0; m < 12; m++) {
-        heatmap2025.push(parseFloat(((pnlNum / 12) + (random() - 0.45) * 8).toFixed(2)));
-        heatmap2024.push(parseFloat((((pnlNum * 0.8) / 12) + (random() - 0.45) * 10).toFixed(2)));
-      }
-      
-      const bestM = "Jul: +" + (3 + random() * 6).toFixed(2) + "%";
-      const worstM = "Oct: -" + (2 + random() * 5).toFixed(2) + "%";
-
-      TEMPLATES.push({
-        id: i,
-        category: cat,
-        name: `Strategy Model #${i} — ${cat.toUpperCase()}`,
-        pnl: `+${pnlNum}.2%`,
-        wr: `${wrNum}%`,
-        symbol: symbol,
-        desc: `Rule-based model #${i} triggers entry on ${symbol} when indicators reach standard boundary crossovers in ${cat} intervals.`,
-        strategy: `Buy ${symbol} when RSI(14) < ${30 + (i % 10)} AND close > EMA50. Exit when RSI > 70. Stop loss 2%.`,
-        metrics: { total: `+${pnlNum}.20%`, best: bestM, worst: worstM },
-        heatmap: {
-          2025: heatmap2025,
-          2024: heatmap2024
-        }
-      });
-    }
-  }
-  generateRemainingData();
+  // Strategies Dataset (populated from database)
+  let TEMPLATES = [];
 
   // App global state variables
   let activeTemplate = null;
