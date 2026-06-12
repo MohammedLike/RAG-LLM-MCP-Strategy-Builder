@@ -2458,15 +2458,18 @@
     activeStrategySpec = activeTemplate.spec;
     document.getElementById('modalOverlay').classList.remove('open');
     showView('backtest');
+    runBacktest(); // Automatically run backtest on load
   }
 
   // Direct load from card buttons
   function loadDirectTemplate(id) {
     const t = TEMPLATES.find(x => x.id === id);
     if (t) {
+      activeTemplate = t; // Set active template to ensure spec is used
       document.getElementById('strategyInput').value = t.strategy;
       activeStrategySpec = t.spec;
       showView('backtest');
+      runBacktest(); // Automatically run backtest on load
     }
   }
 
