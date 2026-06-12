@@ -21,7 +21,7 @@ class OHLCV(Base):
 class OptionsChain(Base):
     __tablename__ = 'options_chain'
     
-    timestamp = Column(DateTime(timezone=True), primary_key=True)
+    time = Column(DateTime(timezone=True), primary_key=True)
     symbol = Column(String, primary_key=True)
     expiry = Column(Date, primary_key=True)
     strike = Column(Float, primary_key=True)

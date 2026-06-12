@@ -15,10 +15,11 @@ services:
     networks:
       - quant_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-quant_user} -d $${POSTGRES_DB:-quant_db}"]
+      test: ["CMD-SHELL", "pg_isready -U quant_user -d quant_db"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 20
+      start_period: 60s
 
   redis:
     image: redis:7-alpine
@@ -52,11 +53,6 @@ services:
     restart: unless-stopped
     networks:
       - quant_network
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:6333/readyz || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   ollama:
     image: ollama/ollama:latest
@@ -71,16 +67,12 @@ services:
     restart: unless-stopped
     networks:
       - quant_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     container_name: quant_backend
     ports:
       - "${BACKEND_PORT:-8001}:8000"
@@ -101,17 +93,18 @@ services:
       redis:
         condition: service_healthy
       qdrant:
-        condition: service_healthy
+        condition: service_started
       ollama:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
     networks:
       - quant_network
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8000/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 -O- http://localhost:8000/health || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 15
+      start_period: 15s
 
   frontend:
     build:
