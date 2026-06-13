@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Settings,
   Zap,
+  History,
 } from 'lucide-react';
 import '../dashboard/Dashboard.css';
 import { ThemeToggle } from './ThemeToggle';
@@ -20,6 +21,7 @@ export type AppView =
   | 'strategies'
   | 'my-algos'
   | 'backtest'
+  | 'history'
   | 'account'
   | 'contact'
   | 'faq';
@@ -36,6 +38,7 @@ const navItems: { id: AppView; label: string; icon: ReactNode; section?: string 
   { id: 'strategies', label: 'Strategy Library', icon: <Layers size={18} />, section: 'algos' },
   { id: 'my-algos', label: 'My Algos', icon: <Bot size={18} />, section: 'algos' },
   { id: 'backtest', label: 'Strategy Builder', icon: <Wrench size={18} /> },
+  { id: 'history', label: 'Backtest History', icon: <History size={18} /> },
   { id: 'account', label: 'My Account', icon: <User size={18} /> },
   { id: 'contact', label: 'Contact Us', icon: <Phone size={18} /> },
   { id: 'faq', label: 'FAQ', icon: <HelpCircle size={18} /> },

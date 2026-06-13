@@ -172,6 +172,15 @@ class BacktestEngine:
             take_profit = float(take_profit) / 100.0
         else:
             take_profit = None
+
+        trailing_stop = strategy_spec.get('trailing_stop')
+        if trailing_stop is not None and trailing_stop > 0:
+            trailing_stop = float(trailing_stop) / 100.0
+        else:
+            trailing_stop = None
+
+        brokerage = strategy_spec.get('brokerage')
+        fees = float(brokerage if brokerage is not None else strategy_spec.get('fees', 0.001))
         
         # 3. Run VectorBT Portfolio
         portfolio = vbt.Portfolio.from_signals(
@@ -180,7 +189,8 @@ class BacktestEngine:
             exits,
             sl_stop=stop_loss,
             tp_stop=take_profit,
-            fees=float(strategy_spec.get('fees', 0.001)),
+            tsl_stop=trailing_stop,
+            fees=fees,
             slippage=float(strategy_spec.get('slippage', 0.001)),
             freq='D'
         )

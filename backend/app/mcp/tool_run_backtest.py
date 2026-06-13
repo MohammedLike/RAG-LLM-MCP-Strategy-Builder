@@ -105,6 +105,9 @@ async def run_backtest_tool(input_data: RunBacktestInput) -> dict:
         data_start = str(df["time"].iloc[0])[:10] if "time" in df.columns else None
         data_end = str(df["time"].iloc[-1])[:10] if "time" in df.columns else None
 
+        from ..backtest.metrics import compute_monthly_returns_by_year
+        monthly_returns = compute_monthly_returns_by_year(result.get("equity_curve") or [])
+
         LAST_BACKTEST = {
             "symbol": input_data.symbol,
             "period": input_data.period,
@@ -116,6 +119,7 @@ async def run_backtest_tool(input_data: RunBacktestInput) -> dict:
             "data_start": data_start,
             "data_end": data_end,
             "ohlcv": serialize_ohlcv(df),
+            "monthly_returns": monthly_returns,
             **result
         }
 
