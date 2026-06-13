@@ -8,6 +8,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        legacy: 'legacy.html',
+      },
+    },
+  },
   server: {
     host: '0.0.0.0',
     port: 5075,

@@ -36,6 +36,7 @@ export interface BacktestResult {
   period: string;
   strategy_spec: any;
   timestamp?: string;
+  label?: string;
   total_return: number;
   benchmark_return: number;
   cagr: number;
@@ -52,6 +53,9 @@ export interface BacktestResult {
   equity_curve: EquityPoint[];
   drawdown: EquityPoint[];
   trades: Trade[];
+  ohlcv?: { time: string; open: number; high: number; low: number; close: number; volume?: number }[];
+  monthly_returns?: Record<string, (number | null)[]>;
+  backtest_id?: string;
 }
 
 export interface Indicator {

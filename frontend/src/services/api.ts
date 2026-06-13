@@ -48,6 +48,68 @@ export const pollBacktestResult = async (taskId: string) => {
   return res.data;
 };
 
+export const fetchBacktestHistory = async (limit = 50, symbol?: string) => {
+  const params: Record<string, string | number> = { limit };
+  if (symbol) params.symbol = symbol;
+  const res = await api.get('/backtest/history', { params });
+  return res.data;
+};
+
+export const fetchBacktestById = async (id: string) => {
+  const res = await api.get(`/backtest/${id}`);
+  return res.data;
+};
+
+export const optimizeBacktest = async (
+  symbol: string,
+  strategy_spec: object,
+  period: string,
+  param_grid?: Record<string, number[]>
+) => {
+  const res = await api.post('/backtest/optimize', {
+    symbol,
+    strategy_spec,
+    period,
+    param_grid,
+  });
+  return res.data;
+};
+
+export const compareBacktests = async (runs: object[]) => {
+  const res = await api.post('/backtest/compare', { runs });
+  return res.data;
+};
+
+export const runMonteCarlo = async (trades: object[], n_simulations = 1000) => {
+  const res = await api.post('/backtest/monte-carlo', { trades, n_simulations });
+  return res.data;
+};
+
+export const runWalkForward = async (
+  symbol: string,
+  strategy_spec: object,
+  period: string,
+  n_splits = 5
+) => {
+  const res = await api.post('/backtest/walk-forward', {
+    symbol,
+    strategy_spec,
+    period,
+    n_splits,
+  });
+  return res.data;
+};
+
+export const fetchOptionsPayoff = async (symbol: string, strategy_spec: object) => {
+  const res = await api.post('/backtest/payoff', { symbol, strategy_spec });
+  return res.data;
+};
+
+export const exportBacktest = async (format: string, result: object) => {
+  const res = await api.post('/pipeline/export', { format, result }, { responseType: 'blob' });
+  return res.data;
+};
+
 export const fetchMcpTools = async () => {
   const res = await api.get('/mcp/tools');
   return res.data;

@@ -43,6 +43,12 @@ export const StrategyBuilder = forwardRef<StrategyBuilderRef, StrategyBuilderPro
     const [period, setPeriod] = useState('2y');
     const [fees, setFees] = useState(0.001);
     const [slippage, setSlippage] = useState(0.001);
+    const [instrumentType, setInstrumentType] = useState<'EQUITY' | 'OPTION'>('EQUITY');
+    const [optionType, setOptionType] = useState('CE');
+    const [strike, setStrike] = useState('ATM');
+    const [stopLoss, setStopLoss] = useState(0);
+    const [takeProfit, setTakeProfit] = useState(0);
+    const [trailingStop, setTrailingStop] = useState(0);
 
     const [companies, setCompanies] = useState<{symbol: string, name: string, sector: string}[]>([]);
     const [symbolSearch, setSymbolSearch] = useState('');
@@ -138,6 +144,12 @@ export const StrategyBuilder = forwardRef<StrategyBuilderRef, StrategyBuilderPro
         if (spec.exit) setExitConditions(parseRules(spec.exit));
         if (spec.fees !== undefined) setFees(spec.fees);
         if (spec.slippage !== undefined) setSlippage(spec.slippage);
+        if (spec.stop_loss) setStopLoss(spec.stop_loss);
+        if (spec.take_profit) setTakeProfit(spec.take_profit);
+        if (spec.trailing_stop) setTrailingStop(spec.trailing_stop);
+        if (spec.instrument_type) setInstrumentType(spec.instrument_type);
+        if (spec.option_type) setOptionType(spec.option_type);
+        if (spec.strike) setStrike(spec.strike);
       },
 
       loadIndicatorToRule: (indicatorName: string, defaults: any, ruleType: 'entry' | 'exit') => {
@@ -201,7 +213,7 @@ export const StrategyBuilder = forwardRef<StrategyBuilderRef, StrategyBuilderPro
         });
       };
 
-      const strategySpec = {
+      const strategySpec: any = {
         entry: {
           conditions: formatConditions(entryConditions),
           logical_operator: 'AND'
@@ -211,8 +223,17 @@ export const StrategyBuilder = forwardRef<StrategyBuilderRef, StrategyBuilderPro
           logical_operator: 'AND'
         },
         fees,
-        slippage
+        slippage,
+        instrument_type: instrumentType,
       };
+
+      if (stopLoss > 0) strategySpec.stop_loss = stopLoss;
+      if (takeProfit > 0) strategySpec.take_profit = takeProfit;
+      if (trailingStop > 0) strategySpec.trailing_stop = trailingStop;
+      if (instrumentType === 'OPTION') {
+        strategySpec.strike = strike;
+        strategySpec.option_type = optionType;
+      }
 
       await runBacktest(symbol, strategySpec, period);
       if (onBacktestCompleted) {
@@ -446,7 +467,7 @@ export const StrategyBuilder = forwardRef<StrategyBuilderRef, StrategyBuilderPro
         </div>
 
         {/* Parameters Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-950/40 p-4 border border-slate-800/80 rounded-lg">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 bg-slate-950/40 p-4 border border-slate-800/80 rounded-lg">
           <div className="relative">
             <label className="text-[9px] font-semibold text-slate-500 uppercase">Symbol</label>
             <input
@@ -518,6 +539,60 @@ export const StrategyBuilder = forwardRef<StrategyBuilderRef, StrategyBuilderPro
             </select>
           </div>
 
+          <div>
+            <label className="text-[9px] font-semibold text-slate-500 uppercase">Instrument</label>
+            <select
+              value={instrumentType}
+              onChange={(e) => setInstrumentType(e.target.value as 'EQUITY' | 'OPTION')}
+              className="w-full mt-1 bg-slate-900 border border-slate-700/80 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none"
+            >
+              <option value="EQUITY">Equity</option>
+              <option value="OPTION">Option</option>
+            </select>
+          </div>
+
+          {instrumentType === 'OPTION' && (
+            <>
+              <div>
+                <label className="text-[9px] font-semibold text-slate-500 uppercase">Option Type</label>
+                <select value={optionType} onChange={(e) => setOptionType(e.target.value)}
+                  className="w-full mt-1 bg-slate-900 border border-slate-700/80 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none">
+                  <option value="CE">Call (CE)</option>
+                  <option value="PE">Put (PE)</option>
+                  <option value="STRADDLE">Straddle</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[9px] font-semibold text-slate-500 uppercase">Strike</label>
+                <select value={strike} onChange={(e) => setStrike(e.target.value)}
+                  className="w-full mt-1 bg-slate-900 border border-slate-700/80 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none">
+                  <option value="ITM-2">ITM-2</option>
+                  <option value="ITM-1">ITM-1</option>
+                  <option value="ATM">ATM</option>
+                  <option value="OTM+1">OTM+1</option>
+                  <option value="OTM+2">OTM+2</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          <div>
+            <label className="text-[9px] font-semibold text-slate-500 uppercase">Stop Loss %</label>
+            <input type="number" step="0.5" value={stopLoss} onChange={(e) => setStopLoss(Number(e.target.value))}
+              className="w-full mt-1 bg-slate-900 border border-slate-700/80 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none" />
+          </div>
+
+          <div>
+            <label className="text-[9px] font-semibold text-slate-500 uppercase">Take Profit %</label>
+            <input type="number" step="0.5" value={takeProfit} onChange={(e) => setTakeProfit(Number(e.target.value))}
+              className="w-full mt-1 bg-slate-900 border border-slate-700/80 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none" />
+          </div>
+
+          <div>
+            <label className="text-[9px] font-semibold text-slate-500 uppercase">Trail Stop %</label>
+            <input type="number" step="0.5" value={trailingStop} onChange={(e) => setTrailingStop(Number(e.target.value))}
+              className="w-full mt-1 bg-slate-900 border border-slate-700/80 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none" />
+          </div>
           <div>
             <label className="text-[9px] font-semibold text-slate-500 uppercase">Fees %</label>
             <input

@@ -6,6 +6,7 @@ const titles: Record<AppView, string> = {
   strategies: 'Strategy Library',
   'my-algos': 'My Algos',
   backtest: 'Strategy Builder',
+  history: 'Backtest History',
   account: 'My Account',
   contact: 'Contact Us',
   faq: 'FAQ',

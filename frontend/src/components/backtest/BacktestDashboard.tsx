@@ -8,6 +8,7 @@ import { MonteCarloSimulation } from './MonteCarloSimulation';
 import { TradeDistribution } from './TradeDistribution';
 import { ParameterOptimizer } from './ParameterOptimizer';
 import { BacktestComparison } from './BacktestComparison';
+import { WalkForwardPanel } from './WalkForwardPanel';
 import {
   TradingViewChart,
   buildTradeMarkers,
@@ -193,6 +194,7 @@ export const BacktestDashboard = () => {
       {/* 2. Advanced Performance Tab */}
       {activeSubTab === 'performance' && (
         <div className="flex flex-col gap-4">
+          <WalkForwardPanel />
           <MonthlyReturnsHeatmap />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <RollingMetricsChart />

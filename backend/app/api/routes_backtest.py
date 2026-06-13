@@ -1,17 +1,23 @@
 from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from ..mcp.tool_run_backtest import run_backtest_tool, RunBacktestInput
 from ..mcp import tool_run_backtest
 from ..db.backtest_store import get_backtest_run, list_backtest_runs
 from ..db.task_store import task_store
 from ..backtest.indicators import IndicatorManager
+from ..backtest.advanced import run_monte_carlo, run_walk_forward, compare_backtest_results
+from ..backtest.options_payoff import compute_payoff_curve
+from ..backtest.optimizer import run_grid_search
+from ..market.provider_yfinance import YFinanceProvider
 from ..nl_parser import nl_parser
 from ..db.session import is_db_available
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 import html
 from typing import Optional
+
+_provider = YFinanceProvider()
 
 router = APIRouter()
 
@@ -34,6 +40,40 @@ class BacktestReportRequest(BaseModel):
     strategy_label: str = "Custom Strategy"
     strategy_text: str = ""
     result: dict
+
+class MonteCarloRequest(BaseModel):
+    trades: list[dict] = Field(default_factory=list)
+    n_simulations: int = 1000
+    initial_capital: float = 100.0
+
+class WalkForwardRequest(BaseModel):
+    strategy_spec: dict
+    symbol: str = "NIFTY"
+    period: str = "2y"
+    interval: str = "1d"
+    n_splits: int = 5
+    train_ratio: float = 0.7
+
+class CompareRequest(BaseModel):
+    runs: list[dict] = Field(default_factory=list)
+
+class OptimizeRequest(BaseModel):
+    strategy_spec: dict
+    symbol: str = "NIFTY"
+    period: str = "2y"
+    interval: str = "1d"
+    param_grid: dict[str, list] = Field(
+        default_factory=lambda: {
+            "stop_loss": [1.0, 2.0, 3.0, 4.0, 5.0],
+            "take_profit": [3.0, 5.0, 8.0, 10.0],
+        }
+    )
+    max_runs: int = 50
+
+class PayoffRequest(BaseModel):
+    symbol: str = "NIFTY"
+    strategy_spec: dict
+    spot: Optional[float] = None
 
 @router.get("/health/data")
 async def data_health():
@@ -183,3 +223,54 @@ async def get_backtest(backtest_id: str):
     if not row:
         return {"error": "Backtest not found", "id": backtest_id}
     return row
+
+
+async def _fetch_ohlcv(symbol: str, period: str, interval: str = "1d"):
+    days_map = {"1y": 365, "2y": 730, "5y": 1825, "8y": 2920, "6m": 180, "3y": 1095}
+    days = days_map.get(period, 365)
+    end = datetime.utcnow()
+    start = end - timedelta(days=days)
+    df = await _provider.get_ohlcv(symbol, interval, start, end)
+    if df.empty:
+        from ..market.parquet_store import read_ohlcv
+        df = read_ohlcv(symbol, interval, start, end)
+    return df
+
+
+@router.post("/backtest/monte-carlo")
+async def monte_carlo_endpoint(request: MonteCarloRequest):
+    return run_monte_carlo(request.trades, request.n_simulations, request.initial_capital)
+
+
+@router.post("/backtest/walk-forward")
+async def walk_forward_endpoint(request: WalkForwardRequest):
+    df = await _fetch_ohlcv(request.symbol, request.period, request.interval)
+    if df.empty:
+        return {"error": f"No OHLCV data for {request.symbol}"}
+    return run_walk_forward(df, request.strategy_spec, request.n_splits, request.train_ratio)
+
+
+@router.post("/backtest/compare")
+async def compare_endpoint(request: CompareRequest):
+    return compare_backtest_results(request.runs)
+
+
+@router.post("/backtest/optimize")
+async def optimize_endpoint(request: OptimizeRequest):
+    df = await _fetch_ohlcv(request.symbol, request.period, request.interval)
+    if df.empty:
+        return {"error": f"No OHLCV data for {request.symbol}"}
+    opt = run_grid_search(df, request.strategy_spec, request.param_grid, request.max_runs)
+    return {"symbol": request.symbol, "period": request.period, **opt}
+
+
+@router.post("/backtest/payoff")
+async def payoff_endpoint(request: PayoffRequest):
+    spot = request.spot
+    if spot is None:
+        df = await _fetch_ohlcv(request.symbol, "1y", "1d")
+        if not df.empty and "close" in df.columns:
+            spot = float(df["close"].iloc[-1])
+        else:
+            spot = 24000.0 if "BANK" in request.symbol.upper() else 22000.0
+    return compute_payoff_curve(float(spot), request.strategy_spec)
