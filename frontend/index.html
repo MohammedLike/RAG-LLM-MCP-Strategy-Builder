@@ -1709,8 +1709,8 @@
     .prebuilt-overlay.open { display: flex; }
 
     .prebuilt-modal {
-      width: min(1120px, 96vw);
-      height: min(760px, 92vh);
+      width: min(1680px, 99vw);
+      height: min(940px, 96vh);
       background: var(--pb-bg);
       border: 1px solid var(--pb-border);
       border-radius: 8px;
@@ -1835,7 +1835,7 @@
 
     .prebuilt-modal-body {
       display: grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 440px 1fr;
       flex: 1;
       min-height: 0;
     }
@@ -1849,81 +1849,42 @@
     }
 
     .prebuilt-pane-title {
-      padding: 12px 14px 8px;
-      font-size: 13px;
+      padding: 14px 16px 8px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--pb-text);
     }
 
-    .prebuilt-cat-tabs-wrap {
-      display: flex;
-      align-items: stretch;
+    .prebuilt-pane-hint {
+      padding: 0 16px 12px;
+      font-size: 12px;
+      color: var(--pb-muted);
+      line-height: 1.45;
       border-bottom: 1px solid var(--pb-border);
-      background: var(--pb-bg);
-      flex-shrink: 0;
     }
 
-    .prebuilt-cat-tabs {
-      display: flex;
-      align-items: stretch;
-      flex: 1;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    .prebuilt-cat-tabs::-webkit-scrollbar { display: none; }
-
-    .prebuilt-cat-tab {
-      flex: 0 0 auto;
-      padding: 9px 12px;
-      border: none;
-      border-right: 1px solid var(--pb-border);
-      border-radius: 0;
-      background: transparent;
-      color: var(--pb-muted);
-      font-size: 11px;
-      font-weight: 500;
-      cursor: pointer;
-      font-family: inherit;
-      white-space: nowrap;
-      text-transform: lowercase;
-    }
-
-    .prebuilt-cat-tab:first-child {
-      text-transform: none;
-    }
-
-    .prebuilt-cat-tab.active {
-      background: var(--primary);
-      color: #fff;
-    }
-
-    .prebuilt-cat-tab:hover:not(.active) {
-      background: var(--pb-hover);
-      color: var(--pb-text);
-    }
-
-    .prebuilt-cat-scroll-btn {
-      flex: 0 0 28px;
-      border: none;
-      border-left: 1px solid var(--pb-border);
-      background: var(--pb-bg);
-      color: var(--pb-muted);
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 14px;
+    .prebuilt-cat-tabs-wrap {
+      display: none;
     }
 
     .prebuilt-indicator-list {
       overflow-y: auto;
-      padding: 6px 8px;
+      padding: 8px 10px;
       flex: 1;
+      scrollbar-width: thin;
+      scrollbar-color: var(--card-border) transparent;
+    }
+
+    .prebuilt-indicator-list::-webkit-scrollbar { width: 8px; }
+    .prebuilt-indicator-list::-webkit-scrollbar-thumb {
+      background: var(--card-border);
+      border-radius: 4px;
     }
 
     .prebuilt-indicator-item {
       width: 100%;
       text-align: left;
-      padding: 12px 14px;
+      padding: 14px 16px;
       border: 1px solid transparent;
       border-radius: 4px;
       background: transparent;
@@ -1943,17 +1904,24 @@
     }
 
     .prebuilt-indicator-name {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--pb-text);
-      line-height: 1.2;
+      line-height: 1.3;
     }
 
     .prebuilt-indicator-desc {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--pb-muted);
-      margin-top: 3px;
+      margin-top: 4px;
       line-height: 1.35;
+    }
+
+    .prebuilt-indicator-count {
+      font-size: 11px;
+      color: var(--primary-light);
+      margin-top: 3px;
+      font-weight: 600;
     }
 
     .prebuilt-suggestions-pane {
@@ -1977,16 +1945,24 @@
 
     .prebuilt-suggestion-list {
       overflow-y: auto;
-      padding: 0 16px;
+      padding: 0 18px 14px;
       flex: 1;
+      scrollbar-width: thin;
+      scrollbar-color: var(--card-border) transparent;
+    }
+
+    .prebuilt-suggestion-list::-webkit-scrollbar { width: 8px; }
+    .prebuilt-suggestion-list::-webkit-scrollbar-thumb {
+      background: var(--card-border);
+      border-radius: 4px;
     }
 
     .prebuilt-suggestion-item {
       display: grid;
-      grid-template-columns: 20px 1fr auto;
-      gap: 12px;
-      align-items: center;
-      padding: 14px 0;
+      grid-template-columns: 22px 1fr auto;
+      gap: 14px;
+      align-items: start;
+      padding: 16px 0;
       border-bottom: 1px solid var(--pb-border);
       cursor: pointer;
     }
@@ -1996,23 +1972,47 @@
     .prebuilt-suggestion-item input {
       width: 16px;
       height: 16px;
-      margin: 0;
+      margin: 4px 0 0;
       accent-color: var(--primary);
       cursor: pointer;
     }
 
-    .prebuilt-suggestion-text {
-      font-size: 13px;
+    .prebuilt-suggestion-body { min-width: 0; }
+
+    .prebuilt-suggestion-name {
+      font-size: 15px;
+      font-weight: 700;
       color: var(--pb-text);
+      line-height: 1.35;
+      margin-bottom: 6px;
+    }
+
+    .prebuilt-suggestion-text {
+      font-size: 14px;
+      color: var(--pb-muted);
       line-height: 1.45;
-      font-family: var(--font-family);
+      word-break: break-word;
+    }
+
+    .prebuilt-suggestion-exit {
+      font-size: 13px;
+      color: var(--pb-muted);
+      line-height: 1.45;
+      margin-top: 4px;
+      word-break: break-word;
+    }
+
+    .prebuilt-suggestion-label {
+      font-weight: 600;
+      color: var(--pb-text);
     }
 
     .prebuilt-style-tag {
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--pb-muted);
       white-space: nowrap;
+      padding-top: 2px;
     }
 
     .prebuilt-modal-foot {
@@ -3940,12 +3940,12 @@
 <div class="prebuilt-overlay" id="prebuiltModalOverlay" onclick="closePrebuiltModal(event)">
   <div class="prebuilt-modal" onclick="event.stopPropagation()">
     <div class="prebuilt-modal-head">
-      <div class="prebuilt-modal-title">Add Prebuild Suggestions</div>
+      <div class="prebuilt-modal-title">Add Pre-built Strategy Suggestions</div>
       <div class="prebuilt-alpha" id="prebuiltAlpha"></div>
       <div class="prebuilt-toolbar">
         <div class="prebuilt-search">
           <i data-lucide="search"></i>
-          <input type="text" id="prebuiltSearchInput" placeholder="Search for conditions..." oninput="onPrebuiltSearchInput(this.value)">
+          <input type="text" id="prebuiltSearchInput" placeholder="Search strategy name, entry/exit logic, or slug…" oninput="onPrebuiltSearchInput(this.value)">
         </div>
         <div class="prebuilt-sentiment-toggle">
           <button type="button" class="prebuilt-sentiment-btn bullish" id="prebuiltBullishBtn" onclick="togglePrebuiltSentiment('bullish')">Bullish</button>
@@ -3956,7 +3956,8 @@
     <div class="prebuilt-modal-body">
       <div class="prebuilt-indicators-pane">
         <div class="prebuilt-pane-title" id="prebuiltIndicatorCount">Indicators</div>
-        <div class="prebuilt-cat-tabs-wrap">
+        <div class="prebuilt-pane-hint">Strict per-indicator categories — EMA, SMA, DEMA, TEMA, Hull Moving Average (HMA), RSI, etc. Each list shows only strategies whose entry logic uses that indicator.</div>
+        <div class="prebuilt-cat-tabs-wrap" hidden aria-hidden="true">
           <div class="prebuilt-cat-tabs" id="prebuiltCatTabs"></div>
           <button type="button" class="prebuilt-cat-scroll-btn" onclick="scrollPrebuiltCatTabs(1)" aria-label="Scroll categories">›</button>
         </div>
@@ -4035,7 +4036,7 @@
   let prebuiltCatalog = null;
   let prebuiltSelectedIndicator = null;
   let prebuiltSelectedSlugs = new Set();
-  let prebuiltFilters = { q: '', category: 'All', letter: '', bullish: false, bearish: false };
+  let prebuiltFilters = { q: '', letter: '', bullish: false, bearish: false };
 
   const EQUITY_CATEGORIES = new Set([
     'equity', 'trend following', 'momentum', 'mean reversion',
@@ -4225,15 +4226,8 @@
   function getFilteredIndicators() {
     if (!prebuiltCatalog) return [];
     let indicators = [...(prebuiltCatalog.indicators || [])];
-    const { letter, category } = prebuiltFilters;
-
-    if (letter) {
-      indicators = indicators.filter(i => i.letter === letter);
-    }
-    if (category && category !== 'All') {
-      indicators = indicators.filter(i =>
-        i.category === category || i.category_slug === String(category).toLowerCase()
-      );
+    if (prebuiltFilters.letter) {
+      indicators = indicators.filter(i => i.letter === prebuiltFilters.letter);
     }
     return indicators;
   }
@@ -4259,7 +4253,7 @@
     if (q.trim()) {
       const qLower = q.trim().toLowerCase();
       items = items.filter(s => {
-        const hay = `${s.name} ${s.condition_text || ''} ${s.hypothesis || ''} ${s.style_tag || ''}`.toLowerCase();
+        const hay = `${s.name} ${s.slug || ''} ${s.condition_text || ''} ${s.exit_condition_text || ''} ${s.hypothesis || ''} ${s.category || ''}`.toLowerCase();
         return hay.includes(qLower);
       });
     }
@@ -4267,25 +4261,23 @@
   }
 
   function getSuggestionTag(s, indicatorMeta) {
-    const tag = s.style_tag || '';
-    if (tag && !['General', 'Equity', 'Setup'].includes(tag)) return tag;
-    const cat = (indicatorMeta?.category || '').toLowerCase();
-    if (cat.includes('oscillator')) return 'Oscillator';
-    if (cat.includes('overlap')) return 'Overlap Studies';
-    if (cat.includes('volume')) return 'Volume';
-    if (cat.includes('volatility')) return 'Volatility';
-    if (cat.includes('momentum')) return 'Momentum';
-    if (cat.includes('price')) return 'Price Action';
-    return 'Setup';
+    return indicatorMeta?.long_name || indicatorMeta?.display_name || s.indicator || 'Strategy';
   }
 
   function renderSuggestionRow(s, indicatorMeta) {
     const checked = prebuiltSelectedSlugs.has(s.slug) ? 'checked' : '';
     const tag = getSuggestionTag(s, indicatorMeta);
+    const exitLine = s.exit_condition_text
+      ? `<div class="prebuilt-suggestion-exit"><span class="prebuilt-suggestion-label">Exit:</span> ${escapeHtml(s.exit_condition_text)}</div>`
+      : '';
     return `
       <label class="prebuilt-suggestion-item">
         <input type="checkbox" value="${s.slug}" ${checked} onchange="togglePrebuiltSuggestion('${s.slug}', this.checked)">
-        <div class="prebuilt-suggestion-text">${escapeHtml(s.condition_text || s.name)}</div>
+        <div class="prebuilt-suggestion-body">
+          <div class="prebuilt-suggestion-name">${escapeHtml(s.name)}</div>
+          <div class="prebuilt-suggestion-text"><span class="prebuilt-suggestion-label">Entry:</span> ${escapeHtml(s.condition_text || '—')}</div>
+          ${exitLine}
+        </div>
         <span class="prebuilt-style-tag">${escapeHtml(tag)}</span>
       </label>`;
   }
@@ -4312,7 +4304,7 @@
     strip.innerHTML = prebuiltCatalog.indicators.map(ind => `
       <button type="button" class="prebuilt-chip" onclick="openPrebuiltModal('${ind.id}')" title="${escapeHtml(ind.long_name || ind.name)}">
         <div class="prebuilt-chip-icon"></div>
-        <div class="prebuilt-chip-name">${escapeHtml(ind.name)}</div>
+        <div class="prebuilt-chip-name">${escapeHtml(ind.display_name || ind.long_name || ind.name)}</div>
       </button>
     `).join('');
   }
@@ -4359,12 +4351,6 @@
     renderPrebuiltModal();
   }
 
-  function setPrebuiltCategory(cat) {
-    prebuiltFilters.category = cat;
-    syncPrebuiltSelection();
-    renderPrebuiltModal();
-  }
-
   function setPrebuiltLetter(letter) {
     prebuiltFilters.letter = prebuiltFilters.letter === letter ? '' : letter;
     syncPrebuiltSelection();
@@ -4386,7 +4372,6 @@
     if (!prebuiltCatalog) return;
 
     const alpha = document.getElementById('prebuiltAlpha');
-    const catTabs = document.getElementById('prebuiltCatTabs');
     const indList = document.getElementById('prebuiltIndicatorList');
     const sugList = document.getElementById('prebuiltSuggestionList');
     const indCount = document.getElementById('prebuiltIndicatorCount');
@@ -4400,17 +4385,11 @@
       <button type="button" class="prebuilt-alpha-btn ${prebuiltFilters.letter === l ? 'active' : ''}" onclick="setPrebuiltLetter('${l}')">${l}</button>
     `).join('');
 
-    const categories = prebuiltCatalog.categories || ['All'];
-    catTabs.innerHTML = categories.map(cat => {
-      const label = cat === 'All' ? 'All' : cat.toLowerCase();
-      return `<button type="button" class="prebuilt-cat-tab ${prebuiltFilters.category === cat ? 'active' : ''}" onclick="setPrebuiltCategory('${cat.replace(/'/g, "\\'")}')">${label}</button>`;
-    }).join('');
-
     const indicators = getFilteredIndicators();
-    indCount.textContent = `Indicators (${indicators.length})`;
+    indCount.textContent = `Indicators (${indicators.length}) — one category per indicator`;
 
     if (!indicators.length) {
-      indList.innerHTML = '<div class="prebuilt-empty">No indicators in this category</div>';
+      indList.innerHTML = '<div class="prebuilt-empty">No indicators match this letter filter</div>';
       sugList.innerHTML = '';
       sugCount.textContent = 'Prebuild Suggestions (0)';
       return;
@@ -4418,15 +4397,16 @@
 
     indList.innerHTML = indicators.map(ind => `
       <button type="button" class="prebuilt-indicator-item ${ind.id === prebuiltSelectedIndicator ? 'active' : ''}" onclick="selectPrebuiltIndicator('${ind.id}')">
-        <div class="prebuilt-indicator-name">${escapeHtml(ind.name)}</div>
-        <div class="prebuilt-indicator-desc">${escapeHtml(ind.long_name || ind.description || '')}</div>
+        <div class="prebuilt-indicator-name">${escapeHtml(ind.display_name || ind.long_name || ind.name)}</div>
+        <div class="prebuilt-indicator-desc">${escapeHtml(ind.description || '')}</div>
+        <div class="prebuilt-indicator-count">${ind.count || 0} strategies</div>
       </button>
     `).join('');
 
     const selectedMeta = getSelectedIndicatorMeta();
     const suggestions = getFilteredSuggestionsForIndicator(prebuiltSelectedIndicator);
 
-    sugCount.textContent = `Prebuild Suggestions (${suggestions.length})`;
+    sugCount.textContent = `Pre-built Strategies (${suggestions.length})`;
 
     if (!prebuiltSelectedIndicator) {
       sugList.innerHTML = '<div class="prebuilt-empty">Select an indicator on the left</div>';
@@ -4449,6 +4429,13 @@
       .replace(/"/g, '&quot;');
   }
 
+  function formatPrebuiltStrategyText(suggestion) {
+    const parts = [suggestion.name];
+    if (suggestion.condition_text) parts.push(`Entry: ${suggestion.condition_text}`);
+    if (suggestion.exit_condition_text) parts.push(`Exit: ${suggestion.exit_condition_text}`);
+    return parts.join('. ');
+  }
+
   function applySelectedPrebuilt() {
     if (!prebuiltCatalog || !prebuiltSelectedIndicator) {
       closePrebuiltModal(null);
@@ -4468,7 +4455,7 @@
       applyPrebuiltSuggestion(selected[0]);
       return;
     }
-    const text = selected.map(s => s.condition_text || s.name).join(' AND ');
+    const text = selected.map(s => formatPrebuiltStrategyText(s)).join(' AND ');
     document.getElementById('strategyInput').value = text;
     activeStrategySpec = selected[0].backtest_spec || null;
     activeTemplate = null;
@@ -4478,10 +4465,7 @@
   }
 
   function applyPrebuiltSuggestion(suggestion) {
-    const text = suggestion.condition_text
-      ? `${suggestion.name}: ${suggestion.condition_text}`
-      : suggestion.name;
-    document.getElementById('strategyInput').value = text;
+    document.getElementById('strategyInput').value = formatPrebuiltStrategyText(suggestion);
     activeStrategySpec = suggestion.backtest_spec || null;
     activeTemplate = null;
     closePrebuiltModal(null);

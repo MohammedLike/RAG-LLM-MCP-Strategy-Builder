@@ -24,6 +24,22 @@ INDICATORS_DB = {
         "description": "A moving average that assigns linearly decreasing weights to older data points.",
         "inputs": ["close"]
     },
+    "HMA": {
+        "name": "HMA",
+        "long_name": "Hull Moving Average",
+        "category": "Overlap Studies",
+        "params": {"timeperiod": 14},
+        "description": "A responsive moving average that reduces lag using weighted square-root periods.",
+        "inputs": ["close"]
+    },
+    "VWMA": {
+        "name": "VWMA",
+        "long_name": "Volume Weighted Moving Average",
+        "category": "Overlap Studies",
+        "params": {"timeperiod": 14},
+        "description": "A moving average weighted by volume over each period.",
+        "inputs": ["close", "volume"]
+    },
     "DEMA": {
         "name": "DEMA",
         "long_name": "Double Exponential Moving Average",

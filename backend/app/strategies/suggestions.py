@@ -12,6 +12,14 @@ from app.backtest.indicators import IndicatorManager
 from app.strategies.compiler import compile_db_strategy, parse_condition_str
 
 INDICATOR_FALLBACK_NAMES: dict[str, str] = {
+    "HMA": "Hull Moving Average",
+    "VWMA": "Volume Weighted Moving Average",
+    "PIVOT_POINT": "Pivot Point",
+    "AROON_DOWN": "Aroon Down",
+    "AROON_UP": "Aroon Up",
+    "AROON": "Aroon Oscillator",
+    "STOCHRSI": "Stochastic RSI",
+    "ATR_BANDS": "ATR Bands",
     "PREV_N": "Previous N",
     "OPENING_RANGE": "Opening Range",
     "DONCHIAN_CHANNEL": "Donchian Channel",
@@ -38,6 +46,106 @@ INDICATOR_FALLBACK_NAMES: dict[str, str] = {
     "MIDPOINT": "Midpoint",
     "UNKNOWN": "Other",
 }
+
+_CONDITION_PREFIXES: list[tuple[str, str | None]] = [
+    ("ATR Trailing Stoploss", "ATR"),
+    ("Stochastic RSI", "STOCHRSI"),
+    ("Aroon oscillator", "AROON"),
+    ("Aroon Down", "AROON_DOWN"),
+    ("Aroon Up", "AROON_UP"),
+    ("Pivot Point", "PIVOT_POINT"),
+    ("Pivot point", "PIVOT_POINT"),
+    ("Donchian Channel", "DONCHIAN_CHANNEL"),
+    ("Opening Range", "OPENING_RANGE"),
+    ("Nth candle", "PREV_N"),
+    ("ATR Bands", "ATR_BANDS"),
+    ("Median Price MA", "SMA"),
+    ("Median Price", "SMA"),
+    ("Moving average", None),
+    ("Moving Average", None),
+    ("Awesome Oscillator", "MOM"),
+    ("Choppiness Index", "ATR"),
+    ("Fractal Chaos Bands", "BBANDS"),
+    ("Bollinger Bandwidth", "BBANDS"),
+    ("Ehler Fisher", "RSI"),
+    ("Coppock Curve", "ROC"),
+    ("Chaikin MF", "MFI"),
+    ("Minus DI", "MINUS_DI"),
+    ("Adx MA", "ADX"),
+]
+
+_SINGLE_TOKEN_ORDER: tuple[str, ...] = (
+    "DEMA", "TEMA", "TRIMA", "KAMA", "VWMA", "HMA", "WMA", "EMA", "SMA",
+    "STOCHRSI", "STOCH", "RSI", "MACD", "BBANDS", "ATR", "ADX", "CCI",
+    "WILLR", "MFI", "OBV", "ROC", "MOM", "VWAP", "MIDPOINT", "MIDPRICE",
+    "PLUS_DI", "MINUS_DI", "VORTEX", "ICHIMOKU", "KELTNER", "CMO", "EFI",
+    "CLOSE", "HIGH", "LOW", "OPEN", "VOLUME",
+)
+
+_MOVING_AVERAGE_TYPE_MAP = {
+    "hull": "HMA",
+    "vwma": "VWMA",
+    "volume_weighted": "VWMA",
+    "weighted": "WMA",
+    "wma": "WMA",
+    "exponential": "EMA",
+    "ema": "EMA",
+    "double_exponential": "DEMA",
+    "dema": "DEMA",
+    "triple_exponential": "TEMA",
+    "tema": "TEMA",
+    "simple": "SMA",
+    "sma": "SMA",
+}
+
+
+def _moving_average_subtype(condition: str) -> str:
+    match = re.search(r"Moving\s+[Aa]verage\s*\(\s*[^,]+,\s*[^,]+,\s*(\w+)", condition)
+    if match:
+        return _MOVING_AVERAGE_TYPE_MAP.get(match.group(1).lower(), "SMA")
+    return "SMA"
+
+
+def _canonical_indicator_id(token: str, condition: str = "") -> str:
+    cleaned = token.strip()
+    if cleaned.lower() in ("moving average", "moving_average"):
+        return _moving_average_subtype(condition)
+    key = cleaned.upper().replace(" ", "_").replace("-", "_")
+    if key in INDICATORS_DB or key in INDICATOR_FALLBACK_NAMES:
+        return key
+    normalized = IndicatorManager.normalize_name(key)
+    if normalized in INDICATORS_DB or normalized in INDICATOR_FALLBACK_NAMES:
+        return normalized
+    return key
+
+
+def _primary_from_condition(condition: str) -> str | None:
+    if not condition or not str(condition).strip():
+        return None
+    cond = str(condition).strip()
+    cond_lower = cond.lower()
+
+    for prefix, indicator_id in _CONDITION_PREFIXES:
+        if cond_lower.startswith(prefix.lower()):
+            if indicator_id is None:
+                return _moving_average_subtype(cond)
+            return indicator_id
+
+    match = re.match(r"^([A-Za-z][A-Za-z0-9 ]*?)\s*\(", cond)
+    if match:
+        return _canonical_indicator_id(match.group(1), cond)
+
+    for token in _SINGLE_TOKEN_ORDER:
+        if re.match(rf"^{re.escape(token)}\s*\(", cond, re.IGNORECASE):
+            return token
+
+    return None
+
+
+def _condition_belongs_to_indicator(indicator_id: str, condition: str) -> bool:
+    detected = _primary_from_condition(condition)
+    return bool(detected and detected == indicator_id)
+
 
 CATEGORY_SLUG_MAP = {
     "Overlap Studies": "overlap studies",
@@ -83,39 +191,37 @@ def _format_structured_condition(cond: dict) -> str:
 def format_condition_display(entry_rules: dict, backtest_spec: dict | None = None) -> str:
     if entry_rules.get("condition"):
         return str(entry_rules["condition"]).strip()
-    entry = (backtest_spec or {}).get("entry") or {}
-    conditions = entry.get("conditions") or []
+    conditions = entry_rules.get("conditions") or []
+    if not conditions:
+        entry = (backtest_spec or {}).get("entry") or {}
+        conditions = entry.get("conditions") or []
     if conditions:
-        return _format_structured_condition(conditions[0])
+        return " AND ".join(_format_structured_condition(c) for c in conditions[:4])
     if entry_rules.get("indicator"):
         return _format_structured_condition(entry_rules)
     return ""
 
 
 def extract_primary_indicator(entry_rules: dict, name: str = "") -> str:
-    if entry_rules.get("condition"):
-        parsed = parse_condition_str(entry_rules["condition"])
-        indicator = parsed.get("indicator")
-        if indicator and indicator != "CLOSE":
-            return IndicatorManager.normalize_name(indicator)
+    """Strict classification from entry condition only — never from strategy name."""
+    condition = str(entry_rules.get("condition") or "").strip()
+    if condition:
+        primary = _primary_from_condition(condition)
+        if primary:
+            return primary
 
-    for cond in entry_rules.get("conditions") or []:
-        if cond.get("indicator"):
-            return IndicatorManager.normalize_name(cond["indicator"])
+    conditions = entry_rules.get("conditions") or []
+    for cond in conditions:
+        ind = cond.get("indicator")
+        if ind and str(ind).upper() != "CLOSE":
+            return IndicatorManager.normalize_name(ind)
+    for cond in conditions:
+        val = cond.get("value")
+        if isinstance(val, dict) and val.get("indicator") and str(val["indicator"]).upper() != "CLOSE":
+            return IndicatorManager.normalize_name(val["indicator"])
 
     if entry_rules.get("indicator"):
         return IndicatorManager.normalize_name(entry_rules["indicator"])
-
-    if entry_rules.get("condition"):
-        match = re.search(r"([A-Za-z][A-Za-z0-9 %_\-\./]+?)\s*\(", entry_rules["condition"])
-        if match:
-            raw = match.group(1).strip().upper().replace(" ", "_")
-            return IndicatorManager.normalize_name(raw)
-
-    name_upper = name.upper()
-    for key in sorted(INDICATORS_DB.keys(), key=len, reverse=True):
-        if key in name_upper.replace(" ", "_"):
-            return key
 
     return "UNKNOWN"
 
@@ -213,8 +319,14 @@ def build_prebuilt_catalog(rows: list) -> dict:
         except Exception:
             backtest_spec = {}
 
-        condition_text = format_condition_display(entry_rules, backtest_spec)
+        entry_condition = str(entry_rules.get("condition") or "").strip()
+        exit_condition = str(exit_rules.get("condition") or "").strip()
+        condition_text = entry_condition or format_condition_display(entry_rules, backtest_spec) or name
         primary = extract_primary_indicator(entry_rules, name)
+        if entry_condition:
+            detected = _primary_from_condition(entry_condition)
+            if detected:
+                primary = detected
         direction = infer_direction(name, condition_text, entry_rules, slug)
         style_tag = infer_style_tag(category, entry_rules, name)
 
@@ -223,7 +335,8 @@ def build_prebuilt_catalog(rows: list) -> dict:
             "name": name,
             "category": category,
             "hypothesis": hypothesis,
-            "condition_text": condition_text or name,
+            "condition_text": condition_text,
+            "exit_condition_text": exit_condition,
             "direction": direction,
             "style_tag": style_tag,
             "timeframe": entry_rules.get("timeframe"),
@@ -235,28 +348,24 @@ def build_prebuilt_catalog(rows: list) -> dict:
         suggestions_by_indicator[primary].append(suggestion)
         indicator_counts[primary] += 1
 
+    for ind_id in suggestions_by_indicator:
+        suggestions_by_indicator[ind_id].sort(key=lambda s: s["name"].lower())
+
     indicators = []
-    for indicator_id, count in sorted(indicator_counts.items(), key=lambda x: (-x[1], x[0])):
+    for indicator_id, count in sorted(indicator_counts.items(), key=lambda x: x[0].lower()):
         meta = _indicator_meta(indicator_id)
         meta["count"] = count
-        meta["letter"] = meta["name"][:1].upper()
-        meta["category_slug"] = CATEGORY_SLUG_MAP.get(meta["category"], meta["category"].lower())
+        meta["display_name"] = meta["long_name"]
+        meta["letter"] = meta["long_name"][:1].upper()
+        meta["category_slug"] = indicator_id.lower()
         indicators.append(meta)
-
-    category_filters = ["All"]
-    seen = set()
-    for ind in indicators:
-        slug = ind["category_slug"]
-        if slug not in seen:
-            category_filters.append(ind["category"])
-            seen.add(slug)
 
     alphabet = sorted({ind["letter"] for ind in indicators if ind["letter"].isalpha()})
 
     return {
         "total_strategies": sum(indicator_counts.values()),
         "total_indicators": len(indicators),
-        "categories": category_filters,
+        "categories": ["All"],
         "alphabet": alphabet,
         "indicators": indicators,
         "suggestions_by_indicator": dict(suggestions_by_indicator),
@@ -280,10 +389,7 @@ def filter_catalog(
         indicators = [i for i in indicators if i["letter"] == letter.upper()]
 
     if category and category.lower() != "all":
-        indicators = [
-            i for i in indicators
-            if i["category"].lower() == category.lower() or i["category_slug"] == category.lower()
-        ]
+        indicators = [i for i in indicators if i["id"].lower() == category.lower()]
 
     if indicator:
         indicator = IndicatorManager.normalize_name(indicator)
@@ -303,8 +409,11 @@ def filter_catalog(
             if q_lower:
                 haystack = " ".join([
                     item["name"],
+                    item.get("slug") or "",
                     item.get("condition_text") or "",
+                    item.get("exit_condition_text") or "",
                     item.get("hypothesis") or "",
+                    item.get("category") or "",
                     item.get("style_tag") or "",
                 ]).lower()
                 if q_lower not in haystack:

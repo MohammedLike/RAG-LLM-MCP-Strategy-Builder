@@ -84,7 +84,23 @@ def parse_single_indicator(part: str) -> dict | float:
                 break
         
         # Standardize names
-        if "SMA" in name or "SIMPLE" in name or "MOVING AVERAGE" in name:
+        if "MOVING AVERAGE" in name or name.strip().upper() == "MOVING_AVERAGE":
+            args_lower = args_str.lower()
+            if "hull" in args_lower:
+                ind_name = "HMA"
+            elif "vwma" in args_lower or "volume" in args_lower:
+                ind_name = "VWMA"
+            elif "weighted" in args_lower or "wma" in args_lower:
+                ind_name = "WMA"
+            elif "exponential" in args_lower or "ema" in args_lower:
+                ind_name = "EMA"
+            elif "dema" in args_lower or "double" in args_lower:
+                ind_name = "DEMA"
+            elif "tema" in args_lower or "triple" in args_lower:
+                ind_name = "TEMA"
+            else:
+                ind_name = "SMA"
+        elif "SMA" in name or "SIMPLE" in name:
             ind_name = "SMA"
         elif "EMA" in name or "EXPONENTIAL" in name:
             ind_name = "EMA"
