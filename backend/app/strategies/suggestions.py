@@ -120,15 +120,15 @@ def extract_primary_indicator(entry_rules: dict, name: str = "") -> str:
     return "UNKNOWN"
 
 
-def infer_direction(name: str, condition_text: str, entry_rules: dict) -> str:
-    blob = f"{name} {condition_text}".lower()
+def infer_direction(name: str, condition_text: str, entry_rules: dict, slug: str = "") -> str:
+    blob = f"{name} {condition_text} {slug}".lower()
     bearish_markers = (
-        "bearish", "bear ", "death cross", "downtrend", "downside",
-        "lower low", "breakdown", "weak", "oversold reversal bear",
+        "bearish", "bear_", "bear ", "death cross", "downtrend", "downside",
+        "lower low", "breakdown", "weak", "short-term", "short term",
     )
     bullish_markers = (
-        "bullish", "bull ", "golden cross", "uptrend", "upside",
-        "breakout", "strength", "recovery", "accumulation",
+        "bullish", "bull_", "bull ", "golden cross", "uptrend", "upside",
+        "breakout", "strength", "recovery", "accumulation", "long-term", "long term",
     )
     if any(m in blob for m in bearish_markers):
         return "bearish"
