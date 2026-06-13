@@ -10,15 +10,6 @@ DATABASE_URL = 'postgresql+asyncpg://quant_user:quant_password@postgres:5432/qua
 
 strategies = [
     {
-        'name': 'RSI Mean Reversion (Equity)',
-        'slug': 'rsi-mean-reversion',
-        'category': 'Equity',
-        'hypothesis': 'Buy when RSI is oversold (<30) and exit when it reaches neutral (50) or overbought (70).',
-        'entry_rules': json.dumps({'conditions': [{'indicator': 'RSI', 'params': {'timeperiod': 14}, 'operator': '<', 'value': 30}], 'logical_operator': 'AND'}),
-        'exit_rules': json.dumps({'conditions': [{'indicator': 'RSI', 'params': {'timeperiod': 14}, 'operator': '>', 'value': 70}], 'logical_operator': 'AND'}),
-        'risk_params': json.dumps({'stop_loss': 0.02, 'take_profit': 0.05})
-    },
-    {
         'name': 'Golden Crossover (SMA)',
         'slug': 'golden-crossover',
         'category': 'Equity',
@@ -205,51 +196,6 @@ strategies = [
         'risk_params': json.dumps({'stop_loss': 0.07, 'take_profit': 0.10})
     },
     {
-        'name': 'CCI Oversold + EMA Uptrend',
-        'slug': 'cci-oversold-ema-uptrend',
-        'category': 'Momentum',
-        'hypothesis': 'Buys oversold opportunities identified by CCI while maintaining a bullish long-term trend.',
-        'entry_rules': json.dumps({'conditions': [
-            {'indicator': 'CCI', 'params': {'timeperiod': 20}, 'operator': '<', 'value': -100},
-            {'indicator': 'EMA', 'params': {'timeperiod': 50}, 'operator': '>', 'value': {'indicator': 'EMA', 'params': {'timeperiod': 200}}},
-            {'indicator': 'RSI', 'params': {'timeperiod': 14}, 'operator': '>', 'value': 35}
-        ], 'logical_operator': 'AND'}),
-        'exit_rules': json.dumps({'conditions': [
-            {'indicator': 'CCI', 'params': {'timeperiod': 20}, 'operator': '>', 'value': 0}
-        ], 'logical_operator': 'AND'}),
-        'risk_params': json.dumps({'stop_loss': 0.07, 'take_profit': 0.10})
-    },
-    {
-        'name': 'Bollinger Lower Touch + RSI Uptrend',
-        'slug': 'bollinger-lower-touch-rsi-uptrend',
-        'category': 'Mean Reversion',
-        'hypothesis': 'Mean-reversion strategy that buys pullbacks to the lower Bollinger Band within an uptrend.',
-        'entry_rules': json.dumps({'conditions': [
-            {'indicator': 'CLOSE', 'params': {}, 'operator': '<=', 'value': {'indicator': 'BBANDS', 'params': {'timeperiod': 20, 'nbdevup': 2, 'output_index': 'lower'}}},
-            {'indicator': 'RSI', 'params': {'timeperiod': 14}, 'operator': '<', 'value': 42},
-            {'indicator': 'EMA', 'params': {'timeperiod': 50}, 'operator': '>', 'value': {'indicator': 'EMA', 'params': {'timeperiod': 200}}}
-        ], 'logical_operator': 'AND'}),
-        'exit_rules': json.dumps({'conditions': [
-            {'indicator': 'CLOSE', 'params': {}, 'operator': '>=', 'value': {'indicator': 'BBANDS', 'params': {'timeperiod': 20, 'nbdevup': 2, 'output_index': 'middle'}}}
-        ], 'logical_operator': 'AND'}),
-        'risk_params': json.dumps({'stop_loss': 0.07, 'take_profit': 0.10})
-    },
-    {
-        'name': 'MFI Wide Oversold + EMA Uptrend',
-        'slug': 'mfi-wide-oversold-ema-uptrend',
-        'category': 'Momentum',
-        'hypothesis': 'Uses deeply oversold Money Flow Index readings to capture rebounds in an uptrend.',
-        'entry_rules': json.dumps({'conditions': [
-            {'indicator': 'MFI', 'params': {'timeperiod': 14}, 'operator': '<', 'value': 35},
-            {'indicator': 'EMA', 'params': {'timeperiod': 50}, 'operator': '>', 'value': {'indicator': 'EMA', 'params': {'timeperiod': 200}}},
-            {'indicator': 'CLOSE', 'params': {}, 'operator': '>', 'value': {'indicator': 'EMA', 'params': {'timeperiod': 50}}}
-        ], 'logical_operator': 'AND'}),
-        'exit_rules': json.dumps({'conditions': [
-            {'indicator': 'MFI', 'params': {'timeperiod': 14}, 'operator': '>', 'value': 65}
-        ], 'logical_operator': 'AND'}),
-        'risk_params': json.dumps({'stop_loss': 0.07, 'take_profit': 0.10})
-    },
-    {
         'name': 'SuperTrend + Ichimoku Span B Filter',
         'slug': 'supertrend-ichimoku-spanb-filter',
         'category': 'Trend Following',
@@ -260,21 +206,6 @@ strategies = [
         ], 'logical_operator': 'AND'}),
         'exit_rules': json.dumps({'conditions': [
             {'indicator': 'CLOSE', 'params': {}, 'operator': '<', 'value': {'indicator': 'SAR', 'params': {}}}
-        ], 'logical_operator': 'AND'}),
-        'risk_params': json.dumps({'stop_loss': 0.07, 'take_profit': 0.10})
-    },
-    {
-        'name': 'WilliamsR Deep Oversold + Uptrend',
-        'slug': 'williamsr-deep-oversold-uptrend',
-        'category': 'Momentum',
-        'hypothesis': 'Buys extreme oversold conditions using Williams %R during an established uptrend.',
-        'entry_rules': json.dumps({'conditions': [
-            {'indicator': 'WILLR', 'params': {'timeperiod': 14}, 'operator': '<', 'value': -80},
-            {'indicator': 'EMA', 'params': {'timeperiod': 50}, 'operator': '>', 'value': {'indicator': 'EMA', 'params': {'timeperiod': 200}}},
-            {'indicator': 'ADX', 'params': {'timeperiod': 14}, 'operator': '>', 'value': 18}
-        ], 'logical_operator': 'AND'}),
-        'exit_rules': json.dumps({'conditions': [
-            {'indicator': 'WILLR', 'params': {'timeperiod': 14}, 'operator': '>', 'value': -20}
         ], 'logical_operator': 'AND'}),
         'risk_params': json.dumps({'stop_loss': 0.07, 'take_profit': 0.10})
     },

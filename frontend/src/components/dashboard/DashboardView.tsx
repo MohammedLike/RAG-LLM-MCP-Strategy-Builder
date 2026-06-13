@@ -31,13 +31,15 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
       try {
         const data = await fetchStrategies();
         const rows = data || [];
-        // Filter to only include 'Equity' and 'Options' strategies on the dashboard
-        const filtered = rows.filter((s: any) => s.category === 'Equity' || s.category === 'Options');
-        setStrategies(filtered);
-        const dynamicCategories = Array.from(
-          new Set(['All', ...filtered.map((s: any) => s.category || 'Uncategorized')])
+        // Filter to include 'Equity', 'Options', and 'Indicator Based' strategies on the dashboard
+        const filtered = rows.filter((s: any) => 
+          s.category === 'Equity' || 
+          s.category === 'Options' || 
+          s.category === 'Indicator Based'
         );
-        setCategories(dynamicCategories);
+        setStrategies(filtered);
+        // Ensure a fixed clean tab order for key categories
+        setCategories(['All', 'Equity', 'Options', 'Indicator Based']);
       } catch (err) {
         console.error('Error loading dashboard strategies', err);
       } finally {
@@ -163,7 +165,7 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
             ) : (
               strategies
                 .filter((s) => selectedCategory === 'All' || s.category === selectedCategory)
-                .slice(0, 6)
+                .slice(0, 30)
                 .map((s) => (
                   <div key={s.slug} className="bg-[#0a0e17] border border-slate-800/60 p-5 rounded-xl flex flex-col">
                     <div className="flex items-center justify-between mb-3">
