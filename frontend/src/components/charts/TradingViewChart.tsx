@@ -3,16 +3,12 @@ import {
   createChart,
   type IChartApi,
   type ISeriesApi,
-  type SeriesType,
   type CandlestickData,
   type LineData,
   type HistogramData,
   type SeriesMarker,
   ColorType,
   CrosshairMode,
-  AreaSeries,
-  CandlestickSeries,
-  HistogramSeries,
 } from 'lightweight-charts';
 
 export type OhlcvBar = {
@@ -35,31 +31,29 @@ type TradingViewChartProps = {
   kind: ChartKind;
   candles?: OhlcvBar[];
   lineData?: LinePoint[];
-  markers?: SeriesMarker<Time>[];
+  markers?: SeriesMarker<string>[];
   height?: number;
   className?: string;
 };
-
-type Time = string;
 
 function getTheme() {
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
   return {
     isLight,
     layout: {
-      background: { type: ColorType.Solid, color: 'transparent' },
-      textColor: isLight ? '#475569' : '#94a3b8',
+      background: { type: ColorType.Solid, color: isLight ? '#ffffff' : '#0d0d0d' },
+      textColor: isLight ? '#475569' : '#a3a3a3',
       fontFamily: 'Roboto, system-ui, sans-serif',
     },
     grid: {
-      vertLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
-      horzLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+      vertLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
+      horzLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
     },
     crosshair: { mode: CrosshairMode.Normal },
   };
 }
 
-function toTime(value: string): Time {
+function toTime(value: string): string {
   return String(value).slice(0, 10);
 }
 
@@ -73,7 +67,6 @@ export function TradingViewChart({
 }: TradingViewChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<SeriesType> | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -81,7 +74,6 @@ export function TradingViewChart({
 
     chartRef.current?.remove();
     chartRef.current = null;
-    seriesRef.current = null;
 
     const theme = getTheme();
     const chart = createChart(container, {
@@ -92,9 +84,8 @@ export function TradingViewChart({
       timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false },
     });
 
-    let series: ISeriesApi<SeriesType>;
     if (kind === 'candlestick') {
-      series = chart.addSeries(CandlestickSeries, {
+      const series = chart.addCandlestickSeries({
         upColor: '#26a69a',
         downColor: '#ef5350',
         borderVisible: false,
@@ -113,7 +104,7 @@ export function TradingViewChart({
         series.setMarkers(markers);
       }
     } else if (kind === 'histogram') {
-      series = chart.addSeries(HistogramSeries, {
+      const series = chart.addHistogramSeries({
         color: '#ef4444',
         priceFormat: { type: 'percent', precision: 2, minMove: 0.01 },
       });
@@ -124,7 +115,7 @@ export function TradingViewChart({
       }));
       series.setData(data);
     } else {
-      series = chart.addSeries(AreaSeries, {
+      const series = chart.addAreaSeries({
         lineColor: '#2962FF',
         topColor: 'rgba(41, 98, 255, 0.35)',
         bottomColor: 'rgba(41, 98, 255, 0.02)',
@@ -139,7 +130,6 @@ export function TradingViewChart({
 
     chart.timeScale().fitContent();
     chartRef.current = chart;
-    seriesRef.current = series;
 
     const ro = new ResizeObserver(() => {
       if (container && chartRef.current) {
@@ -158,15 +148,14 @@ export function TradingViewChart({
       window.removeEventListener('strykex-theme-change', onThemeChange);
       chart.remove();
       chartRef.current = null;
-      seriesRef.current = null;
     };
   }, [kind, candles, lineData, markers, height]);
 
   return <div ref={containerRef} className={`w-full ${className}`} style={{ height }} />;
 }
 
-export function buildTradeMarkers(trades: Array<{ entry_date?: string; exit_date?: string }>): SeriesMarker<Time>[] {
-  const markers: SeriesMarker<Time>[] = [];
+export function buildTradeMarkers(trades: Array<{ entry_date?: string; exit_date?: string }>): SeriesMarker<string>[] {
+  const markers: SeriesMarker<string>[] = [];
   for (const trade of trades) {
     if (trade.entry_date) {
       markers.push({

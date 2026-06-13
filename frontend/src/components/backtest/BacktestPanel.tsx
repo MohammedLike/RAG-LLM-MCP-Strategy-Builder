@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Play, BarChart3, Loader2, List, Settings2 } from 'lucide-react';
 import { runBacktest } from '../../services/api';
+import { TradingViewChart, buildTradeMarkers, toLineSeries, toOhlcvSeries, type OhlcvBar } from '../charts/TradingViewChart';
 
 const defaultMetrics = [
   { label: 'Total Return', value: '—', key: 'total_return', suffix: '%' },
@@ -17,7 +17,8 @@ export const BacktestPanel = () => {
   const [period, setPeriod] = useState('1y');
   const [loading, setLoading] = useState(false);
   const [metrics, setMetrics] = useState(defaultMetrics);
-  const [chartData, setChartData] = useState<{ date: string; equity: number }[]>([]);
+  const [chartData, setChartData] = useState<{ date: string; value: number }[]>([]);
+  const [ohlcvData, setOhlcvData] = useState<OhlcvBar[]>([]);
   const [trades, setTrades] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,10 +53,11 @@ export const BacktestPanel = () => {
       
       if (result.equity_curve) {
         setChartData(result.equity_curve.map((p: any) => ({
-          date: p.date.split(' ')[0],
-          equity: p.value,
+          date: String(p.date).split(' ')[0],
+          value: p.value,
         })));
       }
+      setOhlcvData(toOhlcvSeries(result.ohlcv || []));
       
       if (result.trades) {
         setTrades(result.trades);
@@ -181,35 +183,42 @@ export const BacktestPanel = () => {
       </div>
 
       {/* Chart Section */}
-      <div className="bg-[#131c31] border border-slate-800/60 p-5 min-h-[400px] rounded-xl">
-        <div className="flex items-center gap-2 mb-6">
-          <BarChart3 size={18} className="text-brand" />
-          <h3 className="font-black text-white uppercase tracking-tight text-sm">Equity Curve</h3>
-        </div>
-        {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={320}>
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-              <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} stroke="#334155" axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} stroke="#334155" axisLine={false} tickLine={false} />
-              <Tooltip 
-                contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '10px' }}
-                itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
-              />
-              <Area type="monotone" dataKey="equity" stroke="#3b82f6" fill="url(#colorEquity)" strokeWidth={2.5} />
-            </AreaChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="h-[320px] flex items-center justify-center text-slate-600 text-[10px] font-black uppercase tracking-widest">
-            Configure strategy and run backtest to visualize performance
+      <div className="bg-[#131c31] border border-slate-800/60 p-5 min-h-[400px] rounded-xl space-y-6">
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 size={18} className="text-brand" />
+            <h3 className="font-black text-white uppercase tracking-tight text-sm">Price Chart</h3>
           </div>
-        )}
+          {ohlcvData.length > 0 ? (
+            <TradingViewChart
+              kind="candlestick"
+              candles={ohlcvData}
+              markers={buildTradeMarkers(trades)}
+              height={280}
+            />
+          ) : (
+            <div className="h-[280px] flex items-center justify-center text-slate-600 text-[10px] font-black uppercase tracking-widest">
+              Run backtest to load candlesticks
+            </div>
+          )}
+        </div>
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 size={18} className="text-brand" />
+            <h3 className="font-black text-white uppercase tracking-tight text-sm">Equity Curve</h3>
+          </div>
+          {chartData.length > 0 ? (
+            <TradingViewChart
+              kind="area"
+              lineData={toLineSeries(chartData.map(d => ({ date: d.date, value: d.value })))}
+              height={240}
+            />
+          ) : (
+            <div className="h-[240px] flex items-center justify-center text-slate-600 text-[10px] font-black uppercase tracking-widest">
+              Configure strategy and run backtest to visualize performance
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Trade Log */}

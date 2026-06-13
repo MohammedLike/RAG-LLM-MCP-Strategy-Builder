@@ -58,27 +58,47 @@
       --sidebar-width: 248px;
     }
 
-    /* Dark mode (default) */
+    /* Dark mode (default) — pure black, no blue tint */
     [data-theme="dark"] {
-      --bg-color: #07080d;
-      --bg-mesh-1: rgba(59, 130, 246, 0.14);
-      --bg-mesh-2: rgba(99, 102, 241, 0.1);
-      --bg-mesh-3: rgba(14, 165, 233, 0.06);
-      --sidebar-bg: rgba(14, 17, 26, 0.82);
-      --surface: rgba(20, 24, 36, 0.72);
-      --surface-elevated: rgba(26, 31, 46, 0.88);
-      --card-bg: rgba(22, 27, 40, 0.85);
+      --bg-color: #000000;
+      --bg-mesh-1: transparent;
+      --bg-mesh-2: transparent;
+      --bg-mesh-3: transparent;
+      --sidebar-bg: #000000;
+      --surface: #0a0a0a;
+      --surface-elevated: #111111;
+      --card-bg: #0d0d0d;
       --card-border: rgba(255, 255, 255, 0.08);
-      --glass-highlight: rgba(255, 255, 255, 0.06);
-      --text-primary: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --input-bg: rgba(12, 15, 24, 0.9);
+      --glass-highlight: rgba(255, 255, 255, 0.04);
+      --text-primary: #f5f5f5;
+      --text-secondary: #a3a3a3;
+      --text-muted: #737373;
+      --input-bg: #0a0a0a;
       --input-border: rgba(255, 255, 255, 0.1);
-      --primary-tint: rgba(59, 130, 246, 0.14);
+      --primary-tint: rgba(59, 130, 246, 0.12);
       --green: #4ade80;
       --red: #f87171;
       --yellow: #fbbf24;
+      --shadow-3d-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.35);
+      --shadow-3d-md: 0 4px 8px rgba(0, 0, 0, 0.45), 0 16px 32px rgba(0, 0, 0, 0.5);
+      --shadow-3d-lg: 0 8px 16px rgba(0, 0, 0, 0.5), 0 28px 56px rgba(0, 0, 0, 0.55);
+    }
+
+    [data-theme="dark"] .topbar,
+    [data-theme="dark"] .bt-left,
+    [data-theme="dark"] .results-header,
+    [data-theme="dark"] .chart-card,
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .form-card,
+    [data-theme="dark"] .report-actions,
+    [data-theme="dark"] .modal,
+    [data-theme="dark"] .prebuilt-modal {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    [data-theme="dark"] .ambient-layer {
+      display: none;
     }
 
     /* Light mode */
@@ -106,9 +126,9 @@
 
     [data-theme="dark"] .sidebar {
       background: var(--sidebar-bg);
-      backdrop-filter: blur(20px) saturate(1.4);
-      -webkit-backdrop-filter: blur(20px) saturate(1.4);
-      box-shadow: 4px 0 32px rgba(0, 0, 0, 0.35);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
     }
 
     [data-theme="light"] .sidebar {
@@ -674,7 +694,7 @@
     }
 
     [data-theme="dark"] .home-headline {
-      background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 40%, #93c5fd 100%);
+      background: linear-gradient(135deg, #ffffff 0%, #e5e5e5 50%, #a3a3a3 100%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -4216,7 +4236,7 @@
         <div class="chart-card">
           <div class="chart-title-row">
             <div class="chart-title">
-              <i data-lucide="candlestick-chart"></i>
+              <i data-lucide="chart-column"></i>
               Market & Performance Charts
             </div>
             <div class="chart-type-tabs">
@@ -4315,13 +4335,13 @@
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     return {
       layout: {
-        background: { color: 'transparent' },
-        textColor: isLight ? '#475569' : '#94a3b8',
+        background: { color: isLight ? '#ffffff' : '#0d0d0d' },
+        textColor: isLight ? '#475569' : '#a3a3a3',
         fontFamily: 'Roboto, system-ui, sans-serif',
       },
       grid: {
-        vertLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
-        horzLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+        vertLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
+        horzLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
       },
       rightPriceScale: { borderVisible: false },
       timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false },
@@ -4437,7 +4457,7 @@
       return;
     }
     mountTvChart(containerId, chart => {
-      const series = chart.addSeries(LightweightCharts.CandlestickSeries, {
+      const series = chart.addCandlestickSeries({
         upColor: '#26a69a',
         downColor: '#ef5350',
         borderVisible: false,
@@ -4456,7 +4476,7 @@
       return;
     }
     mountTvChart(containerId, chart => {
-      const series = chart.addSeries(LightweightCharts.AreaSeries, {
+      const series = chart.addAreaSeries({
         lineColor: color,
         topColor: 'rgba(41, 98, 255, 0.35)',
         bottomColor: 'rgba(41, 98, 255, 0.02)',
@@ -4473,7 +4493,7 @@
       return;
     }
     mountTvChart(containerId, chart => {
-      const series = chart.addSeries(LightweightCharts.HistogramSeries, {
+      const series = chart.addHistogramSeries({
         color: '#ef4444',
         priceFormat: { type: 'percent', precision: 2, minMove: 0.01 },
       });
