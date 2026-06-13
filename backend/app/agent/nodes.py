@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from .state import AgentState
 from ..mcp.server import server
 from ..rag.qdrant_client import search_strategies
-from ..rag.embedder import embed_texts
+from ..rag.embedder import embed_texts_async
 from .prompts import SYSTEM_PROMPT
 from ..config import settings
 from ..nl_parser import nl_parser
@@ -118,7 +118,7 @@ async def rag_retrieve_node(state: AgentState):
         return {"retrieved_context": []}
 
     try:
-        query_emb = embed_texts([last_user_message])[0]
+        query_emb = (await embed_texts_async([last_user_message]))[0]
         results = search_strategies(query_emb, top_k=3)
         context = [res["text"] for res in results]
         return {"retrieved_context": context}

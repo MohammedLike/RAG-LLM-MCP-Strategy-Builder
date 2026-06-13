@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { TrendingDown, TrendingUp, Zap, Rocket } from 'lucide-react';
 import { useMarketStore } from '../../stores/marketStore';
-import { fetchQuote } from '../../services/api';
+import { fetchQuote, fetchStrategies } from '../../services/api';
 
 const extraIndices = [
   { name: 'NIFTY MIDCAP SELECT', value: '13,201.05', change: '-0.40%', up: false },
@@ -9,46 +9,41 @@ const extraIndices = [
   { name: 'INDIA VIX', value: '17.05', change: '-0.40%', up: false },
 ];
 
-const recommendedStrategies = [
-  {
-    name: 'Nifty Options Bundle',
-    provider: 'Stockwiz Tech. LLP',
-    minInvestment: '₹3,00,000',
-    tags: [{ label: 'Multi Directional', color: 'bg-orange-100 text-orange-700' }],
-    risk: 'High Risk',
-    instruments: 'Nifty',
-    description: 'A diversified options bundle for Nifty with defined risk parameters.',
-    winRate: '68%',
-    rr: '1:2',
-    return1y: '15.2%',
-    maxDd: '8.5%',
-  },
-  {
-    name: 'Short Strangle Pro',
-    provider: 'Quant AI',
-    minInvestment: '₹2,50,000',
-    tags: [{ label: 'Non-Directional', color: 'bg-blue-100 text-blue-700' }],
-    risk: 'Medium Risk',
-    instruments: 'BankNifty',
-    description: 'Weekly short strangle on BankNifty with IV filter and theta capture.',
-    winRate: '72%',
-    rr: '1:1.5',
-    return1y: '12.5%',
-    maxDd: '6.2%',
-  },
-];
-
 interface DashboardViewProps {
   onNavigate?: (view: 'strategies' | 'backtest') => void;
+  onRunStrategy?: (spec: any) => void;
 }
 
-export const DashboardView = ({ onNavigate }: DashboardViewProps) => {
+export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps) => {
   const { niftyQuote, bankNiftyQuote, setQuote } = useMarketStore();
+  const [strategies, setStrategies] = useState<any[]>([]);
+  const [loadingStrategies, setLoadingStrategies] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [categories, setCategories] = useState<string[]>(['All']);
 
   useEffect(() => {
     fetchQuote('NIFTY').then(setQuote).catch(() => {});
     fetchQuote('BANKNIFTY').then(setQuote).catch(() => {});
   }, [setQuote]);
+
+  useEffect(() => {
+    const loadStrategies = async () => {
+      try {
+        const data = await fetchStrategies();
+        const rows = data || [];
+        setStrategies(rows);
+        const dynamicCategories = Array.from(
+          new Set(['All', ...rows.map((s: any) => s.category || 'Uncategorized')])
+        );
+        setCategories(dynamicCategories);
+      } catch (err) {
+        console.error('Error loading dashboard strategies', err);
+      } finally {
+        setLoadingStrategies(false);
+      }
+    };
+    loadStrategies();
+  }, []);
 
   const formatPrice = (v?: number) => (v ? v.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '—');
 
@@ -146,23 +141,52 @@ export const DashboardView = ({ onNavigate }: DashboardViewProps) => {
           <div className="flex items-center gap-2 mb-4">
             <span className="text-lg">👍</span>
             <h3 className="font-bold text-slate-900">Recommended Algo Strategies</h3>
-            <div className="ml-auto flex gap-2 text-xs">
-              {['Individual', 'Bundled', 'Algofolio'].map((tab, i) => (
-                <button
-                  key={tab}
-                  className={`px-3 py-1.5 rounded-lg font-semibold ${
-                    i === 1 ? 'bg-brand text-white' : 'bg-white border border-[#e5e9f0] text-muted'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2">
-            {recommendedStrategies.map((s) => (
-              <StrategyCard key={s.name} {...s} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
+            {categories.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setSelectedCategory(tab)}
+                className={`px-3 py-2 rounded-lg text-xs font-semibold ${
+                  selectedCategory === tab ? 'bg-brand text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {tab}
+              </button>
             ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {loadingStrategies ? (
+              <div className="col-span-3 py-12 text-center text-slate-500">Loading strategies...</div>
+            ) : (
+              strategies
+                .filter((s) => selectedCategory === 'All' || s.category === selectedCategory)
+                .slice(0, 6)
+                .map((s) => (
+                  <div key={s.slug} className="card p-5 bg-slate-950 border border-slate-800">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[9px] uppercase tracking-wider text-slate-500">{s.category || 'General'}</span>
+                      <span className="text-[10px] font-black text-brand">{s.backtest_results?.win_rate ? `${s.backtest_results.win_rate}% WR` : ''}</span>
+                    </div>
+                    <h4 className="font-bold text-slate-100 text-sm mb-2">{s.name}</h4>
+                    <p className="text-[11px] text-slate-400 leading-relaxed mb-4 min-h-[52px]">{s.description || s.hypothesis || 'Quantitative strategy from the library.'}</p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {(s.tags || []).slice(0, 2).map((tag: string) => (
+                        <span key={tag} className="rounded-full bg-slate-800 px-2 py-1 text-[10px] uppercase text-slate-400">{tag}</span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => onRunStrategy?.({ ...s.backtest_spec, symbol: s.backtest_spec?.symbol || 'NIFTY' })}
+                        className="btn-primary flex-1 py-2 text-[10px] font-black uppercase tracking-wider"
+                      >
+                        Run
+                      </button>
+                      <button className="btn-outline flex-1 py-2 text-[10px] font-black uppercase tracking-wider">View</button>
+                    </div>
+                  </div>
+                ))
+            )}
           </div>
         </div>
 
@@ -198,62 +222,3 @@ export const DashboardView = ({ onNavigate }: DashboardViewProps) => {
   );
 };
 
-function StrategyCard({
-  name,
-  provider,
-  minInvestment,
-  tags,
-  risk,
-  instruments,
-  description,
-  winRate,
-  rr,
-  return1y,
-  maxDd,
-}: (typeof recommendedStrategies)[0]) {
-  return (
-    <div className="card p-4 min-w-[300px] max-w-[320px] shrink-0 flex flex-col">
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          <h4 className="font-bold text-slate-900 text-sm">{name}</h4>
-          <div className="flex items-center gap-1 mt-0.5">
-            <span className="text-xs text-muted">{provider}</span>
-            <span className="text-brand text-xs">✓</span>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-[10px] text-muted">Min Investment</div>
-          <div className="text-xs font-bold text-slate-900">{minInvestment}</div>
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {tags.map((t) => (
-          <span key={t.label} className={`tag ${t.color}`}>{t.label}</span>
-        ))}
-        <span className="tag bg-red-100 text-danger">{risk}</span>
-      </div>
-      <div className="text-[10px] text-muted uppercase font-semibold mb-1">Instruments</div>
-      <div className="text-xs font-semibold text-slate-800 mb-2">{instruments}</div>
-      <p className="text-xs text-muted mb-3 line-clamp-2">{description}</p>
-      <div className="grid grid-cols-2 gap-2 mb-4 text-center">
-        {[
-          ['Win Rate', winRate],
-          ['R/R Ratio', rr],
-          ['1 Year Return', return1y],
-          ['Max Drawdown', maxDd],
-        ].map(([k, v]) => (
-          <div key={k} className="bg-slate-50 rounded-lg py-2">
-            <div className="text-[10px] text-muted">{k}</div>
-            <div className="text-xs font-bold text-slate-900">{v}</div>
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-2 mt-auto">
-        <button className="btn-primary flex-1 py-2 text-xs flex items-center justify-center gap-1">
-          <Zap size={12} /> Instant Deploy
-        </button>
-        <button className="btn-outline flex-1 py-2 text-xs">View Details</button>
-      </div>
-    </div>
-  );
-}

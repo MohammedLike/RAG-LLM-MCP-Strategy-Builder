@@ -31,9 +31,14 @@ export const PredefinedStrategies = ({ onLoadStrategy }: PredefinedStrategiesPro
     // Default symbol and period for prebuilt runs (Indian context)
     const symbol = 'NIFTY';
     const period = '2y';
-    
-    await runBacktest(symbol, strat.backtest_spec, period);
-    onLoadStrategy(strat.backtest_spec);
+    try {
+      await runBacktest(symbol, strat.backtest_spec, period);
+      onLoadStrategy(strat.backtest_spec);
+    } catch (err) {
+      console.error('Predefined strategy run failed', err);
+    } finally {
+      setActiveStrategySlug(null);
+    }
   };
 
   return (
@@ -57,7 +62,10 @@ export const PredefinedStrategies = ({ onLoadStrategy }: PredefinedStrategiesPro
         {strategies.length > 0 ? (
           strategies.map((strat) => {
             const isRunningThis = loading && activeStrategySlug === strat.slug;
-            const isCurrentlyDisplayed = latestBacktest?.strategy_spec === strat.backtest_spec;
+            // Compare strategy specs deeply since they can be different object instances
+            const isCurrentlyDisplayed = latestBacktest?.strategy_spec && strat.backtest_spec
+              ? JSON.stringify(latestBacktest.strategy_spec) === JSON.stringify(strat.backtest_spec)
+              : false;
             
             return (
               <div

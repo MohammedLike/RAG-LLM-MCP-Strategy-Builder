@@ -55,8 +55,13 @@ def search_strategies(query_embedding: list[float], top_k: int = 5, category: st
     if category:
         query_filter = Filter(must=[FieldCondition(key="category", match=MatchValue(value=category))])
     try:
-        results = c.search(collection_name=COLLECTION_NAME, query_vector=query_embedding, limit=top_k, query_filter=query_filter)
-        return [{"text": res.payload["text"], "score": res.score, "metadata": {k: v for k, v in res.payload.items() if k != "text"}} for res in results]
+        results = c.query_points(
+            collection_name=COLLECTION_NAME,
+            query=query_embedding,
+            limit=top_k,
+            query_filter=query_filter
+        )
+        return [{"text": res.payload["text"], "score": res.score, "metadata": {k: v for k, v in res.payload.items() if k != "text"}} for res in results.points]
     except Exception as e:
         print(f"Qdrant search error: {e}")
         return []

@@ -44,6 +44,125 @@ class NLParser:
             match = pattern.search(text)
             if match:
                 return self._build_spec(name, match)
+        
+        # Fallback Heuristic Parser
+        text_lower = text.lower()
+        
+        # 1. Extract Symbol
+        symbol = "NIFTY"  # default
+        for sym in ["NIFTY", "BANKNIFTY", "RELIANCE", "TCS", "INFY", "HDFCBANK", "SBI", "ICICIBANK", "FINNIFTY", "SENSEX", "NIFTY100", "NIFTY500"]:
+            if sym.lower() in text_lower:
+                symbol = sym
+                break
+                
+        # 2. Extract Period
+        period = "2y"  # default
+        period_match = re.search(r"(\d+)\s*(?:y|year)s?", text_lower)
+        if period_match:
+            p_val = period_match.group(1)
+            period = f"{p_val}y"
+            # Normalize to allowed periods
+            if period not in ["1y", "2y", "5y", "8y"]:
+                period = "2y"
+                
+        # 3. Check for Options Strategy
+        options_keywords = ["straddle", "strangle", "iron condor", "option"]
+        is_option = any(kw in text_lower for kw in options_keywords) or bool(re.search(r"\b(?:ce|pe)\b", text_lower))
+        
+        if is_option:
+            strike = "ATM"
+            if "itm-2" in text_lower or "itm -2" in text_lower: strike = "ITM-2"
+            elif "itm-1" in text_lower or "itm -1" in text_lower: strike = "ITM-1"
+            elif "otm+1" in text_lower or "otm +1" in text_lower: strike = "OTM+1"
+            elif "otm+2" in text_lower or "otm +2" in text_lower: strike = "OTM+2"
+            elif "otm" in text_lower: strike = "OTM"
+            elif "itm" in text_lower: strike = "ITM"
+            
+            option_type = "CE"
+            if "pe" in text_lower or "put" in text_lower:
+                option_type = "PE"
+            elif "straddle" in text_lower or "strangle" in text_lower or "iron condor" in text_lower:
+                option_type = "STRADDLE"
+                
+            return {
+                "action": "run_backtest",
+                "symbol": symbol, "period": period,
+                "instrument_type": "OPTION",
+                "strategy_spec": {
+                    "instrument_type": "OPTION",
+                    "strike": strike, "option_type": option_type,
+                    "entry": {"conditions": [], "logical_operator": "AND"},
+                    "exit": {"conditions": [], "logical_operator": "AND"}
+                }
+            }
+            
+        # 4. Check for SMA/EMA Crossover
+        if "sma" in text_lower or "ema" in text_lower:
+            nums = [int(n) for n in re.findall(r"\b\d+\b", text) if int(n) in [5, 9, 10, 20, 30, 50, 100, 200] or (2 < int(n) < 300)]
+            sma_periods = [int(n) for n in re.findall(r"(?:sma|ema)\s*(?:period\s*)?(\d+)", text_lower)]
+            if not sma_periods:
+                sma_periods = [n for n in nums if n not in [1, 2, 5, 8]]
+            
+            if len(sma_periods) >= 2:
+                fast = min(sma_periods)
+                slow = max(sma_periods)
+            else:
+                fast = 20
+                slow = 50
+                
+            op = "crosses_above"
+            if "below" in text_lower or "under" in text_lower:
+                op = "crosses_below"
+                
+            exit_op = "crosses_below" if op == "crosses_above" else "crosses_above"
+            ind_type = "EMA" if "ema" in text_lower else "SMA"
+            
+            return {
+                "action": "run_backtest",
+                "symbol": symbol, "period": period,
+                "instrument_type": "EQUITY",
+                "strategy_spec": {
+                    "entry": {"conditions": [{"indicator": ind_type, "params": {"timeperiod": fast}, "operator": op, "value": {"indicator": ind_type, "params": {"timeperiod": slow}}}], "logical_operator": "AND"},
+                    "exit": {"conditions": [{"indicator": ind_type, "params": {"timeperiod": fast}, "operator": exit_op, "value": {"indicator": ind_type, "params": {"timeperiod": slow}}}], "logical_operator": "AND"}
+                }
+            }
+            
+        # 5. Check for RSI Mean Reversion
+        if "rsi" in text_lower:
+            nums = [float(n) for n in re.findall(r"\b\d+\.?\d*\b", text) if 10 < float(n) < 90]
+            entry_val = 30.0
+            exit_val = 70.0
+            
+            if len(nums) >= 2:
+                entry_val = min(nums)
+                exit_val = max(nums)
+            elif len(nums) == 1:
+                val = nums[0]
+                if val <= 50:
+                    entry_val = val
+                else:
+                    exit_val = val
+                    
+            op = "<"
+            if "above" in text_lower or ">" in text_lower:
+                if len(nums) == 1 and nums[0] > 50:
+                    exit_val = nums[0]
+                op = ">"
+                
+            exit_op = ">"
+            if "below" in text_lower or "<" in text_lower:
+                exit_op = "<"
+                
+            return {
+                "action": "run_backtest",
+                "symbol": symbol, "period": period,
+                "instrument_type": "EQUITY",
+                "strategy_spec": {
+                    "entry": {"conditions": [{"indicator": "RSI", "params": {"timeperiod": 14}, "operator": op, "value": entry_val}], "logical_operator": "AND"},
+                    "exit": {"conditions": [{"indicator": "RSI", "params": {"timeperiod": 14}, "operator": exit_op, "value": exit_val}], "logical_operator": "AND"}
+                }
+            }
+            
         return None
 
     def _build_spec(self, name: str, match: re.Match) -> dict:

@@ -2049,7 +2049,9 @@
 
 <script>
   // API Config
-  const API_BASE = `${window.location.protocol}//${window.location.hostname}:8001/api`;
+  const API_BASE = (window.location.protocol === 'file:') 
+    ? 'http://localhost:8001/api' 
+    : `${window.location.protocol}//${window.location.hostname}:8001/api`;
 
   // Fallback Templates Dataset (Page 1 to 4, total 36 items)
   // Strategies Dataset (populated from database)
@@ -2300,12 +2302,20 @@
     const endIdx = startIdx + itemsPerPage;
     const paginated = filtered.slice(startIdx, endIdx);
 
-    document.getElementById('templateGrid').innerHTML = paginated.map(renderCard).join('');
+    const grid = document.getElementById('templateGrid');
+    if (grid) {
+      grid.innerHTML = paginated.map(renderCard).join('');
+    }
 
     // Update pagination labels
-    document.getElementById('page-indicator').textContent = `${currentPage} / ${totalPages}`;
-    document.getElementById('prev-page-btn').disabled = currentPage === 1;
-    document.getElementById('next-page-btn').disabled = currentPage === totalPages;
+    const indicator = document.getElementById('page-indicator');
+    if (indicator) indicator.textContent = `${currentPage} / ${totalPages}`;
+    
+    const prevBtn = document.getElementById('prev-page-btn');
+    if (prevBtn) prevBtn.disabled = currentPage === 1;
+    
+    const nextBtn = document.getElementById('next-page-btn');
+    if (nextBtn) nextBtn.disabled = currentPage === totalPages;
 
     lucide.createIcons();
   }
@@ -2562,19 +2572,25 @@
     if (!strategyText) { alert('Please describe your strategy first.'); return; }
 
     const btn = document.getElementById('runBtn');
-    btn.classList.add('loading');
-    btn.innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div> Parsing strategy...`;
+    if (btn) {
+      btn.classList.add('loading');
+      btn.innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div> Parsing strategy...`;
+    }
 
     const state = document.getElementById('resultState');
-    state.textContent = 'AI parsing strategy...';
-    state.className = 'result-state running';
+    if (state) {
+      state.textContent = 'AI parsing strategy...';
+      state.className = 'result-state running';
+    }
 
     const body = document.getElementById('resultsBody');
-    body.innerHTML = `
-      <div class="ai-thinking" style="border: 1px solid var(--primary); background: var(--card-bg);">
-        <div class="loading-dots"><span></span><span></span><span></span></div>
-        <span style="font-family: var(--font-family);">Parsing strategy rules...</span>
-      </div>`;
+    if (body) {
+      body.innerHTML = `
+        <div class="ai-thinking" style="border: 1px solid var(--primary); background: var(--card-bg);">
+          <div class="loading-dots"><span></span><span></span><span></span></div>
+          <span style="font-family: var(--font-family);">Parsing strategy rules...</span>
+        </div>`;
+    }
 
     // Retrieve input values from configuration panel
     const symbolSelect = document.getElementById("instrument");
@@ -2608,13 +2624,15 @@
 
     // Execute FastAPI vectorbt simulation after 1.5s loader
     setTimeout(async () => {
-      body.innerHTML = `
-        <div class="progress-bar"><div class="progress-fill animate"></div></div>
-        <div class="ai-thinking" style="border: 1px solid var(--primary); background: var(--card-bg);">
-          <div class="loading-dots"><span></span><span></span><span></span></div>
-          <span style="font-family: var(--font-family);">Running backtest on ${symbol} data (${period.toUpperCase()}) — simulating historical sessions...</span>
-        </div>`;
-      btn.innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div> Running simulation...`;
+      if (body) {
+        body.innerHTML = `
+          <div class="progress-bar"><div class="progress-fill animate"></div></div>
+          <div class="ai-thinking" style="border: 1px solid var(--primary); background: var(--card-bg);">
+            <div class="loading-dots"><span></span><span></span><span></span></div>
+            <span style="font-family: var(--font-family);">Running backtest on ${symbol} data (${period.toUpperCase()}) — simulating historical sessions...</span>
+          </div>`;
+      }
+      if (btn) btn.innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div> Running simulation...`;
 
       try {
         // Send POST backtest query
@@ -2631,25 +2649,35 @@
         const data = await response.json();
         
         if (data.error) {
-          state.textContent = 'Failed';
-          state.className = 'result-state';
-          btn.classList.remove('loading');
-          btn.innerHTML = `<i data-lucide="play" style="width: 14px; height: 14px; fill: #fff;"></i> Run Again`;
-          body.innerHTML = `
-            <div class="empty-state">
-              <div class="empty-icon" style="color:var(--red)"><i data-lucide="alert-circle" style="width: 48px; height: 48px;"></i></div>
-              <div class="empty-title">Backtest Failed</div>
-              <div class="empty-sub">${data.error}</div>
-            </div>`;
+          if (state) {
+            state.textContent = 'Failed';
+            state.className = 'result-state';
+          }
+          if (btn) {
+            btn.classList.remove('loading');
+            btn.innerHTML = `<i data-lucide="play" style="width: 14px; height: 14px; fill: #fff;"></i> Run Again`;
+          }
+          if (body) {
+            body.innerHTML = `
+              <div class="empty-state">
+                <div class="empty-icon" style="color:var(--red)"><i data-lucide="alert-circle" style="width: 48px; height: 48px;"></i></div>
+                <div class="empty-title">Backtest Failed</div>
+                <div class="empty-sub">${data.error}</div>
+              </div>`;
+          }
           lucide.createIcons();
           return;
         }
 
         // Successfully executed backtest
-        state.textContent = `Completed — ${data.trades ? data.trades.length : 0} trades executed`;
-        state.className = 'result-state done';
-        btn.classList.remove('loading');
-        btn.innerHTML = `<i data-lucide="play" style="width: 14px; height: 14px; fill: #fff;"></i> Run Again`;
+        if (state) {
+          state.textContent = `Completed — ${data.trades ? data.trades.length : 0} trades executed`;
+          state.className = 'result-state done';
+        }
+        if (btn) {
+          btn.classList.remove('loading');
+          btn.innerHTML = `<i data-lucide="play" style="width: 14px; height: 14px; fill: #fff;"></i> Run Again`;
+        }
         
         // Render the actual VectorBT results
         renderActualResults(data, symbol);
@@ -2657,16 +2685,22 @@
         
       } catch (err) {
         console.error("Backtest connection error", err);
-        state.textContent = 'Connection Error';
-        state.className = 'result-state';
-        btn.classList.remove('loading');
-        btn.innerHTML = `<i data-lucide="play" style="width: 14px; height: 14px; fill: #fff;"></i> Run Again`;
-        body.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon" style="color:var(--red)"><i data-lucide="alert-triangle" style="width: 48px; height: 48px;"></i></div>
-            <div class="empty-title">Connection Failed</div>
-            <div class="empty-sub">Could not connect to the backtesting server at ${API_BASE}. Make sure the backend service is running.</div>
-          </div>`;
+        if (state) {
+          state.textContent = 'Connection Error';
+          state.className = 'result-state';
+        }
+        if (btn) {
+          btn.classList.remove('loading');
+          btn.innerHTML = `<i data-lucide="play" style="width: 14px; height: 14px; fill: #fff;"></i> Run Again`;
+        }
+        if (body) {
+          body.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon" style="color:var(--red)"><i data-lucide="alert-triangle" style="width: 48px; height: 48px;"></i></div>
+              <div class="empty-title">Connection Failed</div>
+              <div class="empty-sub">Could not connect to the backtesting server at ${API_BASE}. Make sure the backend service is running.</div>
+            </div>`;
+        }
         lucide.createIcons();
       }
     }, 1500);
@@ -2674,145 +2708,160 @@
 
   // Populate dynamic vectorbt metrics, canvases, and log tables
   function renderActualResults(data, symbol) {
-    const totalReturn = data.total_return !== undefined ? data.total_return.toFixed(2) : '0.00';
-    const sharpe = data.sharpe !== undefined ? data.sharpe.toFixed(2) : '0.00';
-    const maxDD = data.max_drawdown !== undefined ? data.max_drawdown.toFixed(2) : '0.00';
-    const winRate = data.win_rate !== undefined ? data.win_rate.toFixed(0) : '0';
-    const totalTrades = data.trades ? data.trades.length : 0;
-    const profitFactor = data.profit_factor !== undefined ? data.profit_factor.toFixed(2) : '0.00';
-    const sortino = data.sortino !== undefined ? data.sortino.toFixed(2) : '0.00';
+    if (!data) return;
     
-    // Calculate average trade P&L percentage return
-    let avgTrade = '0.00';
-    if (totalTrades > 0) {
-      const sumPnlPct = data.trades.reduce((sum, t) => sum + (t.pnl_pct || 0), 0);
-      avgTrade = (sumPnlPct / totalTrades).toFixed(2);
+    try {
+      const totalReturn = data.total_return !== undefined ? data.total_return.toFixed(2) : '0.00';
+      const sharpe = data.sharpe !== undefined ? data.sharpe.toFixed(2) : '0.00';
+      const maxDD = data.max_drawdown !== undefined ? data.max_drawdown.toFixed(2) : '0.00';
+      const winRate = data.win_rate !== undefined ? data.win_rate.toFixed(0) : '0';
+      const totalTrades = data.trades ? data.trades.length : 0;
+      const profitFactor = data.profit_factor !== undefined ? data.profit_factor.toFixed(2) : '0.00';
+      const sortino = data.sortino !== undefined ? data.sortino.toFixed(2) : '0.00';
+      
+      // Calculate average trade P&L percentage return
+      let avgTrade = '0.00';
+      if (totalTrades > 0) {
+        const sumPnlPct = data.trades.reduce((sum, t) => sum + (t.pnl_pct || 0), 0);
+        avgTrade = (sumPnlPct / totalTrades).toFixed(2);
+      }
+      
+      // Count winning/losing sessions
+      const wins = data.trades ? data.trades.filter(t => (t.pnl_pct || 0) >= 0).length : 0;
+      const losses = totalTrades - wins;
+
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const monthlyReturns = calculateMonthlyReturns(data.equity_curve);
+
+      const body = document.getElementById('resultsBody');
+      if (!body) return;
+
+      body.innerHTML = `
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Return</div>
+            <div class="stat-value ${parseFloat(totalReturn) >= 0 ? 'green' : 'red'}">${parseFloat(totalReturn) >= 0 ? '+' : ''}${totalReturn}%</div>
+            <div class="stat-sub">Active Ticker: ${symbol}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Sharpe Ratio</div>
+            <div class="stat-value yellow">${sharpe}</div>
+            <div class="stat-sub">Risk-adjusted return</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Max Drawdown</div>
+            <div class="stat-value red">${maxDD}%</div>
+            <div class="stat-sub">Peak-to-trough drop</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-value">${winRate}%</div>
+            <div class="stat-sub">${wins}W / ${losses}L</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Trades</div>
+            <div class="stat-value">${totalTrades}</div>
+            <div class="stat-sub">Over active period</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Profit Factor</div>
+            <div class="stat-value yellow">${profitFactor}</div>
+            <div class="stat-sub">Gross Win / Gross Loss</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Sortino Ratio</div>
+            <div class="stat-value yellow">${sortino}</div>
+            <div class="stat-sub">Downside-adjusted metric</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Trade</div>
+            <div class="stat-value ${parseFloat(avgTrade) >= 0 ? 'green' : 'red'}">${parseFloat(avgTrade) >= 0 ? '+' : ''}${avgTrade}%</div>
+            <div class="stat-sub">Per session return</div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">
+            <i data-lucide="line-chart"></i>
+            Equity Growth Curve (VectorBT)
+          </div>
+          <canvas id="equityCurveCanvas"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">
+            <i data-lucide="grid"></i>
+            Monthly Returns Performance (Seeded from OHLC)
+          </div>
+          <div class="heatmap-grid">
+            ${monthlyReturns.map((v, i) => `
+              <div class="hm-cell ${v >= 0 ? 'pos' : 'neg'}">
+                <span class="hm-month">${months[i]}</span>
+                <span class="hm-val">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">
+            <i data-lucide="list"></i>
+            Executed Order Log (VectorBT Simulation)
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Entry Date</th>
+                  <th>Exit Date</th>
+                  <th>Avg Entry Price</th>
+                  <th>Avg Exit Price</th>
+                  <th>Trade P&L</th>
+                  <th>Change P&L %</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.trades && data.trades.length > 0 
+                  ? data.trades.slice(0, 30).map(t => {
+                      const ep = t.entry_price !== undefined ? t.entry_price : 0;
+                      const xp = t.exit_price !== undefined ? t.exit_price : 0;
+                      const pnl = t.pnl !== undefined ? t.pnl : 0;
+                      const pnl_pct = t.pnl_pct !== undefined ? t.pnl_pct : 0;
+                      return `
+                        <tr>
+                          <td>#${t.id}</td>
+                          <td>${t.entry_date}</td>
+                          <td>${t.exit_date}</td>
+                          <td>₹${ep.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                          <td>₹${xp.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                          <td class="${pnl >= 0 ? 'trade-pos' : 'trade-neg'}">${pnl >= 0 ? '+' : ''}₹${pnl.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                          <td><span class="${pnl_pct >= 0 ? 'side-buy' : 'side-sell'}">${pnl_pct >= 0 ? '+' : ''}${pnl_pct.toFixed(2)}%</span></td>
+                        </tr>
+                      `;
+                    }).join('')
+                  : `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No trades executed by strategy parameters.</td></tr>`
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      // Draw canvas equity curve path
+      const points = data.equity_curve ? data.equity_curve.map(p => p.value) : [100.0];
+      setTimeout(() => {
+        drawEquityCurve('equityCurveCanvas', points);
+        lucide.createIcons();
+      }, 100);
+    } catch (err) {
+      console.error("Error rendering backtest results", err);
     }
-    
-    // Count winning/losing sessions
-    const wins = data.trades ? data.trades.filter(t => (t.pnl_pct || 0) >= 0).length : 0;
-    const losses = totalTrades - wins;
-
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const monthlyReturns = calculateMonthlyReturns(data.equity_curve);
-
-    const body = document.getElementById('resultsBody');
-    body.innerHTML = `
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total Return</div>
-          <div class="stat-value ${parseFloat(totalReturn) >= 0 ? 'green' : 'red'}">${parseFloat(totalReturn) >= 0 ? '+' : ''}${totalReturn}%</div>
-          <div class="stat-sub">Active Ticker: ${symbol}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Sharpe Ratio</div>
-          <div class="stat-value yellow">${sharpe}</div>
-          <div class="stat-sub">Risk-adjusted return</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Max Drawdown</div>
-          <div class="stat-value red">${maxDD}%</div>
-          <div class="stat-sub">Peak-to-trough drop</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Win Rate</div>
-          <div class="stat-value">${winRate}%</div>
-          <div class="stat-sub">${wins}W / ${losses}L</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Trades</div>
-          <div class="stat-value">${totalTrades}</div>
-          <div class="stat-sub">Over active period</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Profit Factor</div>
-          <div class="stat-value yellow">${profitFactor}</div>
-          <div class="stat-sub">Gross Win / Gross Loss</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Sortino Ratio</div>
-          <div class="stat-value yellow">${sortino}</div>
-          <div class="stat-sub">Downside-adjusted metric</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Avg Trade</div>
-          <div class="stat-value ${parseFloat(avgTrade) >= 0 ? 'green' : 'red'}">${parseFloat(avgTrade) >= 0 ? '+' : ''}${avgTrade}%</div>
-          <div class="stat-sub">Per session return</div>
-        </div>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-title">
-          <i data-lucide="line-chart"></i>
-          Equity Growth Curve (VectorBT)
-        </div>
-        <canvas id="equityCurveCanvas"></canvas>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-title">
-          <i data-lucide="grid"></i>
-          Monthly Returns Performance (Seeded from OHLC)
-        </div>
-        <div class="heatmap-grid">
-          ${monthlyReturns.map((v, i) => `
-            <div class="hm-cell ${v >= 0 ? 'pos' : 'neg'}">
-              <span class="hm-month">${months[i]}</span>
-              <span class="hm-val">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-title">
-          <i data-lucide="list"></i>
-          Executed Order Log (VectorBT Simulation)
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Entry Date</th>
-                <th>Exit Date</th>
-                <th>Avg Entry Price</th>
-                <th>Avg Exit Price</th>
-                <th>Trade P&L</th>
-                <th>Change P&L %</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${data.trades && data.trades.length > 0 
-                ? data.trades.slice(0, 30).map(t => `
-                    <tr>
-                      <td>#${t.id}</td>
-                      <td>${t.entry_date}</td>
-                      <td>${t.exit_date}</td>
-                      <td>₹${t.entry_price.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                      <td>₹${t.exit_price.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                      <td class="${t.pnl >= 0 ? 'trade-pos' : 'trade-neg'}">${t.pnl >= 0 ? '+' : ''}₹${t.pnl.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                      <td><span class="${t.pnl_pct >= 0 ? 'side-buy' : 'side-sell'}">${t.pnl_pct >= 0 ? '+' : ''}${t.pnl_pct.toFixed(2)}%</span></td>
-                    </tr>
-                  `).join('')
-                : `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No trades executed by strategy parameters.</td></tr>`
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-
-    // Draw canvas equity curve path
-    const points = data.equity_curve ? data.equity_curve.map(p => p.value) : [100000];
-    setTimeout(() => {
-      drawEquityCurve('equityCurveCanvas', points);
-      lucide.createIcons();
-    }, 100);
   }
 
   // Draw Equity Canvas Curve
   function drawEquityCurve(canvasId, dataPoints) {
+    if (!dataPoints || dataPoints.length < 2) return;
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
     const ctx = canvas.getContext('2d');

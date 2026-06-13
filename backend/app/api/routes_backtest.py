@@ -38,10 +38,7 @@ async def get_latest_backtest():
 
 @router.post("/backtest")
 async def run_backtest(request: RunBacktestInput):
-    summary = await run_backtest_tool(request)
-    if "error" in summary:
-        return summary
-    return tool_run_backtest.LAST_BACKTEST
+    return await run_backtest_tool(request)
 
 @router.post("/backtest/async")
 async def run_backtest_async(requests: list[AsyncBacktestRequest], background_tasks: BackgroundTasks):

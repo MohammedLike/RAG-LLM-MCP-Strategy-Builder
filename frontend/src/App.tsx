@@ -12,6 +12,9 @@ import {
 } from 'recharts';
 import { fetchCompanies } from './services/api';
 import type { Condition } from './types';
+import { Sidebar, type AppView } from './components/layout/Sidebar';
+import { DashboardView } from './components/dashboard/DashboardView';
+import { StrategyExplorer } from './components/strategy/StrategyExplorer';
 
 const defaultCondition = (): Condition => ({
   id: crypto.randomUUID(),
@@ -26,6 +29,9 @@ const defaultCondition = (): Condition => ({
 
 function App() {
   const { latestBacktest, runBacktest, loading, error, fetchIndicators, indicators } = useBacktestStore();
+
+  const [activeView, setActiveView] = useState<AppView>('dashboard');
+  const [tradingMode, setTradingMode] = useState<'live' | 'virtual'>('virtual');
 
   const [symbol, setSymbol] = useState('NIFTY');
   const [symbolSearch, setSymbolSearch] = useState('NIFTY');
@@ -92,6 +98,15 @@ function App() {
     await runBacktest(symbol, strategySpec, period);
   };
 
+  const handleRunInstant = async (spec: any) => {
+    if (!spec) return;
+    const targetSymbol = spec.symbol || 'NIFTY';
+    setSymbol(targetSymbol);
+    setSymbolSearch(targetSymbol);
+    setActiveView('backtest');
+    await runBacktest(targetSymbol, spec, period);
+  };
+
   const metrics = latestBacktest ? [
     { label: 'Total Return', value: `${latestBacktest.total_return.toFixed(2)}%`, color: latestBacktest.total_return >= 0 ? 'text-emerald-400' : 'text-red-400' },
     { label: 'CAGR', value: `${latestBacktest.cagr?.toFixed(2) || '0.00'}%`, color: 'text-emerald-400' },
@@ -142,234 +157,259 @@ function App() {
   );
 
   return (
-    <div className="h-screen w-screen bg-[#06090f] flex flex-col overflow-hidden text-slate-200 font-sans">
-      {/* TOP HEADER */}
-      <header className="h-12 bg-[#0a0e17] border-b border-slate-800/60 px-4 flex items-center justify-between shrink-0 z-10">
-        <div className="flex items-center gap-3">
-          <div className="h-7 w-7 rounded bg-[#00d09c] flex items-center justify-center text-[#06090f]"><Cpu size={14} /></div>
-          <span className="text-xs font-black text-white tracking-tighter">STREAK <span className="text-[#00d09c]">AI</span></span>
-          <span className="text-[8px] text-slate-600 font-mono">PRO SIMULATOR</span>
-        </div>
-        <div className="flex items-center gap-2 text-[10px]">
-          <div className="relative">
-            <input type="text" value={symbolSearch} onFocus={() => setShowSymbolDropdown(true)}
-              onChange={e => { setSymbolSearch(e.target.value); setShowSymbolDropdown(true); const s = e.target.value.split(' - ')[0].trim().toUpperCase(); if (s) setSymbol(s); }}
-              className="w-36 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]" placeholder="Symbol..." />
-            {showSymbolDropdown && companies.length > 0 && (
-              <><div className="fixed inset-0 z-10" onClick={() => setShowSymbolDropdown(false)} />
-                <div className="absolute top-full left-0 mt-1 bg-slate-900 border border-slate-800 rounded max-h-40 overflow-y-auto z-20 w-48">
-                  {companies.filter(c => c.symbol.toLowerCase().includes(symbolSearch.split(' - ')[0].toLowerCase())).slice(0, 30).map(c => (
-                    <div key={c.symbol} onClick={() => { setSymbol(c.symbol); setSymbolSearch(`${c.symbol} - ${c.name}`); setShowSymbolDropdown(false); }}
-                      className="px-2 py-1.5 text-[10px] hover:bg-blue-600/30 cursor-pointer text-slate-300">{c.symbol} <span className="text-slate-600">{c.name}</span></div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-          <select value={period} onChange={e => setPeriod(e.target.value)}
-            className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
-            <option value="1y">1Y</option><option value="2y">2Y</option><option value="5y">5Y</option><option value="8y">8Y</option>
-          </select>
-          <select value={instrumentType} onChange={e => setInstrumentType(e.target.value as 'EQUITY'|'OPTION')}
-            className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
-            <option value="EQUITY">Equity</option><option value="OPTION">Option</option>
-          </select>
-          {instrumentType === 'OPTION' && (
-            <>
-              <select value={optionType} onChange={e => setOptionType(e.target.value)}
-                className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
-                <option value="CE">CE</option><option value="PE">PE</option><option value="STRADDLE">Straddle</option>
-              </select>
-              <select value={strike} onChange={e => setStrike(e.target.value)}
-                className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
-                <option value="ITM-2">ITM-2</option><option value="ITM-1">ITM-1</option>
-                <option value="ATM">ATM</option><option value="OTM+1">OTM+1</option><option value="OTM+2">OTM+2</option>
-              </select>
-            </>
-          )}
-          <input type="number" step="0.01" value={stopLoss} onChange={e => setStopLoss(Number(e.target.value))}
-            className="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-1.5 text-slate-200 text-[10px] text-center" placeholder="SL%" />
-          <button onClick={handleRun} disabled={loading}
-            className="bg-[#00d09c] hover:bg-[#00b386] disabled:bg-slate-700 text-[#06090f] px-4 py-1.5 rounded text-[10px] font-black flex items-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed">
-            {loading ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
-            {loading ? 'RUNNING...' : 'RUN'}
-          </button>
-        </div>
-      </header>
-
-      <div className="flex-1 flex overflow-hidden">
-        {/* MAIN CONTENT */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          {/* KPI STRIP */}
-          {latestBacktest && (
-            <div className="flex gap-2 px-3 py-1.5 bg-slate-900/40 border-b border-slate-800/40 overflow-x-auto shrink-0">
-              {metrics.map(m => (
-                <div key={m.label} className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/60 rounded border border-slate-800/50 shrink-0">
-                  <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">{m.label}</span>
-                  <span className={`text-[11px] font-black font-mono ${m.color}`}>{m.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {error && (
-            <div className="mx-3 mt-2 px-3 py-2 bg-red-950/30 border border-red-900/50 text-red-300 rounded text-[10px] font-medium shrink-0">{error}</div>
-          )}
-
-          {/* MAIN CHART AREA */}
-          <div className="flex-1 p-3 overflow-auto">
-            {!latestBacktest && !loading && (
-              <div className="h-full flex flex-col items-center justify-center text-center">
-                <div className="h-12 w-12 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center justify-center mb-3">
-                  <BarChart3 className="text-slate-600" size={24} />
-                </div>
-                <h3 className="text-sm font-black text-slate-400 uppercase tracking-tight">Backtest Simulator Ready</h3>
-                <p className="text-[10px] text-slate-600 mt-1 max-w-md">Configure entry/exit conditions, select a symbol, and hit RUN. Supports Equity & Options (CE/PE/Straddle).</p>
+    <div className="h-screen w-screen bg-white flex overflow-hidden font-sans">
+      <Sidebar 
+        activeView={activeView} 
+        onNavigate={setActiveView} 
+        tradingMode={tradingMode} 
+        onTradingModeChange={setTradingMode} 
+      />
+      
+      <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+        {activeView === 'dashboard' && <DashboardView onNavigate={(v) => setActiveView(v as any)} onRunStrategy={handleRunInstant} />}
+        {activeView === 'strategies' && <StrategyExplorer onRunStrategy={handleRunInstant} />}
+        {activeView === 'backtest' && (
+          <div className="h-full flex flex-col overflow-hidden text-slate-200 bg-[#06090f]">
+            {/* TOP HEADER */}
+            <header className="h-12 bg-[#0a0e17] border-b border-slate-800/60 px-4 flex items-center justify-between shrink-0 z-10">
+              <div className="flex items-center gap-3">
+                <div className="h-7 w-7 rounded bg-[#00d09c] flex items-center justify-center text-[#06090f]"><Cpu size={14} /></div>
+                <span className="text-xs font-black text-white tracking-tighter">STREAK <span className="text-[#00d09c]">AI</span></span>
+                <span className="text-[8px] text-slate-600 font-mono">PRO SIMULATOR</span>
               </div>
-            )}
-
-            {loading && (
-              <div className="h-full flex flex-col items-center justify-center">
-                <div className="relative h-10 w-10 mb-3">
-                  <div className="absolute inset-0 rounded-full border-2 border-slate-800"></div>
-                  <div className="absolute inset-0 rounded-full border-2 border-[#00d09c] border-t-transparent animate-spin"></div>
+              <div className="flex items-center gap-2 text-[10px]">
+                <div className="relative">
+                  <input type="text" value={symbolSearch} onFocus={() => setShowSymbolDropdown(true)}
+                    onChange={e => { setSymbolSearch(e.target.value); setShowSymbolDropdown(true); const s = e.target.value.split(' - ')[0].trim().toUpperCase(); if (s) setSymbol(s); }}
+                    className="w-36 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]" placeholder="Symbol..." />
+                  {showSymbolDropdown && companies.length > 0 && (
+                    <><div className="fixed inset-0 z-10" onClick={() => setShowSymbolDropdown(false)} />
+                      <div className="absolute top-full left-0 mt-1 bg-slate-900 border border-slate-800 rounded max-h-40 overflow-y-auto z-20 w-48">
+                        {companies.filter(c => c.symbol.toLowerCase().includes(symbolSearch.split(' - ')[0].toLowerCase())).slice(0, 30).map(c => (
+                          <div key={c.symbol} onClick={() => { setSymbol(c.symbol); setSymbolSearch(`${c.symbol} - ${c.name}`); setShowSymbolDropdown(false); }}
+                            className="px-2 py-1.5 text-[10px] hover:bg-blue-600/30 cursor-pointer text-slate-300">{c.symbol} <span className="text-slate-600">{c.name}</span></div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Backtesting {symbol}...</p>
+                <select value={period} onChange={e => setPeriod(e.target.value)}
+                  className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
+                  <option value="1y">1Y</option><option value="2y">2Y</option><option value="5y">5Y</option><option value="8y">8Y</option>
+                </select>
+                <select value={instrumentType} onChange={e => setInstrumentType(e.target.value as 'EQUITY'|'OPTION')}
+                  className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
+                  <option value="EQUITY">Equity</option><option value="OPTION">Option</option>
+                </select>
+                {instrumentType === 'OPTION' && (
+                  <>
+                    <select value={optionType} onChange={e => setOptionType(e.target.value)}
+                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
+                      <option value="CE">CE</option><option value="PE">PE</option><option value="STRADDLE">Straddle</option>
+                    </select>
+                    <select value={strike} onChange={e => setStrike(e.target.value)}
+                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
+                      <option value="ITM-2">ITM-2</option><option value="ITM-1">ITM-1</option>
+                      <option value="ATM">ATM</option><option value="OTM+1">OTM+1</option><option value="OTM+2">OTM+2</option>
+                    </select>
+                  </>
+                )}
+                <input type="number" step="0.01" value={stopLoss} onChange={e => setStopLoss(Number(e.target.value))}
+                  className="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-1.5 text-slate-200 text-[10px] text-center" placeholder="SL%" />
+                <button onClick={handleRun} disabled={loading}
+                  className="bg-[#00d09c] hover:bg-[#00b386] disabled:bg-slate-700 text-[#06090f] px-4 py-1.5 rounded text-[10px] font-black flex items-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed">
+                  {loading ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
+                  {loading ? 'RUNNING...' : 'RUN'}
+                </button>
               </div>
-            )}
+            </header>
 
-            {latestBacktest && !loading && (
-              <div className="flex flex-col gap-3">
-                {/* Chart */}
-                <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-[#00d09c]"></div>
-                      <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Performance {chartView === 'both' ? '& Drawdown' : 'Curve'}</h3>
-                    </div>
-                    <div className="flex bg-slate-900 rounded p-0.5 border border-slate-800">
-                      <button onClick={() => setChartView('equity')}
-                        className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider cursor-pointer ${chartView==='equity'?'bg-[#00d09c] text-[#06090f]':'text-slate-500 hover:text-slate-300'}`}>EQUITY</button>
-                      <button onClick={() => setChartView('both')}
-                        className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider cursor-pointer ${chartView==='both'?'bg-[#00d09c] text-[#06090f]':'text-slate-500 hover:text-slate-300'}`}>BOTH</button>
-                    </div>
+            <div className="flex-1 flex overflow-hidden">
+              {/* MAIN CONTENT */}
+              <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+                {/* KPI STRIP */}
+                {latestBacktest && (
+                  <div className="flex gap-2 px-3 py-1.5 bg-slate-900/40 border-b border-slate-800/40 overflow-x-auto shrink-0">
+                    {metrics.map(m => (
+                      <div key={m.label} className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/60 rounded border border-slate-800/50 shrink-0">
+                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">{m.label}</span>
+                        <span className={`text-[11px] font-black font-mono ${m.color}`}>{m.value}</span>
+                      </div>
+                    ))}
                   </div>
-                  <ResponsiveContainer width="100%" height={220}>
-                    <ComposedChart data={latestBacktest.equity_curve}>
-                      <defs>
-                        <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#00d09c" stopOpacity={0.15}/>
-                          <stop offset="95%" stopColor="#00d09c" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="ddGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
-                          <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} strokeOpacity={0.2} />
-                      <XAxis dataKey="date" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false} />
-                      <YAxis yAxisId="equity" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false} domain={['auto','auto']} />
-                      {chartView === 'both' && (
-                        <YAxis yAxisId="drawdown" orientation="right" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false}
-                          domain={[-100, 5]} tickFormatter={(v: number) => `${v.toFixed(0)}%`} />
-                      )}
-                      <Tooltip contentStyle={{backgroundColor:'#0a0e17',border:'1px solid #1e293b',borderRadius:4,color:'#f8fafc',fontSize:10}} />
-                      <Area yAxisId="equity" type="monotone" dataKey="value" stroke="#00d09c" fill="url(#eqGrad)" strokeWidth={2} name="Equity" />
-                      {chartView === 'both' && latestBacktest.drawdown && (
-                        <Area yAxisId="drawdown" type="monotone" data={latestBacktest.drawdown} dataKey="value" stroke="#ef4444" fill="url(#ddGrad)" strokeWidth={1.5} name="Drawdown %" />
-                      )}
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
+                )}
 
-                {/* INLINE STRATEGY BUILDER */}
-                <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg">
-                  <button onClick={() => setShowBuilder(!showBuilder)}
-                    className="w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-200 transition">
-                    <span className="flex items-center gap-2"><Settings2 size={12} /> Strategy Builder</span>
-                    {showBuilder ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
-                  </button>
-                  {showBuilder && (
-                    <div className="px-4 pb-4 space-y-3 border-t border-slate-800/50 pt-3">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wider">Entry (Buy)</span>
-                            <button onClick={() => addCondition('entry')} className="text-[9px] text-blue-400 hover:text-blue-300 cursor-pointer">+ Add</button>
-                          </div>
-                          <div className="space-y-1">{entryConditions.map((c, i) => renderConditionRow(c, i, 'entry'))}</div>
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Exit (Sell)</span>
-                            <button onClick={() => addCondition('exit')} className="text-[9px] text-emerald-400 hover:text-emerald-300 cursor-pointer">+ Add</button>
-                          </div>
-                          <div className="space-y-1">{exitConditions.map((c, i) => renderConditionRow(c, i, 'exit'))}</div>
-                        </div>
+                {error && (
+                  <div className="mx-3 mt-2 px-3 py-2 bg-red-950/30 border border-red-900/50 text-red-300 rounded text-[10px] font-medium shrink-0">{error}</div>
+                )}
+
+                {/* MAIN CHART AREA */}
+                <div className="flex-1 p-3 overflow-auto">
+                  {!latestBacktest && !loading && (
+                    <div className="h-full flex flex-col items-center justify-center text-center">
+                      <div className="h-12 w-12 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center justify-center mb-3">
+                        <BarChart3 className="text-slate-600" size={24} />
                       </div>
-                      <div className="flex gap-3 text-[9px]">
-                        <label className="flex items-center gap-1 text-slate-500 font-bold uppercase"><span className="text-blue-400">Fees</span>
-                          <input type="number" step="0.0001" value={fees} onChange={e => setFees(Number(e.target.value))}
-                            className="w-14 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-slate-200 text-center" />
-                        </label>
-                        <label className="flex items-center gap-1 text-slate-500 font-bold uppercase"><span className="text-blue-400">Slippage</span>
-                          <input type="number" step="0.0001" value={slippage} onChange={e => setSlippage(Number(e.target.value))}
-                            className="w-14 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-slate-200 text-center" />
-                        </label>
-                      </div>
+                      <h3 className="text-sm font-black text-slate-400 uppercase tracking-tight">Backtest Simulator Ready</h3>
+                      <p className="text-[10px] text-slate-600 mt-1 max-w-md">Configure entry/exit conditions, select a symbol, and hit RUN. Supports Equity & Options (CE/PE/Straddle).</p>
                     </div>
                   )}
-                </div>
 
-                {/* TRADE LOG */}
-                <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg">
-                  <button onClick={() => setShowTradeLog(!showTradeLog)}
-                    className="w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-200 transition">
-                    <span className="flex items-center gap-2"><List size={12} /> Trade Log ({latestBacktest.trades?.length || 0} trades)</span>
-                    {showTradeLog ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
-                  </button>
-                  {showTradeLog && (
-                    <div className="px-4 pb-4 border-t border-slate-800/50 pt-2 overflow-x-auto max-h-64 overflow-y-auto">
-                      {latestBacktest.trades && latestBacktest.trades.length > 0 ? (
-                        <table className="w-full text-[10px] text-left">
-                          <thead className="text-slate-500 uppercase text-[8px] font-black sticky top-0 bg-[#0a0e17]">
-                            <tr><th className="px-2 py-1.5">ID</th><th className="px-2 py-1.5">Entry</th><th className="px-2 py-1.5">Exit</th>
-                              <th className="px-2 py-1.5">Entry</th><th className="px-2 py-1.5">Exit</th><th className="px-2 py-1.5">P&L</th>
-                              <th className="px-2 py-1.5">Return</th><th className="px-2 py-1.5">Reason</th></tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800/40">
-                            {latestBacktest.trades.map((t: any) => (
-                              <tr key={t.id} className="hover:bg-slate-800/30">
-                                <td className="px-2 py-1.5 font-mono text-slate-600">#{t.id}</td>
-                                <td className="px-2 py-1.5 font-bold text-slate-400">{t.entry_date}</td>
-                                <td className="px-2 py-1.5 font-bold text-slate-400">{t.exit_date}</td>
-                                <td className="px-2 py-1.5 font-mono">{t.entry_price?.toFixed(2)}</td>
-                                <td className="px-2 py-1.5 font-mono">{t.exit_price?.toFixed(2)}</td>
-                                <td className={`px-2 py-1.5 font-black ${t.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                  {t.pnl >= 0 ? '+' : ''}{t.pnl?.toFixed(2) || '0.00'}
-                                </td>
-                                <td className="px-2 py-1.5"><span className={`px-1 py-0.5 rounded font-black text-[9px] ${t.pnl_pct >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                                  {t.pnl_pct >= 0 ? '+' : ''}{t.pnl_pct?.toFixed(2) || '0.00'}%</span></td>
-                                <td className="px-2 py-1.5 text-slate-500">{t.exit_reason || 'Signal'}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      ) : (
-                        <div className="py-6 text-center text-slate-600 text-[10px] font-bold uppercase tracking-widest">No trades executed</div>
-                      )}
+                  {loading && (
+                    <div className="h-full flex flex-col items-center justify-center">
+                      <div className="relative h-10 w-10 mb-3">
+                        <div className="absolute inset-0 rounded-full border-2 border-slate-800"></div>
+                        <div className="absolute inset-0 rounded-full border-2 border-[#00d09c] border-t-transparent animate-spin"></div>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Backtesting {symbol}...</p>
+                    </div>
+                  )}
+
+                  {latestBacktest && !loading && (
+                    <div className="flex flex-col gap-3">
+                      {/* Chart */}
+                      <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-[#00d09c]"></div>
+                            <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Performance {chartView === 'both' ? '& Drawdown' : 'Curve'}</h3>
+                          </div>
+                          <div className="flex bg-slate-900 rounded p-0.5 border border-slate-800">
+                            <button onClick={() => setChartView('equity')}
+                              className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider cursor-pointer ${chartView==='equity'?'bg-[#00d09c] text-[#06090f]':'text-slate-500 hover:text-slate-300'}`}>EQUITY</button>
+                            <button onClick={() => setChartView('both')}
+                              className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider cursor-pointer ${chartView==='both'?'bg-[#00d09c] text-[#06090f]':'text-slate-500 hover:text-slate-300'}`}>BOTH</button>
+                          </div>
+                        </div>
+                        <ResponsiveContainer width="100%" height={220}>
+                          <ComposedChart data={latestBacktest.equity_curve}>
+                            <defs>
+                              <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#00d09c" stopOpacity={0.15}/>
+                                <stop offset="95%" stopColor="#00d09c" stopOpacity={0}/>
+                              </linearGradient>
+                              <linearGradient id="ddGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
+                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} strokeOpacity={0.2} />
+                            <XAxis dataKey="date" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false} />
+                            <YAxis yAxisId="equity" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false} domain={['auto','auto']} />
+                            {chartView === 'both' && (
+                              <YAxis yAxisId="drawdown" orientation="right" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false}
+                                domain={[-100, 5]} tickFormatter={(v: number) => `${v.toFixed(0)}%`} />
+                            )}
+                            <Tooltip contentStyle={{backgroundColor:'#0a0e17',border:'1px solid #1e293b',borderRadius:4,color:'#f8fafc',fontSize:10}} />
+                            <Area yAxisId="equity" type="monotone" dataKey="value" stroke="#00d09c" fill="url(#eqGrad)" strokeWidth={2} name="Equity" />
+                            {chartView === 'both' && latestBacktest.drawdown && (
+                              <Area yAxisId="drawdown" type="monotone" data={latestBacktest.drawdown} dataKey="value" stroke="#ef4444" fill="url(#ddGrad)" strokeWidth={1.5} name="Drawdown %" />
+                            )}
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* INLINE STRATEGY BUILDER */}
+                      <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg">
+                        <button onClick={() => setShowBuilder(!showBuilder)}
+                          className="w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-200 transition">
+                          <span className="flex items-center gap-2"><Settings2 size={12} /> Strategy Builder</span>
+                          {showBuilder ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
+                        </button>
+                        {showBuilder && (
+                          <div className="px-4 pb-4 space-y-3 border-t border-slate-800/50 pt-3">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wider">Entry (Buy)</span>
+                                  <button onClick={() => addCondition('entry')} className="text-[9px] text-blue-400 hover:text-blue-300 cursor-pointer">+ Add</button>
+                                </div>
+                                <div className="space-y-1">{entryConditions.map((c, i) => renderConditionRow(c, i, 'entry'))}</div>
+                              </div>
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Exit (Sell)</span>
+                                  <button onClick={() => addCondition('exit')} className="text-[9px] text-emerald-400 hover:text-emerald-300 cursor-pointer">+ Add</button>
+                                </div>
+                                <div className="space-y-1">{exitConditions.map((c, i) => renderConditionRow(c, i, 'exit'))}</div>
+                              </div>
+                            </div>
+                            <div className="flex gap-3 text-[9px]">
+                              <label className="flex items-center gap-1 text-slate-500 font-bold uppercase"><span className="text-blue-400">Fees</span>
+                                <input type="number" step="0.0001" value={fees} onChange={e => setFees(Number(e.target.value))}
+                                  className="w-14 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-slate-200 text-center" />
+                              </label>
+                              <label className="flex items-center gap-1 text-slate-500 font-bold uppercase"><span className="text-blue-400">Slippage</span>
+                                <input type="number" step="0.0001" value={slippage} onChange={e => setSlippage(Number(e.target.value))}
+                                  className="w-14 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-slate-200 text-center" />
+                              </label>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* TRADE LOG */}
+                      <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg">
+                        <button onClick={() => setShowTradeLog(!showTradeLog)}
+                          className="w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-200 transition">
+                          <span className="flex items-center gap-2"><List size={12} /> Trade Log ({latestBacktest.trades?.length || 0} trades)</span>
+                          {showTradeLog ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
+                        </button>
+                        {showTradeLog && (
+                          <div className="px-4 pb-4 border-t border-slate-800/50 pt-2 overflow-x-auto max-h-64 overflow-y-auto">
+                            {latestBacktest.trades && latestBacktest.trades.length > 0 ? (
+                              <table className="w-full text-[10px] text-left">
+                                <thead className="text-slate-500 uppercase text-[8px] font-black sticky top-0 bg-[#0a0e17]">
+                                  <tr><th className="px-2 py-1.5">ID</th><th className="px-2 py-1.5">Entry</th><th className="px-2 py-1.5">Exit</th>
+                                    <th className="px-2 py-1.5">Entry</th><th className="px-2 py-1.5">Exit</th><th className="px-2 py-1.5">P&L</th>
+                                    <th className="px-2 py-1.5">Return</th><th className="px-2 py-1.5">Reason</th></tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/40">
+                                  {latestBacktest.trades.map((t: any) => (
+                                    <tr key={t.id} className="hover:bg-slate-800/30">
+                                      <td className="px-2 py-1.5 font-mono text-slate-600">#{t.id}</td>
+                                      <td className="px-2 py-1.5 font-bold text-slate-400">{t.entry_date}</td>
+                                      <td className="px-2 py-1.5 font-bold text-slate-400">{t.exit_date}</td>
+                                      <td className="px-2 py-1.5 font-mono">{t.entry_price?.toFixed(2)}</td>
+                                      <td className="px-2 py-1.5 font-mono">{t.exit_price?.toFixed(2)}</td>
+                                      <td className={`px-2 py-1.5 font-black ${t.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        {t.pnl >= 0 ? '+' : ''}{t.pnl?.toFixed(2) || '0.00'}
+                                      </td>
+                                      <td className="px-2 py-1.5"><span className={`px-1 py-0.5 rounded font-black text-[9px] ${t.pnl_pct >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                        {t.pnl_pct >= 0 ? '+' : ''}{t.pnl_pct?.toFixed(2) || '0.00'}%</span></td>
+                                      <td className="px-2 py-1.5 text-slate-500">{t.exit_reason || 'Signal'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            ) : (
+                              <div className="py-6 text-center text-slate-600 text-[10px] font-bold uppercase tracking-widest">No trades executed</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* RIGHT SIDEBAR - AI CHAT */}
-        <div className="w-[340px] min-w-[340px] border-l border-slate-800/80 bg-[#0a0e17] flex flex-col">
-          <ChatPanel />
-        </div>
+              {/* RIGHT SIDEBAR - AI CHAT */}
+              <div className="w-[340px] min-w-[340px] border-l border-slate-800/80 bg-[#0a0e17] flex flex-col">
+                <ChatPanel />
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Placeholder for other views */}
+        {!['dashboard', 'strategies', 'backtest'].includes(activeView) && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-xl font-bold text-slate-900 mb-2">View Under Development</h2>
+              <p className="text-slate-500">The {activeView} view is currently being implemented.</p>
+              <button onClick={() => setActiveView('dashboard')} className="btn-primary mt-4 px-4 py-2">Go to Dashboard</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

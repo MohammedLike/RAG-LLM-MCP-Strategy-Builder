@@ -19,13 +19,12 @@ async def run_backtest_tool(input_data: RunBacktestInput) -> dict:
     try:
         cached = await backtest_cache.get(input_data.symbol, input_data.period, input_data.strategy_spec)
         if cached:
-            LAST_BACKTEST = cached
-            summary = {k: v for k, v in cached.items() if k not in ['equity_curve', 'drawdown', 'trades']}
-            summary['equity_curve_sample'] = cached.get('equity_curve', [])[:5] + [{"...": "..."}] + cached.get('equity_curve', [])[-5:]
-            summary['total_trades'] = len(cached.get('trades', []))
-            summary['message'] = "Returned cached result."
-            summary['cached'] = True
-            return summary
+            LAST_BACKTEST = dict(cached)
+            LAST_BACKTEST['equity_curve_sample'] = LAST_BACKTEST.get('equity_curve', [])[:5] + [{"...": "..."}] + LAST_BACKTEST.get('equity_curve', [])[-5:]
+            LAST_BACKTEST['total_trades'] = len(LAST_BACKTEST.get('trades', []))
+            LAST_BACKTEST['message'] = "Returned cached result."
+            LAST_BACKTEST['cached'] = True
+            return LAST_BACKTEST
 
         days_map = {"1y": 365, "2y": 730, "5y": 1825, "8y": 2920}
         days = days_map.get(input_data.period, 365)
@@ -49,15 +48,14 @@ async def run_backtest_tool(input_data: RunBacktestInput) -> dict:
             **result
         }
 
+        LAST_BACKTEST['equity_curve_sample'] = LAST_BACKTEST.get('equity_curve', [])[:5] + [{"...": "..."}] + LAST_BACKTEST.get('equity_curve', [])[-5:]
+        LAST_BACKTEST['total_trades'] = len(LAST_BACKTEST.get('trades', []))
+        LAST_BACKTEST['message'] = f"Successfully ran backtest on {input_data.symbol} for {input_data.period} period."
+        LAST_BACKTEST['cached'] = False
+
         await backtest_cache.set(input_data.symbol, input_data.period, input_data.strategy_spec, LAST_BACKTEST)
 
-        summary = {k: v for k, v in result.items() if k not in ['equity_curve', 'drawdown', 'trades']}
-        summary['equity_curve_sample'] = result.get('equity_curve', [])[:5] + [{"...": "..."}] + result.get('equity_curve', [])[-5:]
-        summary['total_trades'] = len(result.get('trades', []))
-        summary['message'] = f"Successfully ran backtest on {input_data.symbol} for {input_data.period} period."
-        summary['cached'] = False
-
-        return summary
+        return LAST_BACKTEST
     except Exception as e:
         import traceback
         error_detail = traceback.format_exc()

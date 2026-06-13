@@ -112,6 +112,13 @@ async def list_strategies(category: str = None):
                         print(f"Error compiling DB strategy {row[1]}: {e}")
         except Exception as e:
             print(f"Error loading strategies from database: {e}")
+    
+    # Fallback to local files if DB is empty or failed
+    if not db_strategies:
+        file_strategies = _load_strategies()
+        if category:
+            file_strategies = [s for s in file_strategies if s.get('category', '').lower() == category.lower()]
+        return file_strategies
             
     return db_strategies
 

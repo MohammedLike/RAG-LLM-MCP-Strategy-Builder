@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from ..rag.qdrant_client import search_strategies
-from ..rag.embedder import embed_texts
+from ..rag.embedder import embed_texts_async
 
 class QueryStrategyInput(BaseModel):
     query: str = Field(description="The query string to search for strategies")
@@ -12,7 +12,7 @@ async def query_strategy_data(input_data: QueryStrategyInput) -> list:
     """
     try:
         # Embed the query
-        query_emb = embed_texts([input_data.query])[0]
+        query_emb = (await embed_texts_async([input_data.query]))[0]
         # Search Qdrant
         results = search_strategies(query_emb, top_k=input_data.top_k)
         return results

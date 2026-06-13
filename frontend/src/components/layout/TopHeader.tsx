@@ -3,7 +3,7 @@ import type { AppView } from './Sidebar';
 
 const titles: Record<AppView, string> = {
   dashboard: 'Dashboard',
-  strategies: 'Indicator Based Algos',
+  strategies: 'Strategy Library',
   'my-algos': 'My Algos',
   backtest: 'Strategy Builder',
   account: 'My Account',

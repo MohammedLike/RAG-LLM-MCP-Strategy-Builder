@@ -28,7 +28,6 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
-            import nest_asyncio
             try:
                 import nest_asyncio
                 nest_asyncio.apply()

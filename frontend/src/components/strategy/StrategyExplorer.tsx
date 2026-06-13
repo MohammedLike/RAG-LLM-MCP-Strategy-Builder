@@ -2,18 +2,22 @@ import { useEffect, useState } from 'react';
 import { Zap, Trophy, Users, TrendingUp, Loader2 } from 'lucide-react';
 import { fetchStrategies } from '../../services/api';
 
-export const StrategyExplorer = () => {
+export const StrategyExplorer = ({ onRunStrategy }: { onRunStrategy?: (spec: any) => void }) => {
   const [strategies, setStrategies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [categories, setCategories] = useState<string[]>(['All']);
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   useEffect(() => {
     const load = async () => {
       try {
-        // Fetch only indicator based strategies as requested
         const data = await fetchStrategies();
-        // Filter locally if backend parameter not used, or just use all since backend returns DB strategies
-        const filtered = data.filter((s: any) => s.category === 'Indicator Based');
-        setStrategies(filtered);
+        setStrategies(data);
+        const dynamicCategories = Array.from(
+          new Set(['All', ...data.map((s: any) => s.category || 'Uncategorized')])
+        );
+        setCategories(dynamicCategories);
       } catch (err) {
         console.error('Error loading strategies', err);
       } finally {
@@ -33,12 +37,27 @@ export const StrategyExplorer = () => {
     <div className="p-6 space-y-8 overflow-y-auto h-full">
       <div className="flex items-center gap-2">
         <span className="text-lg">👍</span>
-        <h2 className="text-xl font-bold text-slate-900">Indicator Based Strategies</h2>
+        <h2 className="text-xl font-bold text-slate-900">Strategy Library</h2>
         <div className="ml-auto flex gap-2 text-xs">
           <span className="bg-brand/10 text-brand px-3 py-1.5 rounded-lg font-bold border border-brand/20">
             {strategies.length} Strategies Found
           </span>
         </div>
+      </div>
+      <div className="flex flex-wrap gap-2 mt-3">
+        {categories.map((category) => (
+          <button
+            key={category}
+            onClick={() => setSelectedCategory(category)}
+            className={`px-3 py-2 rounded-lg text-xs font-semibold ${
+              selectedCategory === category
+                ? 'bg-brand text-white'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            {category}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -48,8 +67,10 @@ export const StrategyExplorer = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {strategies.map((s) => (
-            <div key={s.slug} className="card p-5 flex flex-col hover:shadow-md transition-shadow bg-white border-[#e5e9f0]">
+          {strategies
+            .filter((s) => selectedCategory === 'All' || (s.category || 'Uncategorized') === selectedCategory)
+            .map((s) => (
+              <div key={s.slug} className="card p-5 flex flex-col hover:shadow-md transition-shadow bg-white border-[#e5e9f0]">
               <div className="flex justify-between mb-2">
                 <div>
                   <h3 className="font-bold text-slate-900 text-sm">{s.name}</h3>
@@ -79,7 +100,10 @@ export const StrategyExplorer = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button className="btn-primary flex-1 py-2 text-[10px] flex items-center justify-center gap-1 font-black uppercase tracking-wider">
+                <button 
+                  onClick={() => onRunStrategy?.(s.backtest_spec)}
+                  className="btn-primary flex-1 py-2 text-[10px] flex items-center justify-center gap-1 font-black uppercase tracking-wider"
+                >
                   <Zap size={12} /> Instant Deploy
                 </button>
                 <button className="btn-outline flex-1 py-2 text-[10px] font-black uppercase tracking-wider">Details</button>

@@ -36,7 +36,7 @@ export const useBacktestStore = create<BacktestState>((set) => ({
   fetchLatestBacktest: async () => {
     try {
       const res = await api.get('/backtest/latest');
-      if (res.data && res.data.symbol) {
+      if (res.data) {
         set({ latestBacktest: res.data });
       }
     } catch (err) {

@@ -31,7 +31,7 @@ interface SidebarProps {
 
 const navItems: { id: AppView; label: string; icon: ReactNode; section?: string }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-  { id: 'strategies', label: 'Indicator Based Algos', icon: <Layers size={18} />, section: 'algos' },
+  { id: 'strategies', label: 'Strategy Library', icon: <Layers size={18} />, section: 'algos' },
   { id: 'my-algos', label: 'My Algos', icon: <Bot size={18} />, section: 'algos' },
   { id: 'backtest', label: 'Strategy Builder', icon: <Wrench size={18} /> },
   { id: 'account', label: 'My Account', icon: <User size={18} /> },
