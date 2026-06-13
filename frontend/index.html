@@ -3048,6 +3048,9 @@
   
   let selectedModalYear = new Date().getFullYear().toString();
   let lastBacktestReport = null;
+  let lastChartPayload = null;
+  let activeResultsChartTab = 'candles';
+  const tvChartRegistry = {};
 
   // Pre-built suggestions assistant (from strategies table)
   let prebuiltCatalog = null;
@@ -4307,125 +4310,175 @@
     }
   }
 
-  // Draw Equity Canvas Curve
-  function drawEquityCurve(canvasId, series) {
-    const points = Array.isArray(series)
-      ? series.map(p => (typeof p === 'object' ? p.value : p)).filter(v => v !== undefined && v !== null)
-      : [];
-    const dates = Array.isArray(series)
-      ? series.map(p => (typeof p === 'object' ? p.date : null)).filter(Boolean)
-      : [];
-
-    if (!points || points.length < 2) return;
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-
-    const chartHeight = 240;
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = chartHeight * dpr;
-    canvas.style.height = chartHeight + 'px';
-    ctx.scale(dpr, dpr);
-
-    const width = rect.width;
-    const height = chartHeight;
+  /* TRADINGVIEW LIGHTWEIGHT CHARTS */
+  function getTvThemeOptions() {
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    const gridColor = isLight ? 'rgba(15, 23, 42, 0.08)' : 'rgba(255, 255, 255, 0.06)';
-    const labelColor = isLight ? '#64748b' : '#9aa3b5';
-
-    ctx.clearRect(0, 0, width, height);
-
-    const padLeft = 56;
-    const padRight = 16;
-    const padTop = 16;
-    const padBottom = 36;
-    const graphWidth = width - padLeft - padRight;
-    const graphHeight = height - padTop - padBottom;
-
-    const minVal = Math.min(...points);
-    const maxVal = Math.max(...points);
-    const range = maxVal - minVal || 1.0;
-
-    const coords = points.map((val, idx) => {
-      const x = padLeft + (idx / (points.length - 1)) * graphWidth;
-      const y = padTop + graphHeight - ((val - minVal) / range) * graphHeight;
-      return { x, y };
-    });
-
-    // Y-axis labels and grid
-    ctx.font = '12px "Roboto Mono", monospace';
-    ctx.fillStyle = labelColor;
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    const numGridLines = 4;
-    for (let i = 0; i <= numGridLines; i++) {
-      const y = padTop + (i / numGridLines) * graphHeight;
-      const val = maxVal - (i / numGridLines) * range;
-      ctx.strokeStyle = gridColor;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(padLeft, y);
-      ctx.lineTo(width - padRight, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillText(val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val.toFixed(0), padLeft - 8, y);
-    }
-
-    // X-axis labels
-    if (dates.length >= 2) {
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.font = '12px "Roboto", sans-serif';
-      const firstDate = dates[0];
-      const lastDate = dates[dates.length - 1];
-      ctx.fillText(formatChartDate(firstDate), padLeft, padTop + graphHeight + 10);
-      ctx.fillText(formatChartDate(lastDate), padLeft + graphWidth, padTop + graphHeight + 10);
-    }
-
-    // Shaded area under curve
-    const grad = ctx.createLinearGradient(0, padTop, 0, padTop + graphHeight);
-    grad.addColorStop(0, 'rgba(37, 99, 235, 0.22)');
-    grad.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
-
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.moveTo(coords[0].x, padTop + graphHeight);
-    coords.forEach(p => ctx.lineTo(p.x, p.y));
-    ctx.lineTo(coords[coords.length - 1].x, padTop + graphHeight);
-    ctx.closePath();
-    ctx.fill();
-
-    // Line path
-    ctx.strokeStyle = '#2563eb';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(coords[0].x, coords[0].y);
-    for (let i = 1; i < coords.length; i++) {
-      ctx.lineTo(coords[i].x, coords[i].y);
-    }
-    ctx.stroke();
-
-    // End point marker
-    const lastPoint = coords[coords.length - 1];
-    ctx.fillStyle = '#2563eb';
-    ctx.beginPath();
-    ctx.arc(lastPoint.x, lastPoint.y, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = isLight ? '#ffffff' : '#181b24';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(lastPoint.x, lastPoint.y, 4, 0, Math.PI * 2);
-    ctx.stroke();
+    return {
+      layout: {
+        background: { color: 'transparent' },
+        textColor: isLight ? '#475569' : '#94a3b8',
+        fontFamily: 'Roboto, system-ui, sans-serif',
+      },
+      grid: {
+        vertLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+        horzLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+      },
+      rightPriceScale: { borderVisible: false },
+      timeScale: { borderVisible: false, timeVisible: true, secondsVisible: false },
+    };
   }
 
-  function formatChartDate(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (Number.isNaN(d.getTime())) return String(dateStr).slice(0, 10);
-    return d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+  function destroyTvChart(key) {
+    if (tvChartRegistry[key]) {
+      tvChartRegistry[key].remove();
+      delete tvChartRegistry[key];
+    }
+  }
+
+  function toTvTime(dateStr) {
+    return String(dateStr || '').slice(0, 10);
+  }
+
+  function buildTradeMarkers(trades) {
+    const markers = [];
+    (trades || []).forEach(trade => {
+      if (trade.entry_date) {
+        markers.push({
+          time: toTvTime(trade.entry_date),
+          position: 'belowBar',
+          color: '#22c55e',
+          shape: 'arrowUp',
+          text: 'Entry',
+        });
+      }
+      if (trade.exit_date) {
+        markers.push({
+          time: toTvTime(trade.exit_date),
+          position: 'aboveBar',
+          color: '#ef4444',
+          shape: 'arrowDown',
+          text: 'Exit',
+        });
+      }
+    });
+    return markers.sort((a, b) => String(a.time).localeCompare(String(b.time)));
+  }
+
+  function setResultsChartTab(tab, btn) {
+    activeResultsChartTab = tab;
+    document.querySelectorAll('.chart-type-tab').forEach(el => el.classList.toggle('active', el.dataset.chartTab === tab));
+    document.querySelectorAll('.tv-chart-panel').forEach(el => {
+      el.classList.toggle('active', el.id === `tvChart${tab.charAt(0).toUpperCase()}${tab.slice(1)}`);
+    });
+    if (lastChartPayload) {
+      renderTradingViewCharts(lastChartPayload.data, lastChartPayload.symbol);
+    }
+  }
+
+  function renderTradingViewCharts(data, symbol) {
+    if (typeof LightweightCharts === 'undefined') return;
+    lastChartPayload = { data, symbol };
+
+    const candles = (data.ohlcv || []).map(b => ({
+      time: toTvTime(b.time),
+      open: Number(b.open),
+      high: Number(b.high),
+      low: Number(b.low),
+      close: Number(b.close),
+    })).filter(b => b.time);
+
+    const equity = (data.equity_curve || []).map(p => ({
+      time: toTvTime(p.date),
+      value: Number(p.value),
+    })).filter(p => p.time && !Number.isNaN(p.value));
+
+    const drawdown = (data.drawdown || []).map(p => ({
+      time: toTvTime(p.date),
+      value: Number(p.value),
+      color: Number(p.value) <= 0 ? 'rgba(239, 68, 68, 0.55)' : 'rgba(34, 197, 94, 0.55)',
+    })).filter(p => p.time && !Number.isNaN(p.value));
+
+    renderTvCandlestickChart('tvChartCandles', candles, buildTradeMarkers(data.trades));
+    renderTvAreaChart('tvChartEquity', equity, '#2962FF');
+    renderTvHistogramChart('tvChartDrawdown', drawdown);
+  }
+
+  function mountTvChart(containerId, buildSeries) {
+    const container = document.getElementById(containerId);
+    if (!container || typeof LightweightCharts === 'undefined') return;
+
+    destroyTvChart(containerId);
+    container.innerHTML = '';
+
+    const chart = LightweightCharts.createChart(container, {
+      ...getTvThemeOptions(),
+      width: container.clientWidth,
+      height: 280,
+    });
+
+    buildSeries(chart);
+    chart.timeScale().fitContent();
+    tvChartRegistry[containerId] = chart;
+
+    if (!container._tvResizeObserver) {
+      container._tvResizeObserver = new ResizeObserver(() => {
+        if (tvChartRegistry[containerId]) {
+          tvChartRegistry[containerId].applyOptions({ width: container.clientWidth });
+        }
+      });
+      container._tvResizeObserver.observe(container);
+    }
+  }
+
+  function renderTvCandlestickChart(containerId, candles, markers) {
+    if (!candles.length) {
+      const container = document.getElementById(containerId);
+      if (container) container.innerHTML = '<div class="prebuilt-empty" style="padding:40px;">No OHLCV data — re-run backtest to load candlesticks</div>';
+      return;
+    }
+    mountTvChart(containerId, chart => {
+      const series = chart.addSeries(LightweightCharts.CandlestickSeries, {
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderVisible: false,
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+      });
+      series.setData(candles);
+      if (markers?.length) series.setMarkers(markers);
+    });
+  }
+
+  function renderTvAreaChart(containerId, points, color) {
+    if (!points.length) {
+      const container = document.getElementById(containerId);
+      if (container) container.innerHTML = '<div class="prebuilt-empty" style="padding:40px;">No equity curve data</div>';
+      return;
+    }
+    mountTvChart(containerId, chart => {
+      const series = chart.addSeries(LightweightCharts.AreaSeries, {
+        lineColor: color,
+        topColor: 'rgba(41, 98, 255, 0.35)',
+        bottomColor: 'rgba(41, 98, 255, 0.02)',
+        lineWidth: 2,
+      });
+      series.setData(points);
+    });
+  }
+
+  function renderTvHistogramChart(containerId, points) {
+    if (!points.length) {
+      const container = document.getElementById(containerId);
+      if (container) container.innerHTML = '<div class="prebuilt-empty" style="padding:40px;">No drawdown data</div>';
+      return;
+    }
+    mountTvChart(containerId, chart => {
+      const series = chart.addSeries(LightweightCharts.HistogramSeries, {
+        color: '#ef4444',
+        priceFormat: { type: 'percent', precision: 2, minMove: 0.01 },
+      });
+      series.setData(points);
+    });
   }
 
   function downloadBacktestJson() {
