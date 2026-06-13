@@ -83,12 +83,50 @@ CREATE INDEX IF NOT EXISTS ix_strategies_category ON strategies (category);
 CREATE TABLE IF NOT EXISTS backtests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     strategy_id UUID REFERENCES strategies(id),
-    user_request_json JSONB, -- The original AI/User request
-    status TEXT DEFAULT 'pending', -- 'pending', 'running', 'completed', 'failed'
-    metrics JSONB, -- Sharpe, Sortino, MaxDD, etc.
-    equity_curve JSONB, -- Time-series of portfolio value
-    trade_log JSONB, -- List of all executed trades
+    pine_script_id UUID,
+    user_request_json JSONB,
+    status TEXT DEFAULT 'pending',
+    symbol TEXT,
+    period TEXT,
+    resolution TEXT,
+    strategy_spec JSONB,
+    strategy_label TEXT,
+    source TEXT DEFAULT 'engine',
+    metrics JSONB,
+    equity_curve JSONB,
+    trade_log JSONB,
+    drawdown_series JSONB,
+    monthly_returns JSONB,
     error_message TEXT,
     started_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMPTZ
 );
+
+CREATE INDEX IF NOT EXISTS ix_backtests_created ON backtests (started_at DESC);
+CREATE INDEX IF NOT EXISTS ix_backtests_symbol ON backtests (symbol);
+
+-- User-authored Pine Script strategies
+CREATE TABLE IF NOT EXISTS pine_scripts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    source TEXT NOT NULL DEFAULT 'upload',
+    pine_script TEXT NOT NULL,
+    strategy_spec JSONB,
+    symbol TEXT,
+    period TEXT,
+    resolution TEXT,
+    prompt TEXT,
+    metadata JSONB,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS ix_pine_scripts_created ON pine_scripts (created_at DESC);
+CREATE INDEX IF NOT EXISTS ix_pine_scripts_source ON pine_scripts (source);
+
+ALTER TABLE backtests
+    DROP CONSTRAINT IF EXISTS backtests_pine_script_id_fkey;
+ALTER TABLE backtests
+    ADD CONSTRAINT backtests_pine_script_id_fkey
+    FOREIGN KEY (pine_script_id) REFERENCES pine_scripts(id) ON DELETE SET NULL;

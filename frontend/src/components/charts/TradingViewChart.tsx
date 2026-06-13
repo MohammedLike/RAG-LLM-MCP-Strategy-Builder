@@ -43,7 +43,7 @@ function getTheme() {
     layout: {
       background: { type: ColorType.Solid, color: isLight ? '#ffffff' : '#0d0d0d' },
       textColor: isLight ? '#475569' : '#a3a3a3',
-      fontFamily: 'Roboto, system-ui, sans-serif',
+      fontFamily: 'Roboto, sans-serif',
     },
     grid: {
       vertLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.05)' },

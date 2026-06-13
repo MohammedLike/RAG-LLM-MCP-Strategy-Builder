@@ -34,9 +34,9 @@
       --red-dim: rgba(220, 38, 38, 0.12);
       --yellow: #a16207;
       --yellow-dim: rgba(161, 98, 7, 0.12);
-      --font-family: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      --font-display: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      --mono-family: 'Roboto Mono', ui-monospace, 'Cascadia Code', monospace;
+      --font-family: 'Roboto', sans-serif;
+      --font-display: var(--font-family);
+      --mono-family: 'Roboto Mono', monospace;
       --text-xs: 12px;
       --text-sm: 13px;
       --text-base: 15px;
@@ -152,6 +152,32 @@
       padding: 0;
     }
 
+    html {
+      height: 100%;
+      font-family: var(--font-family);
+    }
+
+    /* Form controls and tables do not always inherit font-family */
+    button,
+    input,
+    select,
+    textarea,
+    optgroup,
+    option,
+    label,
+    table,
+    th,
+    td {
+      font-family: var(--font-family);
+    }
+
+    code,
+    pre,
+    kbd,
+    samp {
+      font-family: var(--mono-family);
+    }
+
     body {
       background-color: var(--bg-color);
       color: var(--text-primary);
@@ -160,8 +186,10 @@
       font-weight: 400;
       line-height: 1.55;
       overflow: hidden;
-      height: 100vh;
+      height: 100%;
+      min-height: 100vh;
       display: flex;
+      flex-direction: column;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
@@ -218,7 +246,8 @@
     .shell {
       display: flex;
       width: 100%;
-      height: 100vh;
+      flex: 1 1 auto;
+      min-height: 0;
       overflow: hidden;
     }
 
@@ -501,6 +530,8 @@
       overflow: hidden;
       position: relative;
       background: var(--bg-color);
+      min-height: 0;
+      min-width: 0;
     }
 
     .topbar {
@@ -650,21 +681,47 @@
       flex: 1;
       overflow: hidden;
       display: flex;
+      flex-direction: column;
       position: relative;
       z-index: 1;
+      min-height: 0;
+    }
+
+    /* Scroll long pages (pipeline, home, etc.) on the content pane — not nested flex views */
+    .content.content-scrollable {
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .content.content-scrollable > .view.active {
+      flex: none;
+      height: auto;
+      min-height: 0;
+      overflow: visible;
+    }
+
+    .content.content-scrollable #view-home.active,
+    .content.content-scrollable #view-templates.active,
+    .content.content-scrollable #view-pipeline.active,
+    .content.content-scrollable #view-history.active {
+      overflow: visible;
     }
 
     /* Views Framework */
     .view {
       display: none;
       width: 100%;
-      height: 100%;
+      flex: 1 1 auto;
+      min-height: 0;
       overflow: hidden;
     }
 
     .view.active {
       display: flex;
       animation: fadeIn 180ms ease forwards;
+      min-height: 0;
     }
 
     @keyframes fadeIn {
@@ -684,7 +741,7 @@
     }
 
     .home-headline {
-      font-family: var(--font-display);
+      font-family: var(--font-family);
       font-size: 2.375rem;
       font-weight: 600;
       line-height: 1.12;
@@ -941,7 +998,7 @@
     }
 
     .section-title {
-      font-family: var(--font-display);
+      font-family: var(--font-family);
       font-size: 1.125rem;
       font-weight: 600;
       color: var(--text-primary);
@@ -1020,7 +1077,7 @@
     }
 
     .page-title {
-      font-family: var(--font-display);
+      font-family: var(--font-family);
       font-size: 1.625rem;
       font-weight: 600;
       letter-spacing: -0.02em;
@@ -1987,6 +2044,551 @@
       font-size: 13px;
     }
 
+    .prebuilt-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--pb-muted);
+      font-size: 13px;
+    }
+
+    /* Quant Pipeline (5-layer workflow) */
+    #view-pipeline {
+      padding: 28px 32px 48px;
+      gap: 16px;
+      flex-direction: column;
+    }
+
+    #view-pipeline .page-header {
+      margin-bottom: 4px;
+    }
+
+    #view-pipeline .page-sub {
+      max-width: 720px;
+    }
+
+    .pipeline-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+      padding: 12px 16px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-card);
+    }
+
+    .pipeline-flow-inline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1 1 220px;
+      min-width: 0;
+      font-size: 11px;
+      color: var(--text-muted);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .pipeline-flow-inline::-webkit-scrollbar { display: none; }
+
+    .pipeline-flow-inline span.active {
+      color: var(--primary-light);
+      font-weight: 700;
+    }
+
+    .pipeline-settings {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 10px 14px;
+      flex: 2 1 360px;
+    }
+
+    .pipeline-setting {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 110px;
+    }
+
+    .pipeline-setting label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .pipeline-setting select {
+      padding: 7px 10px;
+      font-size: 13px;
+      border-radius: 8px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      font-family: inherit;
+    }
+
+    .pipeline-data-hint {
+      flex: 1 1 180px;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      align-self: center;
+    }
+
+    .pipeline-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .pipeline-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (min-width: 1400px) {
+      .pipeline-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .pipeline-grid { grid-template-columns: 1fr; }
+      #view-pipeline { padding: 20px 16px; }
+    }
+
+    .pipeline-stage {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-card);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 200px;
+    }
+
+    .pipeline-stage-wide {
+      grid-column: 1 / -1;
+    }
+
+    @media (min-width: 1400px) {
+      .pipeline-stage-wide {
+        grid-column: span 2;
+      }
+    }
+
+    .pipeline-stage-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--card-border);
+      flex-shrink: 0;
+    }
+
+    .pipeline-stage-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary-tint);
+      color: var(--primary-light);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .pipeline-stage-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+    }
+
+    .pipeline-stage-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-height: 0;
+    }
+
+    .pipeline-field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .pipeline-field-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .pipeline-stage .form-select,
+    .pipeline-stage .form-textarea {
+      font-size: 12px;
+      padding: 7px 10px;
+    }
+
+    .pipeline-stage .form-textarea {
+      min-height: 64px;
+      max-height: 88px;
+      resize: vertical;
+    }
+
+    .pipeline-json-preview {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      padding: 8px;
+      font-family: var(--mono-family);
+      font-size: 10px;
+      max-height: 72px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      flex-shrink: 0;
+    }
+
+    .pipeline-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: auto;
+      padding-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .pipeline-btn {
+      padding: 7px 11px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .pipeline-btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .pipeline-btn.success {
+      border-color: rgba(34, 197, 94, 0.4);
+      color: var(--green);
+    }
+
+    .pipeline-btn.danger {
+      border-color: rgba(239, 68, 68, 0.4);
+      color: var(--red);
+    }
+
+    .pipeline-suggestions {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 88px;
+      overflow-y: auto;
+    }
+
+    .pipeline-suggestions li {
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: var(--surface);
+      border-left: 3px solid var(--primary);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .pipeline-flow-bar {
+      display: none;
+    }
+
+    .pipeline-ai-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .pipeline-ai-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--card-border);
+      background: var(--surface-elevated);
+      flex-shrink: 0;
+    }
+
+    .pipeline-ai-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .pipeline-ai-title svg {
+      width: 16px;
+      height: 16px;
+      color: var(--primary-light);
+    }
+
+    .pipeline-ai-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--primary-tint);
+      color: var(--primary-light);
+    }
+
+    .pipeline-ai-messages {
+      overflow-y: auto;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 96px;
+      max-height: 140px;
+      flex-shrink: 0;
+    }
+
+    .pipeline-ai-msg {
+      max-width: 92%;
+      padding: 8px 11px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .pipeline-ai-msg.user {
+      align-self: flex-end;
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .pipeline-ai-msg.assistant {
+      align-self: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+    }
+
+    .pipeline-ai-input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 10px 14px 12px;
+      border-top: 1px solid var(--card-border);
+      background: var(--card-bg);
+      align-items: end;
+    }
+
+    @media (max-width: 640px) {
+      .pipeline-ai-input-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pipeline-ai-input-row textarea {
+      width: 100%;
+      min-height: 42px;
+      max-height: 64px;
+      padding: 9px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13px;
+      resize: none;
+    }
+
+    .pipeline-ai-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 132px;
+    }
+
+    @media (max-width: 640px) {
+      .pipeline-ai-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        min-width: 0;
+      }
+    }
+
+    .pipeline-workflow-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    /* Pine → Live execution bridge */
+    .pipeline-live-bridge {
+      margin-top: 4px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+
+    .pipeline-live-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--card-border);
+      background: linear-gradient(135deg, var(--primary-tint) 0%, transparent 60%);
+    }
+
+    .pipeline-live-head h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .pipeline-live-head p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      max-width: 680px;
+    }
+
+    .pipeline-live-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px 18px 18px;
+    }
+
+    @media (max-width: 900px) {
+      .pipeline-live-body { grid-template-columns: 1fr; }
+    }
+
+    .pipeline-live-pine {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pipeline-live-pine textarea {
+      min-height: 140px;
+      max-height: 200px;
+      font-family: var(--mono-family);
+      font-size: 11px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      resize: vertical;
+    }
+
+    .pipeline-live-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pipeline-live-status {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .pipeline-live-card {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: var(--surface);
+    }
+
+    .pipeline-live-card-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .pipeline-live-list {
+      max-height: 120px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .pipeline-live-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      font-size: 11px;
+    }
+
+    .pipeline-live-item .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--primary-tint);
+      color: var(--primary-light);
+    }
+
+    .pipeline-live-item .badge.stopped {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--red);
+    }
+
+    .pipeline-live-log {
+      font-family: var(--mono-family);
+      font-size: 10px;
+      color: var(--text-secondary);
+      max-height: 100px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
     .run-full-btn {
       width: 100%;
       padding: 15px 16px;
@@ -2466,7 +3068,6 @@
        ======================================================== */
     .view-padded {
       padding: 36px 44px;
-      overflow-y: auto;
       flex-direction: column;
       background: transparent;
     }
@@ -2831,6 +3432,10 @@
         <span class="nav-icon"><i data-lucide="activity"></i></span>
         <span class="nav-label">Backtest Engine</span>
       </a>
+      <a class="nav-item" id="nav-pipeline" onclick="showView('pipeline')">
+        <span class="nav-icon"><i data-lucide="workflow"></i></span>
+        <span class="nav-label">Quant Pipeline</span>
+      </a>
       <a class="nav-item" id="nav-templates" onclick="showView('templates')">
         <span class="nav-icon"><i data-lucide="layout"></i></span>
         <span class="nav-label">Strategy Library</span>
@@ -3083,6 +3688,195 @@
         </div>
       </div>
 
+      <!-- 4. QUANT PIPELINE VIEW -->
+      <div id="view-pipeline" class="view view-padded">
+        <div class="page-header">
+          <div class="page-title">Quant Pipeline</div>
+          <div class="page-sub">Convert TradingView Pine into live automated strategies — backtest on your database, deploy paper or broker execution.</div>
+        </div>
+
+        <div class="pipeline-toolbar">
+          <div class="pipeline-flow-inline" id="pipelineFlowBar">
+            <span class="active">INPUT</span> → <span>AI LAYER</span> → <span>EXECUTION</span> → <span>ANALYSIS</span> → <span>OUTPUT</span> → <span>LIVE</span>
+          </div>
+          <div class="pipeline-settings">
+            <div class="pipeline-setting">
+              <label for="pipelineSymbol">Symbol</label>
+              <select id="pipelineSymbol">
+                <option value="NIFTY">NIFTY</option>
+                <option value="BANKNIFTY">BANKNIFTY</option>
+                <option value="RELIANCE">RELIANCE</option>
+              </select>
+            </div>
+            <div class="pipeline-setting">
+              <label for="pipelinePeriod">Period</label>
+              <select id="pipelinePeriod">
+                <option value="1y">1 Year</option>
+                <option value="2y" selected>2 Years</option>
+                <option value="5y">5 Years</option>
+              </select>
+            </div>
+            <div class="pipeline-setting">
+              <label for="pipelineInterval">Timeframe</label>
+              <select id="pipelineInterval">
+                <option value="1d">Daily</option>
+                <option value="1h">Hourly</option>
+                <option value="15m">15 Min</option>
+                <option value="5m">5 Min</option>
+                <option value="1m">1 Min</option>
+              </select>
+            </div>
+          </div>
+          <div class="pipeline-data-hint" id="ohlcvStoreInfo">Loading data store…</div>
+        </div>
+
+        <div class="pipeline-layout">
+          <!-- AI Pine Quant Builder -->
+          <div class="pipeline-ai-panel">
+            <div class="pipeline-ai-head">
+              <div class="pipeline-ai-title">
+                <i data-lucide="bot"></i>
+                AI Pine Quant Builder
+                <span class="pipeline-ai-badge">Ollama · DB backtest</span>
+              </div>
+            </div>
+            <div class="pipeline-ai-messages" id="pipelineAiMessages">
+              <div class="pipeline-ai-msg assistant">Describe a strategy — I'll generate Pine Script and backtest on Postgres OHLCV. Example: RSI mean reversion on NIFTY, buy below 30.</div>
+            </div>
+            <div class="pipeline-ai-input-row">
+              <textarea id="pipelineAiInput" placeholder="e.g. Golden cross EMA 50/200 on NIFTY, 2% stop loss…" rows="2"></textarea>
+              <div class="pipeline-ai-actions">
+                <button type="button" class="pipeline-btn" onclick="sendPipelineAiChat()">Chat</button>
+                <button type="button" class="pipeline-btn primary" onclick="generatePipelinePine()">Generate Pine</button>
+                <button type="button" class="pipeline-btn success" onclick="generateAndBacktestPipeline()">Generate &amp; Backtest</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Manual workflow steps -->
+          <div>
+            <div class="pipeline-workflow-title">Manual workflow</div>
+            <div class="pipeline-grid">
+              <div class="pipeline-stage">
+                <div class="pipeline-stage-head">
+                  <span class="pipeline-stage-num">1</span>
+                  <span class="pipeline-stage-title">Input</span>
+                </div>
+                <div class="pipeline-stage-body">
+                  <span class="pipeline-field-label">Pine Script (.pine)</span>
+                  <input type="file" id="pineUploadInput" accept=".pine,.txt" style="font-size:11px;width:100%;">
+                  <div id="pineScriptList" class="pipeline-field-hint">No scripts uploaded</div>
+                </div>
+                <div class="pipeline-btn-row">
+                  <button type="button" class="pipeline-btn primary" onclick="uploadPineScript()">Upload</button>
+                  <button type="button" class="pipeline-btn" onclick="cacheOhlcvToParquet()">Cache Parquet</button>
+                </div>
+              </div>
+
+              <div class="pipeline-stage pipeline-stage-wide">
+                <div class="pipeline-stage-head">
+                  <span class="pipeline-stage-num">2</span>
+                  <span class="pipeline-stage-title">AI Layer</span>
+                </div>
+                <div class="pipeline-stage-body">
+                  <select class="form-select" id="pipelineSourceType">
+                    <option value="text">Natural language</option>
+                    <option value="pine">Pine Script</option>
+                  </select>
+                  <textarea class="form-textarea" id="pipelineInputText" rows="3" placeholder="Paste Pine Script or describe strategy…"></textarea>
+                  <div class="pipeline-json-preview" id="pipelineJsonPreview">Strategy JSON appears after interpretation.</div>
+                </div>
+                <div class="pipeline-btn-row">
+                  <button type="button" class="pipeline-btn primary" onclick="interpretPipelineStrategy()">Interpret</button>
+                </div>
+              </div>
+
+              <div class="pipeline-stage">
+                <div class="pipeline-stage-head">
+                  <span class="pipeline-stage-num">3</span>
+                  <span class="pipeline-stage-title">Execution</span>
+                </div>
+                <div class="pipeline-stage-body">
+                  <div id="pipelineValidationStatus" class="pipeline-field-hint">Awaiting interpretation</div>
+                  <div id="pipelineExecMetrics" class="pipeline-field-hint">VectorBT metrics after approval</div>
+                </div>
+                <div class="pipeline-btn-row">
+                  <button type="button" class="pipeline-btn success" onclick="validatePipeline('approve')">Approve &amp; Run</button>
+                  <button type="button" class="pipeline-btn danger" onclick="validatePipeline('reject')">Reject</button>
+                </div>
+              </div>
+
+              <div class="pipeline-stage">
+                <div class="pipeline-stage-head">
+                  <span class="pipeline-stage-num">4</span>
+                  <span class="pipeline-stage-title">Analysis</span>
+                </div>
+                <div class="pipeline-stage-body">
+                  <ul class="pipeline-suggestions" id="pipelineSuggestions">
+                    <li>Run a backtest to get suggestions</li>
+                  </ul>
+                </div>
+                <div class="pipeline-btn-row">
+                  <button type="button" class="pipeline-btn" onclick="analyzePipelineResults()">Analyze</button>
+                  <button type="button" class="pipeline-btn" onclick="optimizePipelineStrategy()">Optimize</button>
+                </div>
+              </div>
+
+              <div class="pipeline-stage">
+                <div class="pipeline-stage-head">
+                  <span class="pipeline-stage-num">5</span>
+                  <span class="pipeline-stage-title">Output</span>
+                </div>
+                <div class="pipeline-stage-body">
+                  <span class="pipeline-field-hint">Export report, trade log, optimization.</span>
+                  <div id="pipelineExportStatus" class="pipeline-field-hint">No results yet</div>
+                </div>
+                <div class="pipeline-btn-row">
+                  <button type="button" class="pipeline-btn" onclick="exportPipeline('csv')">CSV</button>
+                  <button type="button" class="pipeline-btn" onclick="exportPipeline('xlsx')">Excel</button>
+                  <button type="button" class="pipeline-btn" onclick="exportPipeline('json')">JSON</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pine → Live Execution Bridge -->
+        <div class="pipeline-live-bridge">
+          <div class="pipeline-live-head">
+            <h3>Pine → Live Execution</h3>
+            <p>Convert any TradingView Pine Script into a live, automated trading strategy. Bridge chart ideas into real market execution — backtest on Postgres OHLCV, then deploy paper trading (or connect broker for live).</p>
+          </div>
+          <div class="pipeline-live-body">
+            <div class="pipeline-live-pine">
+              <span class="pipeline-field-label">TradingView Pine Script</span>
+              <textarea id="pineLiveScript" placeholder="Paste your //@version=5 Pine Script from TradingView…"></textarea>
+              <div class="pipeline-live-actions">
+                <button type="button" class="pipeline-btn" onclick="convertPineLive()">Convert Pine</button>
+                <button type="button" class="pipeline-btn primary" onclick="pineToLiveFull()">Convert · Backtest · Deploy</button>
+                <select id="pipelineLiveMode" class="form-select" style="width:auto;padding:7px 10px;font-size:12px;">
+                  <option value="paper">Paper trading</option>
+                  <option value="live">Live broker</option>
+                </select>
+              </div>
+              <div id="pineLiveConvertStatus" class="pipeline-field-hint">Paste Pine from TradingView → convert → validate on DB → automate signals</div>
+            </div>
+            <div class="pipeline-live-status">
+              <div class="pipeline-live-card">
+                <div class="pipeline-live-card-title">Deployed strategies</div>
+                <div class="pipeline-live-list" id="pipelineLiveList">
+                  <div class="pipeline-field-hint">No live strategies yet</div>
+                </div>
+              </div>
+              <div class="pipeline-live-card">
+                <div class="pipeline-live-card-title">Last execution log</div>
+                <div class="pipeline-live-log" id="pipelineLiveLog">Run a signal check or deploy to see orders.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 5. RESULTS HISTORY VIEW -->
       <div id="view-history" class="view view-padded">
         <div class="page-header">
@@ -3188,7 +3982,40 @@
   // Strategies loaded from database (equity only, real stats)
   let TEMPLATES = [];
   let searchQuery = '';
-  let backtestHistory = JSON.parse(localStorage.getItem('strykex_backtest_history') || '[]');
+  let backtestHistory = [];
+
+  async function loadBacktestHistory() {
+    try {
+      const res = await fetch(`${API_BASE}/backtest/history?limit=50`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      backtestHistory = data.history || [];
+    } catch (err) {
+      console.warn('Could not load backtest history from database:', err);
+      backtestHistory = JSON.parse(localStorage.getItem('strykex_backtest_history') || '[]');
+    }
+    renderHistory();
+  }
+
+  function saveBacktestToHistory(data, symbol, strategyLabel) {
+    if (data.backtest_id) {
+      loadBacktestHistory();
+      return;
+    }
+    const entry = {
+      timestamp: new Date().toISOString(),
+      strategy: strategyLabel || 'Custom Strategy',
+      symbol,
+      total_return: data.total_return,
+      win_rate: data.win_rate,
+      max_drawdown: data.max_drawdown,
+      trades: data.trades ? data.trades.length : 0
+    };
+    backtestHistory.unshift(entry);
+    backtestHistory = backtestHistory.slice(0, 50);
+    localStorage.setItem('strykex_backtest_history', JSON.stringify(backtestHistory));
+    renderHistory();
+  }
 
   // App global state variables
   let activeTemplate = null;
@@ -3197,7 +4024,7 @@
   let currentSort = '';
   let currentPage = 1;
   const itemsPerPage = 9;
-  
+
   let selectedModalYear = new Date().getFullYear().toString();
   let lastBacktestReport = null;
   let lastChartPayload = null;
@@ -3227,22 +4054,6 @@
     if (val === undefined || val === null || Number.isNaN(val)) return fallback;
     const n = Number(val);
     return `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`;
-  }
-
-  function saveBacktestToHistory(data, symbol, strategyLabel) {
-    const entry = {
-      timestamp: new Date().toISOString(),
-      strategy: strategyLabel || 'Custom Strategy',
-      symbol,
-      total_return: data.total_return,
-      win_rate: data.win_rate,
-      max_drawdown: data.max_drawdown,
-      trades: data.trades ? data.trades.length : 0
-    };
-    backtestHistory.unshift(entry);
-    backtestHistory = backtestHistory.slice(0, 50);
-    localStorage.setItem('strykex_backtest_history', JSON.stringify(backtestHistory));
-    renderHistory();
   }
 
   function renderHistory() {
@@ -3330,7 +4141,7 @@
     loadStrategiesFromDb();
     loadSymbolsFromDb();
     loadPrebuiltCatalog();
-    renderHistory();
+    loadBacktestHistory();
   });
 
   // Client-side Routing Engine
@@ -3361,13 +4172,28 @@
     const titleMap = {
       home: ['Research Home', 'StrykeX / Home'],
       backtest: ['Backtest Engine', 'StrykeX / Backtest'],
+      pipeline: ['Quant Pipeline', 'StrykeX / Pipeline'],
       templates: ['Strategy Library', 'StrykeX / Templates'],
       history: ['Results History', 'StrykeX / History']
     };
 
+    const scrollableViews = new Set(['home', 'pipeline', 'templates', 'history']);
+    const contentEl = document.querySelector('.content');
+    if (contentEl) {
+      contentEl.classList.toggle('content-scrollable', scrollableViews.has(viewId));
+    }
+
     const titleInfo = titleMap[viewId] || titleMap.home;
     document.getElementById('topbar-title').textContent = titleInfo[0];
     document.getElementById('topbar-crumb').textContent = titleInfo[1];
+
+    if (viewId === 'pipeline') {
+      loadPipelineStatus();
+      lucide.createIcons();
+    }
+    if (viewId === 'history') {
+      loadBacktestHistory();
+    }
 
     closeModal(null);
   }
@@ -4207,6 +5033,9 @@
     };
     const period = periodMap[rawPeriod] || "2y";
 
+    const tfSelect = document.getElementById("timeframe");
+    const interval = mapTimeframeToInterval(tfSelect ? tfSelect.value : "Daily");
+
     // Determine strategy specification logic
     let spec = activeStrategySpec;
     const isTemplateText = activeTemplate && activeTemplate.strategy === strategyText;
@@ -4251,7 +5080,12 @@
           body: JSON.stringify({
             strategy_spec: spec,
             symbol: symbol,
-            period: period
+            period: period,
+            interval: interval,
+            strategy_label: strategyText || activeTemplate?.name || 'Custom Strategy',
+            source: activeTemplate ? 'template' : 'engine',
+            user_request: { strategy_text: strategyText || '' },
+            persist: true
           })
         });
 
@@ -4371,6 +5205,8 @@
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="report-btn secondary" onclick="downloadBacktestJson()">Download JSON</button>
+            <button class="report-btn secondary" onclick="exportBacktestFormat('csv')">CSV Trades</button>
+            <button class="report-btn secondary" onclick="exportBacktestFormat('xlsx')">Excel</button>
             <button class="report-btn" onclick="downloadBacktestReport()">Download Report (HTML)</button>
           </div>
         </div>
@@ -4522,7 +5358,7 @@
       layout: {
         background: { color: isLight ? '#ffffff' : '#0d0d0d' },
         textColor: isLight ? '#475569' : '#a3a3a3',
-        fontFamily: 'Roboto, system-ui, sans-serif',
+        fontFamily: 'Roboto, sans-serif',
       },
       grid: {
         vertLines: { color: isLight ? 'rgba(15, 23, 42, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
@@ -4686,6 +5522,597 @@
     });
   }
 
+  function mapTimeframeToInterval(label) {
+    const map = {
+      'Daily': '1d', 'Weekly': '1d', 'Hourly': '1h',
+      '15 Min': '15m', '5 Min': '5m', '1 Min': '1m'
+    };
+    return map[label] || '1d';
+  }
+
+  /* QUANT PIPELINE */
+  let pipelineSessionId = null;
+  let pipelineStrategySpec = null;
+  let pipelineBacktestResult = null;
+  let pipelineOptimizationResult = null;
+  let pipelineAiHistory = [];
+
+  function appendPipelineAiMessage(role, text) {
+    const box = document.getElementById('pipelineAiMessages');
+    if (!box) return;
+    const div = document.createElement('div');
+    div.className = `pipeline-ai-msg ${role}`;
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function getPipelineAiParams() {
+    return {
+      symbol: document.getElementById('pipelineSymbol')?.value || 'NIFTY',
+      period: document.getElementById('pipelinePeriod')?.value || '2y',
+      interval: document.getElementById('pipelineInterval')?.value || '1d',
+    };
+  }
+
+  function applyPipelineGenerated(data) {
+    pipelineStrategySpec = data.strategy_spec;
+    if (data.pine_script) {
+      document.getElementById('pipelineSourceType').value = 'pine';
+      document.getElementById('pipelineInputText').value = data.pine_script;
+    } else if (data.explanation) {
+      document.getElementById('pipelineInputText').value = data.explanation;
+    }
+    document.getElementById('pipelineJsonPreview').textContent = JSON.stringify(data.strategy_spec, null, 2);
+    document.getElementById('pipelineValidationStatus').textContent =
+      `${data.explanation || 'AI strategy ready'} · source: ${data.source || 'ai'}`;
+    setPipelineFlowStep(2);
+    loadPipelineStatus();
+  }
+
+  function applyPipelineBacktestResult(data) {
+    pipelineBacktestResult = data.backtest_result;
+    if (data.generated) applyPipelineGenerated(data.generated);
+    pipelineSessionId = data.session_id;
+
+    const r = data.backtest_result || {};
+    if (r.error) {
+      document.getElementById('pipelineExecMetrics').innerHTML =
+        `<span style="color:var(--red)">${r.error}</span>`;
+      return;
+    }
+
+    document.getElementById('pipelineValidationStatus').textContent = 'AI generated & backtested on database';
+    document.getElementById('pipelineExecMetrics').innerHTML =
+      `Return <strong>${(r.total_return || 0).toFixed(2)}%</strong> · Sharpe ${(r.sharpe || 0).toFixed(2)} · ` +
+      `DD ${(r.max_drawdown || 0).toFixed(2)}% · ${(r.trades || []).length} trades · ` +
+      `<em>${r.data_source || 'postgres'} (${r.data_rows || 0} bars)</em>`;
+    document.getElementById('pipelineExportStatus').textContent = 'Ready to export';
+    if (data.analysis) renderPipelineSuggestions(data.analysis);
+    setPipelineFlowStep(3);
+    lastBacktestReport = {
+      symbol: r.symbol,
+      period: r.period,
+      strategy_label: 'AI Pine Strategy',
+      strategy_text: document.getElementById('pipelineAiInput')?.value || '',
+      result: r,
+    };
+  }
+
+  async function sendPipelineAiChat() {
+    const input = document.getElementById('pipelineAiInput');
+    const message = input?.value?.trim();
+    if (!message) return;
+    const { symbol } = getPipelineAiParams();
+
+    appendPipelineAiMessage('user', message);
+    pipelineAiHistory.push({ role: 'user', content: message });
+    input.value = '';
+
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/ai/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, history: pipelineAiHistory.slice(-10), symbol }),
+      });
+      const data = await res.json();
+      const reply = data.reply || data.error || 'No response';
+      appendPipelineAiMessage('assistant', reply);
+      pipelineAiHistory.push({ role: 'assistant', content: reply });
+    } catch (e) {
+      appendPipelineAiMessage('assistant', 'Could not reach AI assistant. Is Ollama running?');
+    }
+  }
+
+  async function generatePipelinePine() {
+    const prompt = document.getElementById('pipelineAiInput')?.value?.trim()
+      || document.getElementById('pipelineInputText')?.value?.trim();
+    if (!prompt) {
+      alert('Describe your strategy in the AI assistant box');
+      return;
+    }
+    const params = getPipelineAiParams();
+    appendPipelineAiMessage('user', `Generate Pine: ${prompt}`);
+    appendPipelineAiMessage('assistant', 'Generating Pine Script and strategy JSON…');
+
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/ai/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, ...params, save_pine: true }),
+      });
+      const data = await res.json();
+      if (data.detail || data.error) throw new Error(data.detail || data.error);
+
+      applyPipelineGenerated(data);
+      const msg = data.llm_error
+        ? `Generated (rule fallback — Ollama: ${data.llm_error})`
+        : `Pine Script ready${data.script_id ? ` · saved as ${data.script_id}` : ''}`;
+      appendPipelineAiMessage('assistant', msg);
+    } catch (e) {
+      appendPipelineAiMessage('assistant', e.message || 'Generation failed');
+    }
+  }
+
+  async function generateAndBacktestPipeline() {
+    const prompt = document.getElementById('pipelineAiInput')?.value?.trim()
+      || document.getElementById('pipelineInputText')?.value?.trim();
+    if (!prompt) {
+      alert('Describe your strategy in the AI assistant box');
+      return;
+    }
+    const params = getPipelineAiParams();
+    appendPipelineAiMessage('user', `Backtest: ${prompt}`);
+    appendPipelineAiMessage('assistant', 'Generating strategy and running VectorBT on your database…');
+
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/ai/backtest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, ...params, save_pine: true }),
+      });
+      const data = await res.json();
+      if (data.backtest_result?.error) throw new Error(data.backtest_result.error);
+
+      applyPipelineBacktestResult(data);
+      const r = data.backtest_result;
+      appendPipelineAiMessage('assistant',
+        `Done — ${(r.total_return || 0).toFixed(2)}% return, ${(r.trades || []).length} trades on ${params.symbol} (${r.data_rows || '?'} bars from ${r.data_source || 'database'}).`);
+    } catch (e) {
+      appendPipelineAiMessage('assistant', e.message || 'Backtest failed');
+    }
+  }
+
+  document.getElementById('pipelineAiInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendPipelineAiChat();
+    }
+  });
+
+  async function loadPipelineStatus() {
+    try {
+      const [statusRes, ohlcvRes, pineRes] = await Promise.all([
+        fetch(`${API_BASE}/pipeline/status`),
+        fetch(`${API_BASE}/pipeline/ohlcv/resolutions`),
+        fetch(`${API_BASE}/pipeline/pine`),
+      ]);
+      const status = await statusRes.json();
+      const ohlcv = await ohlcvRes.json();
+      const pine = await pineRes.json();
+
+      const info = document.getElementById('ohlcvStoreInfo');
+      if (info) {
+        const avail = (ohlcv.available || []).length;
+        info.textContent = `${avail} Parquet dataset(s) · ${(status.supported_resolutions || []).join(', ')}`;
+      }
+
+      const list = document.getElementById('pineScriptList');
+      if (list) {
+        const scripts = pine.scripts || [];
+        list.textContent = scripts.length
+          ? scripts.map(s => s.filename).join(', ')
+          : 'No scripts uploaded';
+      }
+      await loadPipelineLiveStrategies();
+    } catch (_) {
+      const info = document.getElementById('ohlcvStoreInfo');
+      if (info) info.textContent = 'Backend unavailable';
+    }
+  }
+
+  async function uploadPineScript() {
+    const input = document.getElementById('pineUploadInput');
+    if (!input?.files?.length) {
+      alert('Choose a .pine file first');
+      return;
+    }
+    const form = new FormData();
+    form.append('file', input.files[0]);
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/pine/upload`, { method: 'POST', body: form });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      document.getElementById('pipelineSourceType').value = 'pine';
+      document.getElementById('pipelineInputText').value = `(Uploaded: ${data.filename})`;
+      pipelineUploadedScriptId = data.id;
+      await loadPipelineStatus();
+      alert(`Uploaded ${data.filename}`);
+    } catch (e) {
+      alert(e.message || 'Upload failed');
+    }
+  }
+
+  let pipelineUploadedScriptId = null;
+
+  async function cacheOhlcvToParquet() {
+    const symbol = document.getElementById('pipelineSymbol')?.value || 'NIFTY';
+    const interval = document.getElementById('pipelineInterval')?.value || '1d';
+    const period = document.getElementById('pipelinePeriod')?.value || '2y';
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/ohlcv/cache/${symbol}/${interval}?period=${period}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.detail) throw new Error(data.detail);
+      alert(`Cached ${data.rows} bars for ${symbol} (${interval})`);
+      loadPipelineStatus();
+    } catch (e) {
+      alert(e.message || 'Cache failed — ensure OHLCV exists in database');
+    }
+  }
+
+  async function interpretPipelineStrategy() {
+    const sourceType = document.getElementById('pipelineSourceType')?.value || 'text';
+    const content = document.getElementById('pipelineInputText')?.value || '';
+    const symbol = document.getElementById('pipelineSymbol')?.value || 'NIFTY';
+    const period = document.getElementById('pipelinePeriod')?.value || '2y';
+
+    const body = { source_type: sourceType, content, symbol, period, interval: document.getElementById('pipelineInterval')?.value || '1d', use_ai: sourceType === 'text' };
+    if (sourceType === 'pine' && pipelineUploadedScriptId) {
+      body.script_id = pipelineUploadedScriptId;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/interpret`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      pipelineSessionId = data.session_id;
+      pipelineStrategySpec = data.strategy_spec;
+      document.getElementById('pipelineJsonPreview').textContent = JSON.stringify(data.strategy_spec, null, 2);
+      if (data.pine_script) {
+        document.getElementById('pipelineSourceType').value = 'pine';
+        document.getElementById('pipelineInputText').value = data.pine_script;
+      }
+      document.getElementById('pipelineValidationStatus').textContent = `Pending validation · ${data.summary || data.source}`;
+      setPipelineFlowStep(2);
+    } catch (e) {
+      alert(e.message || 'Interpret failed');
+    }
+  }
+
+  async function validatePipeline(action) {
+    if (!pipelineSessionId) {
+      alert('Interpret a strategy first');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: pipelineSessionId, action }),
+      });
+      const data = await res.json();
+      if (action === 'reject') {
+        document.getElementById('pipelineValidationStatus').textContent = 'Rejected — edit and re-interpret';
+        return;
+      }
+      if (data.backtest_result?.error) throw new Error(data.backtest_result.error);
+
+      pipelineBacktestResult = data.backtest_result;
+      lastBacktestReport = {
+        symbol: data.backtest_result.symbol,
+        period: data.backtest_result.period,
+        strategy_label: 'Pipeline Strategy',
+        strategy_text: document.getElementById('pipelineInputText')?.value || '',
+        result: data.backtest_result,
+      };
+
+      const r = data.backtest_result;
+      document.getElementById('pipelineValidationStatus').textContent = 'Approved & executed';
+      document.getElementById('pipelineExecMetrics').innerHTML =
+        `Return <strong>${(r.total_return || 0).toFixed(2)}%</strong> · Sharpe ${(r.sharpe || 0).toFixed(2)} · DD ${(r.max_drawdown || 0).toFixed(2)}% · ${(r.trades || []).length} trades`;
+      document.getElementById('pipelineExportStatus').textContent = 'Ready to export';
+
+      if (data.analysis) renderPipelineSuggestions(data.analysis);
+      setPipelineFlowStep(3);
+    } catch (e) {
+      alert(e.message || 'Validation failed');
+    }
+  }
+
+  function renderPipelineSuggestions(analysis) {
+    const ul = document.getElementById('pipelineSuggestions');
+    if (!ul) return;
+    const items = analysis.suggestions || [];
+    ul.innerHTML = items.length
+      ? items.map(s => `<li><strong>${s.type}</strong>: ${s.message}${s.action ? ' — ' + s.action : ''}</li>`).join('')
+      : `<li>${analysis.narrative || 'No suggestions'}</li>`;
+  }
+
+  async function analyzePipelineResults() {
+    if (!pipelineBacktestResult) {
+      alert('Approve & run a backtest first');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ result: pipelineBacktestResult }),
+      });
+      const data = await res.json();
+      renderPipelineSuggestions(data);
+      setPipelineFlowStep(4);
+    } catch (e) {
+      alert(e.message || 'Analysis failed');
+    }
+  }
+
+  async function optimizePipelineStrategy() {
+    if (!pipelineStrategySpec) {
+      alert('Interpret a strategy first');
+      return;
+    }
+    const symbol = document.getElementById('pipelineSymbol')?.value || 'NIFTY';
+    const period = document.getElementById('pipelinePeriod')?.value || '2y';
+    const interval = document.getElementById('pipelineInterval')?.value || '1d';
+
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/optimize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          strategy_spec: pipelineStrategySpec,
+          symbol,
+          period,
+          interval,
+          param_grid: { stop_loss: [1, 2, 3, 4, 5], take_profit: [3, 5, 8, 10] },
+        }),
+      });
+      const data = await res.json();
+      if (data.detail) throw new Error(data.detail);
+      pipelineOptimizationResult = data;
+      const best = data.best_metrics || {};
+      document.getElementById('pipelineExecMetrics').innerHTML +=
+        `<br>Best optimize: return ${(best.total_return || 0).toFixed(2)}% · params ${JSON.stringify(data.best_params || {})}`;
+      setPipelineFlowStep(4);
+    } catch (e) {
+      alert(e.message || 'Optimization failed');
+    }
+  }
+
+  async function exportPipeline(format) {
+    const payload = pipelineOptimizationResult || pipelineBacktestResult;
+    if (!payload) {
+      alert('No results to export');
+      return;
+    }
+    const exportData = pipelineOptimizationResult
+      ? { ...pipelineBacktestResult, optimization_grid: pipelineOptimizationResult.optimization_grid, best_params: pipelineOptimizationResult.best_params }
+      : pipelineBacktestResult;
+
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format, result: exportData, title: 'StrykeX Pipeline Report' }),
+      });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const ext = format === 'xlsx' ? 'xlsx' : format;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `strykex-pipeline-${Date.now()}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      document.getElementById('pipelineExportStatus').textContent = `Exported ${format.toUpperCase()}`;
+      setPipelineFlowStep(5);
+    } catch (e) {
+      alert(e.message || 'Export failed');
+    }
+  }
+
+  let pipelineLiveActiveId = null;
+
+  async function loadPipelineLiveStrategies() {
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/live`);
+      const data = await res.json();
+      renderPipelineLiveList(data.strategies || []);
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  function renderPipelineLiveList(strategies) {
+    const el = document.getElementById('pipelineLiveList');
+    if (!el) return;
+    if (!strategies.length) {
+      el.innerHTML = '<div class="pipeline-field-hint">No live strategies yet</div>';
+      return;
+    }
+    el.innerHTML = strategies.map(s => {
+      const pos = s.position?.side === 'long' ? `LONG ${s.position.qty}` : 'FLAT';
+      const badgeClass = s.status === 'active' ? 'badge' : 'badge stopped';
+      return `<div class="pipeline-live-item">
+        <div>
+          <strong>${escapeHtml(s.name || s.id)}</strong><br>
+          <span style="color:var(--text-muted)">${s.symbol} · ${s.interval} · ${pos}</span>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <span class="${badgeClass}">${s.status}</span>
+          <button type="button" class="pipeline-btn" style="padding:4px 8px;" onclick="tickLiveStrategy('${s.id}')">Tick</button>
+          <button type="button" class="pipeline-btn danger" style="padding:4px 8px;" onclick="stopLiveStrategy('${s.id}')">Stop</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function logPipelineLive(msg) {
+    const log = document.getElementById('pipelineLiveLog');
+    if (log) log.textContent = msg;
+  }
+
+  async function convertPineLive() {
+    const pine_script = document.getElementById('pineLiveScript')?.value?.trim();
+    if (!pine_script) {
+      alert('Paste TradingView Pine Script first');
+      return;
+    }
+    const params = getPipelineAiParams();
+    const status = document.getElementById('pineLiveConvertStatus');
+    if (status) status.textContent = 'Converting Pine → strategy JSON…';
+
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/pine/convert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pine_script, ...params, run_backtest: true }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      pipelineStrategySpec = data.strategy_spec;
+      if (data.pine_script) {
+        document.getElementById('pipelineInputText').value = data.pine_script;
+        document.getElementById('pipelineSourceType').value = 'pine';
+      }
+      document.getElementById('pipelineJsonPreview').textContent = JSON.stringify(data.strategy_spec, null, 2);
+
+      const bt = data.backtest_result || {};
+      if (status) {
+        status.textContent = bt.error
+          ? `Converted but backtest failed: ${bt.error}`
+          : `Converted · backtest ${(bt.total_return || 0).toFixed(2)}% on ${bt.data_rows || 0} DB bars · ready to deploy`;
+      }
+      if (!bt.error) {
+        pipelineBacktestResult = bt;
+        document.getElementById('pipelineExecMetrics').innerHTML =
+          `Backtest: <strong>${(bt.total_return || 0).toFixed(2)}%</strong> · Sharpe ${(bt.sharpe || 0).toFixed(2)} · ${(bt.trades || []).length} trades`;
+      }
+      setPipelineFlowStep(3);
+    } catch (e) {
+      if (status) status.textContent = e.message || 'Conversion failed';
+    }
+  }
+
+  async function pineToLiveFull() {
+    const pine_script = document.getElementById('pineLiveScript')?.value?.trim();
+    if (!pine_script) {
+      alert('Paste TradingView Pine Script first');
+      return;
+    }
+    const params = getPipelineAiParams();
+    const mode = document.getElementById('pipelineLiveMode')?.value || 'paper';
+    const status = document.getElementById('pineLiveConvertStatus');
+    if (status) status.textContent = 'Converting → backtesting on DB → deploying automated execution…';
+
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/pine/to-live`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pine_script,
+          name: 'TradingView Pine Live',
+          ...params,
+          mode,
+          auto_tick: true,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      if (data.backtest_result?.error) throw new Error(data.backtest_result.error);
+
+      pipelineLiveActiveId = data.live_strategy?.id;
+      pipelineStrategySpec = data.converted?.strategy_spec;
+      pipelineBacktestResult = data.backtest_result;
+
+      if (data.converted?.pine_script) {
+        document.getElementById('pipelineInputText').value = data.converted.pine_script;
+      }
+      document.getElementById('pipelineJsonPreview').textContent =
+        JSON.stringify(data.converted?.strategy_spec || {}, null, 2);
+
+      const bt = data.backtest_result;
+      document.getElementById('pipelineValidationStatus').textContent = 'Live strategy deployed';
+      document.getElementById('pipelineExecMetrics').innerHTML =
+        `DB backtest ${(bt.total_return || 0).toFixed(2)}% · Live ${mode} · ID ${pipelineLiveActiveId}`;
+
+      if (data.first_tick) {
+        logPipelineLive(formatLiveTickLog(data.first_tick));
+      }
+      if (status) {
+        status.textContent = data.message || 'Pine bridged to live execution';
+      }
+      if (data.analysis) renderPipelineSuggestions(data.analysis);
+      await loadPipelineLiveStrategies();
+      setPipelineFlowStep(6);
+    } catch (e) {
+      if (status) status.textContent = e.message || 'Pine → Live failed';
+      logPipelineLive(e.message || 'Error');
+    }
+  }
+
+  function formatLiveTickLog(tick) {
+    if (!tick || tick.error) return tick?.error || 'No tick data';
+    const sig = tick.signals || {};
+    const orders = tick.orders || [];
+    let text = `Bar: ${sig.bar_time || '—'} · Price: ${sig.price || '—'}\n`;
+    text += `Entry trigger: ${sig.entry_trigger} · Exit trigger: ${sig.exit_trigger}\n`;
+    text += `Position: ${tick.position?.side || 'flat'} · Cash: ₹${tick.cash ?? '—'}\n`;
+    if (orders.length) {
+      text += orders.map(o => `ORDER ${o.side} ${o.quantity} @ ${o.price} [${o.status}] ${o.reason || ''}`).join('\n');
+    } else {
+      text += 'No new orders this tick.';
+    }
+    return text;
+  }
+
+  async function tickLiveStrategy(id) {
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/live/${id}/tick`, { method: 'POST' });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      logPipelineLive(formatLiveTickLog(data));
+      await loadPipelineLiveStrategies();
+    } catch (e) {
+      logPipelineLive(e.message || 'Tick failed');
+    }
+  }
+
+  async function stopLiveStrategy(id) {
+    try {
+      await fetch(`${API_BASE}/pipeline/live/${id}/stop`, { method: 'POST' });
+      await loadPipelineLiveStrategies();
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  function setPipelineFlowStep(step) {
+    const bar = document.getElementById('pipelineFlowBar');
+    if (!bar) return;
+    const labels = ['INPUT', 'AI LAYER', 'EXECUTION', 'ANALYSIS', 'OUTPUT', 'LIVE'];
+    bar.innerHTML = labels.map((l, i) =>
+      `<span class="${i + 1 <= step ? 'active' : ''}">${l}</span>${i < labels.length - 1 ? ' → ' : ''}`
+    ).join('');
+  }
+
   function downloadBacktestJson() {
     if (!lastBacktestReport) return;
     const blob = new Blob([JSON.stringify(lastBacktestReport, null, 2)], { type: 'application/json' });
@@ -4695,6 +6122,27 @@
     a.download = `strykex-backtest-${lastBacktestReport.symbol}-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function exportBacktestFormat(format) {
+    if (!lastBacktestReport?.result) return;
+    try {
+      const res = await fetch(`${API_BASE}/pipeline/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format, result: lastBacktestReport.result, title: 'StrykeX Backtest' }),
+      });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `strykex-${lastBacktestReport.symbol}-${Date.now()}.${format === 'xlsx' ? 'xlsx' : format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Export failed — check backend is running.');
+    }
   }
 
   async function downloadBacktestReport() {

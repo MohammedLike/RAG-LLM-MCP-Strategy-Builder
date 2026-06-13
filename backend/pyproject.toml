@@ -23,6 +23,7 @@ dependencies = [
     "pandas-ta>=0.3.14b0",
     "pandas>=2.2.2",
     "openpyxl>=3.1.2",
+    "pyarrow>=16.0.0",
     "numpy>=1.26.4",
     "scipy>=1.13.1",
     "py-vollib>=1.0.1",

@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from ..mcp.tool_run_backtest import run_backtest_tool, RunBacktestInput
 from ..mcp import tool_run_backtest
+from ..db.backtest_store import get_backtest_run, list_backtest_runs
 from ..backtest.indicators import IndicatorManager
 from ..backtest.engine import BacktestEngine
 from ..backtest.cache import backtest_cache
@@ -135,9 +136,16 @@ th,td{{border-bottom:1px solid #eee;padding:8px;text-align:left}} th{{color:#666
 async def get_indicators():
     return IndicatorManager.get_indicators_list()
 
+@router.get("/backtest/history")
+async def list_backtest_history(limit: int = 50, symbol: str | None = None):
+    """List persisted backtest runs from Postgres."""
+    return {"history": await list_backtest_runs(limit=limit, symbol=symbol)}
+
+
 @router.get("/backtest/latest")
 async def get_latest_backtest():
     return tool_run_backtest.LAST_BACKTEST
+
 
 @router.post("/backtest")
 async def run_backtest(request: RunBacktestInput):
@@ -186,6 +194,12 @@ async def get_async_result(task_id: str):
         return {"error": "Task not found"}
     return task
 
-@router.get("/backtest/{id}")
-async def get_backtest(id: str):
-    return {"status": "completed", "id": id}
+@router.get("/backtest/{backtest_id}")
+async def get_backtest(backtest_id: str):
+    """Fetch a persisted backtest run by UUID."""
+    if backtest_id in ("history", "latest", "async"):
+        return {"error": "Invalid backtest id"}
+    row = await get_backtest_run(backtest_id)
+    if not row:
+        return {"error": "Backtest not found", "id": backtest_id}
+    return row

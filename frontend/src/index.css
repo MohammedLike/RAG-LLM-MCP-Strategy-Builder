@@ -10,8 +10,8 @@
   --success: #22c55e;
   --danger: #ef4444;
   --warning: #eab308;
-  --font-sans: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Roboto Mono", ui-monospace, monospace;
+  --font-sans: "Roboto", sans-serif;
+  --font-mono: "Roboto Mono", monospace;
 }
 
 [data-theme="light"] {
@@ -50,11 +50,28 @@
   --color-success: #22c55e;
   --color-danger: #ef4444;
   --color-warning: #eab308;
-  --font-sans: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Roboto Mono", ui-monospace, monospace;
+  --font-sans: "Roboto", sans-serif;
+  --font-mono: "Roboto Mono", monospace;
 }
 
 * { box-sizing: border-box; }
+
+html {
+  font-family: var(--font-sans);
+}
+
+button,
+input,
+select,
+textarea,
+optgroup,
+option,
+label,
+table,
+th,
+td {
+  font-family: var(--font-sans);
+}
 
 body {
   margin: 0;

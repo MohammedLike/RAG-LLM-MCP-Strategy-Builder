@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     # Market Data
     MARKET_DATA_PROVIDER: str = "yfinance" # nse, yfinance, broker
     OHLCV_DB_ONLY: bool = True  # when True, backtests use Postgres ohlcv only (no yfinance fallback)
+    PARQUET_DATA_DIR: str = "data/ohlcv_parquet"
+    PINE_SCRIPTS_DIR: str = "data/pine_scripts"
+    LIVE_STRATEGIES_FILE: str = "data/live_strategies.json"
     
     # Broker API (Optional)
     BROKER_API_KEY: str | None = None

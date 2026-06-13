@@ -9,6 +9,12 @@ from .config import settings
 async def lifespan(app: FastAPI):
     print(f"Starting Quant AI Agent API (model: {settings.LLM_MODEL_NAME})")
     try:
+        from .db.migrate import ensure_schema
+        await ensure_schema()
+        print("Database schema verified")
+    except Exception as e:
+        print(f"Database migration skipped: {e}")
+    try:
         from .rag.qdrant_client import init_collection
         init_collection()
         print("Qdrant collection initialized")
