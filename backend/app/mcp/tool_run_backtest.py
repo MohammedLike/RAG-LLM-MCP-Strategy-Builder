@@ -36,15 +36,26 @@ async def run_backtest_tool(input_data: RunBacktestInput) -> dict:
         df = await provider.get_ohlcv(input_data.symbol, interval="1d", start=start_date, end=end_date)
 
         if df.empty:
-            return {"error": f"No data found for {input_data.symbol} in the requested period."}
+            return {
+                "error": (
+                    f"No OHLCV data in database for {input_data.symbol} ({input_data.period}). "
+                    "Run: docker exec quant_backend python scripts/ingest_indices.py"
+                )
+            }
 
         result = engine.run(df, strategy_spec)
+        data_start = str(df["time"].iloc[0])[:10] if "time" in df.columns else None
+        data_end = str(df["time"].iloc[-1])[:10] if "time" in df.columns else None
 
         LAST_BACKTEST = {
             "symbol": input_data.symbol,
             "period": input_data.period,
             "strategy_spec": input_data.strategy_spec,
             "timestamp": datetime.utcnow().isoformat(),
+            "data_source": "postgres",
+            "data_rows": len(df),
+            "data_start": data_start,
+            "data_end": data_end,
             **result
         }
 

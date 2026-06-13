@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 from .provider_base import MarketDataProvider
+from ..config import settings
 import asyncio
 
 class YFinanceProvider(MarketDataProvider):
@@ -76,7 +77,13 @@ class YFinanceProvider(MarketDataProvider):
                         df.columns = [c.lower() for c in df.columns]
                         return df
             except Exception as e:
-                print(f"Error loading OHLCV from DB: {e}. Falling back to yfinance.")
+                print(f"Error loading OHLCV from DB: {e}.")
+                if settings.OHLCV_DB_ONLY:
+                    return pd.DataFrame()
+
+        if settings.OHLCV_DB_ONLY:
+            print(f"No OHLCV rows in database for {symbol} ({interval}). DB-only mode is enabled.")
+            return pd.DataFrame()
 
         ticker = self._get_ticker(symbol)
         def _fetch():
