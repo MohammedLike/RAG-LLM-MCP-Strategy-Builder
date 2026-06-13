@@ -9,7 +9,9 @@ from sqlalchemy import text
 
 from app.db.session import async_session, is_db_available
 from app.strategies.compiler import compile_db_strategy
+from app.strategies.suggestions import build_prebuilt_catalog, filter_catalog
 from app.backtest.engine import BacktestEngine
+from app.backtest.metrics import compute_monthly_returns_by_year
 from app.market.provider_yfinance import YFinanceProvider
 
 router = APIRouter()
@@ -88,23 +90,29 @@ def _serialize_strategy_row(row, include_full_results: bool = False) -> dict:
     if include_full_results and stored_results:
         payload["backtest_results"] = stored_results
     elif stored_results:
+        summary_keys = (
+            "total_return",
+            "win_rate",
+            "sharpe",
+            "sortino",
+            "max_drawdown",
+            "cagr",
+            "profit_factor",
+            "total_trades",
+            "symbol",
+            "period",
+            "source",
+            "backtested_at",
+            "monthly_returns",
+        )
         payload["backtest_results"] = {
-            k: stored_results[k]
-            for k in (
-                "total_return",
-                "win_rate",
-                "sharpe",
-                "max_drawdown",
-                "cagr",
-                "profit_factor",
-                "total_trades",
-                "symbol",
-                "period",
-                "source",
-                "backtested_at",
-            )
-            if k in stored_results
+            k: stored_results[k] for k in summary_keys if k in stored_results
         }
+        monthly = stored_results.get("monthly_returns")
+        if not monthly and stored_results.get("equity_curve"):
+            monthly = compute_monthly_returns_by_year(stored_results["equity_curve"])
+            if monthly:
+                payload["backtest_results"]["monthly_returns"] = monthly
         if stored_results.get("equity_curve") and include_full_results:
             payload["backtest_results"]["equity_curve"] = stored_results["equity_curve"]
 
@@ -189,6 +197,8 @@ async def _run_and_store_backtest(slug: str, symbol: str, period: str) -> dict:
             raise HTTPException(status_code=404, detail=f"No OHLCV data in database for {symbol}")
 
         bt_result = engine.run(df, spec)
+        equity_curve = bt_result.get("equity_curve", [])
+        monthly_returns = compute_monthly_returns_by_year(equity_curve)
         stored = {
             "source": "live_backtest",
             "backtested_at": datetime.utcnow().isoformat(),
@@ -203,7 +213,8 @@ async def _run_and_store_backtest(slug: str, symbol: str, period: str) -> dict:
             "profit_factor": bt_result.get("profit_factor"),
             "expectancy": bt_result.get("expectancy"),
             "total_trades": len(bt_result.get("trades", [])),
-            "equity_curve": bt_result.get("equity_curve", []),
+            "equity_curve": equity_curve,
+            "monthly_returns": monthly_returns,
             "drawdown": bt_result.get("drawdown", []),
         }
 
@@ -277,6 +288,51 @@ async def list_strategies(
         return file_strategies
 
     return db_strategies
+
+
+@router.get("/strategies/prebuilt/catalog")
+async def get_prebuilt_catalog(
+    q: str | None = Query(default=None, description="Search name or condition"),
+    indicator: str | None = Query(default=None, description="Filter by indicator id e.g. RSI, SMA"),
+    direction: str | None = Query(default=None, description="bullish, bearish, or all"),
+    category: str | None = Query(default=None, description="Indicator category filter"),
+    letter: str | None = Query(default=None, description="A-Z index letter"),
+):
+    """All pre-built strategy suggestions grouped by primary indicator (full strategies table)."""
+    if not is_db_available():
+        return {
+            "total_strategies": 0,
+            "total_indicators": 0,
+            "categories": ["All"],
+            "alphabet": [],
+            "indicators": [],
+            "suggestions_by_indicator": {},
+        }
+
+    try:
+        async with async_session() as session:
+            result = await session.execute(
+                text(
+                    "SELECT name, slug, category, hypothesis, entry_rules, exit_rules, risk_params "
+                    "FROM strategies ORDER BY name ASC"
+                )
+            )
+            rows = result.fetchall()
+    except Exception as e:
+        print(f"Error loading prebuilt catalog: {e}")
+        raise HTTPException(status_code=500, detail="Could not load prebuilt suggestions")
+
+    catalog = build_prebuilt_catalog(rows)
+    if q or indicator or direction or category or letter:
+        catalog = filter_catalog(
+            catalog,
+            q=q,
+            indicator=indicator,
+            direction=direction,
+            category=category,
+            letter=letter,
+        )
+    return catalog
 
 
 @router.get("/strategies/{slug}")

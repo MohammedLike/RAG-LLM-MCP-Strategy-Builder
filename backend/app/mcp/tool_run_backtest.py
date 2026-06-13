@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from ..backtest.engine import BacktestEngine
 from ..backtest.cache import backtest_cache
+from ..backtest.ohlcv_export import serialize_ohlcv
 from ..market.provider_yfinance import YFinanceProvider
 from datetime import datetime, timedelta
 
@@ -24,6 +25,8 @@ async def run_backtest_tool(input_data: RunBacktestInput) -> dict:
             LAST_BACKTEST['total_trades'] = len(LAST_BACKTEST.get('trades', []))
             LAST_BACKTEST['message'] = "Returned cached result."
             LAST_BACKTEST['cached'] = True
+            if 'ohlcv' not in LAST_BACKTEST:
+                LAST_BACKTEST['ohlcv'] = []
             return LAST_BACKTEST
 
         days_map = {"1y": 365, "2y": 730, "5y": 1825, "8y": 2920}
@@ -56,6 +59,7 @@ async def run_backtest_tool(input_data: RunBacktestInput) -> dict:
             "data_rows": len(df),
             "data_start": data_start,
             "data_end": data_end,
+            "ohlcv": serialize_ohlcv(df),
             **result
         }
 

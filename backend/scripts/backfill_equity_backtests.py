@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from app.backtest.engine import BacktestEngine
+from app.backtest.metrics import compute_monthly_returns_by_year
 from app.market.provider_yfinance import YFinanceProvider
 from app.strategies.compiler import compile_db_strategy
 
@@ -78,6 +79,7 @@ async def backfill(symbol: str, period: str, limit: int | None):
                     continue
                 spec = {**spec, "symbol": symbol, "instrument_type": "EQUITY"}
                 bt = engine_bt.run(df.copy(), spec)
+                equity_curve = bt.get("equity_curve", [])
                 stored = {
                     "source": "live_backtest",
                     "backtested_at": datetime.utcnow().isoformat(),
@@ -92,7 +94,8 @@ async def backfill(symbol: str, period: str, limit: int | None):
                     "profit_factor": bt.get("profit_factor"),
                     "expectancy": bt.get("expectancy"),
                     "total_trades": len(bt.get("trades", [])),
-                    "equity_curve": bt.get("equity_curve", []),
+                    "equity_curve": equity_curve,
+                    "monthly_returns": compute_monthly_returns_by_year(equity_curve),
                     "drawdown": bt.get("drawdown", []),
                 }
                 await session.execute(

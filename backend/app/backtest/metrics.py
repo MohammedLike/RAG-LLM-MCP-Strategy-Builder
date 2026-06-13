@@ -45,3 +45,37 @@ def calculate_metrics(returns: pd.Series, risk_free_rate: float = 0.065) -> dict
         "profit_factor": 0.0,
         "expectancy": 0.0,
     }
+
+
+def compute_monthly_returns_by_year(equity_curve: list) -> dict:
+    """Return {year: [12 monthly % returns or None]} from equity curve points."""
+    if not equity_curve or len(equity_curve) < 2:
+        return {}
+
+    buckets: dict[tuple[int, int], list[float]] = {}
+    for point in equity_curve:
+        date_str = str(point.get("date", ""))[:10]
+        try:
+            dt = pd.Timestamp(date_str)
+        except Exception:
+            continue
+        key = (int(dt.year), int(dt.month) - 1)
+        val = float(point.get("value", 0))
+        buckets.setdefault(key, []).append(val)
+
+    by_year: dict[str, list] = {}
+    for (year, month), vals in buckets.items():
+        if not vals:
+            continue
+        start_val, end_val = vals[0], vals[-1]
+        if start_val == 0:
+            continue
+        if start_val == end_val:
+            continue
+        month_return = round(((end_val - start_val) / start_val) * 100.0, 2)
+        year_key = str(year)
+        if year_key not in by_year:
+            by_year[year_key] = [None] * 12
+        by_year[year_key][month] = month_return
+
+    return by_year

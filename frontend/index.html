@@ -13,9 +13,11 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <!-- Lucide Icons via CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- TradingView Lightweight Charts -->
+  <script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script>
   
   <style>
     /* Shared design tokens */
@@ -32,9 +34,9 @@
       --red-dim: rgba(220, 38, 38, 0.12);
       --yellow: #a16207;
       --yellow-dim: rgba(161, 98, 7, 0.12);
-      --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
-      --mono-family: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace;
+      --font-family: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-display: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --mono-family: 'Roboto Mono', ui-monospace, 'Cascadia Code', monospace;
       --text-xs: 12px;
       --text-sm: 13px;
       --text-base: 15px;
@@ -1394,6 +1396,445 @@
       margin: 4px 0;
     }
 
+    .conditions-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .assist-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--card-border);
+      background: var(--surface-elevated);
+      color: var(--primary-light);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+
+    .assist-btn:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .assist-btn svg { width: 14px; height: 14px; }
+
+    .prebuilt-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .prebuilt-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .prebuilt-title {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .prebuilt-see-all {
+      border: none;
+      background: none;
+      color: var(--primary-light);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .prebuilt-strip-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .prebuilt-strip {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      padding-bottom: 4px;
+      flex: 1;
+      scrollbar-width: none;
+    }
+
+    .prebuilt-strip::-webkit-scrollbar { display: none; }
+
+    .prebuilt-chip {
+      flex: 0 0 auto;
+      width: 92px;
+      padding: 10px 8px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      cursor: pointer;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .prebuilt-chip:hover,
+    .prebuilt-chip.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+    }
+
+    .prebuilt-chip-icon {
+      width: 100%;
+      height: 34px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02));
+      margin-bottom: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .prebuilt-chip-icon::before,
+    .prebuilt-chip-icon::after {
+      content: '';
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--green);
+    }
+
+    .prebuilt-chip-icon::before { top: 12px; transform: rotate(-8deg); }
+    .prebuilt-chip-icon::after { top: 22px; background: var(--red); transform: rotate(6deg); }
+
+    .prebuilt-chip-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .prebuilt-chip-count {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .prebuilt-strip-next {
+      flex: 0 0 28px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--card-border);
+      background: var(--surface-elevated);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Prebuilt Suggestions Modal */
+    .prebuilt-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(8px);
+      z-index: 1200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .prebuilt-overlay.open { display: flex; }
+
+    .prebuilt-modal {
+      width: min(1120px, 96vw);
+      height: min(760px, 92vh);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-3d-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .prebuilt-modal-head {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .prebuilt-modal-title {
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .prebuilt-alpha {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .prebuilt-alpha-btn {
+      min-width: 24px;
+      height: 24px;
+      padding: 0 6px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .prebuilt-alpha-btn.active,
+    .prebuilt-alpha-btn:hover {
+      background: var(--primary-tint);
+      color: var(--primary-light);
+    }
+
+    .prebuilt-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .prebuilt-search {
+      flex: 1;
+      min-width: 220px;
+      position: relative;
+    }
+
+    .prebuilt-search input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      border-radius: var(--radius-btn);
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: var(--text-sm);
+    }
+
+    .prebuilt-search svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+    }
+
+    .prebuilt-dir-toggle {
+      display: inline-flex;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-btn);
+      overflow: hidden;
+    }
+
+    .prebuilt-dir-btn {
+      padding: 9px 14px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .prebuilt-dir-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .prebuilt-modal-body {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .prebuilt-indicators-pane {
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .prebuilt-pane-title {
+      padding: 14px 18px 10px;
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .prebuilt-cat-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 0 14px 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .prebuilt-cat-tab {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--card-border);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .prebuilt-cat-tab.active {
+      border-color: var(--primary);
+      color: var(--primary-light);
+      background: var(--primary-tint);
+    }
+
+    .prebuilt-indicator-list {
+      overflow-y: auto;
+      padding: 0 10px 12px;
+      flex: 1;
+    }
+
+    .prebuilt-indicator-item {
+      width: 100%;
+      text-align: left;
+      padding: 12px 14px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+      margin-bottom: 4px;
+      transition: var(--transition);
+    }
+
+    .prebuilt-indicator-item:hover {
+      background: var(--surface-elevated);
+    }
+
+    .prebuilt-indicator-item.active {
+      border-color: var(--primary);
+      background: var(--primary-tint);
+    }
+
+    .prebuilt-indicator-name {
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .prebuilt-indicator-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .prebuilt-suggestions-pane {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .prebuilt-suggestion-list {
+      overflow-y: auto;
+      padding: 0 16px 16px;
+      flex: 1;
+    }
+
+    .prebuilt-suggestion-item {
+      display: grid;
+      grid-template-columns: 24px 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--card-border);
+      cursor: pointer;
+    }
+
+    .prebuilt-suggestion-item:last-child { border-bottom: none; }
+
+    .prebuilt-suggestion-item input { margin-top: 3px; accent-color: var(--primary); }
+
+    .prebuilt-suggestion-text {
+      font-size: var(--text-sm);
+      color: var(--text-primary);
+      line-height: 1.5;
+      font-family: var(--mono-family);
+    }
+
+    .prebuilt-suggestion-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-family: var(--font-family);
+    }
+
+    .prebuilt-style-tag {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .prebuilt-style-tag.bullish { color: var(--green); border-color: rgba(21,128,61,0.35); }
+    .prebuilt-style-tag.bearish { color: var(--red); border-color: rgba(220,38,38,0.35); }
+
+    .prebuilt-modal-foot {
+      padding: 14px 18px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .prebuilt-done-btn {
+      padding: 10px 28px;
+      border: none;
+      border-radius: var(--radius-btn);
+      background: var(--gradient-brand);
+      color: #fff;
+      font-size: var(--text-sm);
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 20px var(--primary-glow);
+    }
+
+    .prebuilt-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: var(--text-sm);
+    }
+
     .run-full-btn {
       width: 100%;
       padding: 15px 16px;
@@ -1639,12 +2080,52 @@
       color: var(--primary);
     }
 
-    #equityCurveCanvas {
+    #equityCurveCanvas,
+    .tv-chart-container {
       width: 100%;
-      height: 240px;
-      border-radius: 6px;
+      height: 280px;
+      border-radius: 8px;
       display: block;
+      overflow: hidden;
     }
+
+    .chart-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .chart-type-tabs {
+      display: inline-flex;
+      gap: 4px;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: var(--surface-elevated);
+    }
+
+    .chart-type-tab {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .chart-type-tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .tv-chart-panel { display: none; }
+    .tv-chart-panel.active { display: block; }
 
     /* MONTHLY HEATMAP */
     .heatmap-grid {
@@ -1997,16 +2478,33 @@
     }
 
     .modal-desc {
-      font-size: 0.825rem;
+      font-size: var(--text-sm);
       color: var(--text-secondary);
-      line-height: 1.6;
+      line-height: 1.65;
       margin-bottom: 20px;
-      background-color: rgba(0, 0, 0, 0.15);
-      border: 1px solid rgba(255,255,255,0.02);
-      border-radius: 8px;
-      padding: 12px;
-      font-family: var(--mono-family);
-      word-break: break-all;
+      background: var(--surface);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-card);
+      padding: 14px 16px;
+      font-family: inherit;
+    }
+
+    .hm-cell.empty {
+      background: var(--surface);
+      border: 1px dashed var(--card-border);
+      opacity: 0.85;
+    }
+
+    .hm-cell.empty .hm-val {
+      color: var(--text-muted);
+      font-weight: 500;
+      font-family: inherit;
+    }
+
+    .modal-period-note {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      margin-left: auto;
     }
 
     .modal-tags {
@@ -2331,10 +2829,29 @@
           </div>
           <div class="bt-form">
             <div class="form-group">
-              <div class="form-label">Strategy (Natural Language)</div>
+              <div class="conditions-header">
+                <div class="form-label">Strategy (Natural Language)</div>
+                <button type="button" class="assist-btn" onclick="openPrebuiltModal()">
+                  <i data-lucide="wand-2"></i> Assist
+                </button>
+              </div>
               <textarea class="form-textarea" id="strategyInput" placeholder="Describe your strategy in plain English...&#10;&#10;e.g. Buy NIFTY when RSI(14) drops below 30 and price is above 200-day EMA. Exit when RSI crosses above 60 or 2% stop loss hits."></textarea>
-              <div class="form-hint">Rules are parsed into structured entry and exit conditions automatically.</div>
+              <div class="form-hint">Rules are parsed into structured entry and exit conditions automatically. Use Assist for pre-built setups from your database.</div>
             </div>
+
+            <div class="prebuilt-section">
+              <div class="prebuilt-section-head">
+                <span class="prebuilt-title">Pre-built Setups</span>
+                <button type="button" class="prebuilt-see-all" onclick="openPrebuiltModal()">See all</button>
+              </div>
+              <div class="prebuilt-strip-wrap">
+                <div class="prebuilt-strip" id="prebuiltStrip">
+                  <div class="prebuilt-empty" style="padding:12px;">Loading suggestions…</div>
+                </div>
+                <button type="button" class="prebuilt-strip-next" onclick="scrollPrebuiltStrip(1)" aria-label="Scroll setups">›</button>
+              </div>
+            </div>
+
             <div class="form-divider"></div>
             <div class="form-row">
               <div class="form-group">
@@ -2463,15 +2980,8 @@
     <div class="modal-metrics" id="modalMetrics"></div>
     
     <div class="modal-controls-row">
-      <div class="modal-timeframe-tabs">
-        <button class="modal-timeframe-tab" onclick="setModalTimeframe('5 Min', this)">5 Min</button>
-        <button class="modal-timeframe-tab" onclick="setModalTimeframe('15 Min', this)">15 Min</button>
-        <button class="modal-timeframe-tab active" onclick="setModalTimeframe('1 Day', this)">1 Day</button>
-      </div>
-      <div class="modal-year-pills">
-        <button class="modal-year-pill active" onclick="setModalYear('2025', this)">2025</button>
-        <button class="modal-year-pill" onclick="setModalYear('2024', this)">2024</button>
-      </div>
+      <div class="modal-period-note">Monthly returns from daily backtest (stored OHLCV)</div>
+      <div class="modal-year-pills" id="modalYearPills"></div>
     </div>
     
     <div class="heatmap-label" id="heatmap-title">Monthly Performance — 2025</div>
@@ -2480,6 +2990,41 @@
     <div class="modal-actions">
       <button class="btn-primary" onclick="loadTemplate()">Load into Backtest Engine</button>
       <button class="btn-secondary" onclick="closeModal(null)">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRE-BUILT SUGGESTIONS MODAL -->
+<div class="prebuilt-overlay" id="prebuiltModalOverlay" onclick="closePrebuiltModal(event)">
+  <div class="prebuilt-modal" onclick="event.stopPropagation()">
+    <div class="prebuilt-modal-head">
+      <div class="prebuilt-modal-title">Add Prebuild Suggestions</div>
+      <div class="prebuilt-alpha" id="prebuiltAlpha"></div>
+      <div class="prebuilt-toolbar">
+        <div class="prebuilt-search">
+          <i data-lucide="search"></i>
+          <input type="text" id="prebuiltSearchInput" placeholder="Search for conditions..." oninput="onPrebuiltSearchInput(this.value)">
+        </div>
+        <div class="prebuilt-dir-toggle">
+          <button type="button" class="prebuilt-dir-btn active" data-dir="all" onclick="setPrebuiltDirection('all', this)">All</button>
+          <button type="button" class="prebuilt-dir-btn" data-dir="bullish" onclick="setPrebuiltDirection('bullish', this)">Bullish</button>
+          <button type="button" class="prebuilt-dir-btn" data-dir="bearish" onclick="setPrebuiltDirection('bearish', this)">Bearish</button>
+        </div>
+      </div>
+    </div>
+    <div class="prebuilt-modal-body">
+      <div class="prebuilt-indicators-pane">
+        <div class="prebuilt-pane-title" id="prebuiltIndicatorCount">Indicators</div>
+        <div class="prebuilt-cat-tabs" id="prebuiltCatTabs"></div>
+        <div class="prebuilt-indicator-list" id="prebuiltIndicatorList"></div>
+      </div>
+      <div class="prebuilt-suggestions-pane">
+        <div class="prebuilt-pane-title" id="prebuiltSuggestionCount">Prebuild Suggestions</div>
+        <div class="prebuilt-suggestion-list" id="prebuiltSuggestionList"></div>
+      </div>
+    </div>
+    <div class="prebuilt-modal-foot">
+      <button type="button" class="prebuilt-done-btn" onclick="applySelectedPrebuilt()">Done</button>
     </div>
   </div>
 </div>
@@ -2501,9 +3046,15 @@
   let currentPage = 1;
   const itemsPerPage = 9;
   
-  let selectedModalYear = "2025";
-  let selectedModalTimeframe = "1 Day";
+  let selectedModalYear = new Date().getFullYear().toString();
   let lastBacktestReport = null;
+
+  // Pre-built suggestions assistant (from strategies table)
+  let prebuiltCatalog = null;
+  let prebuiltFiltered = null;
+  let prebuiltSelectedIndicator = null;
+  let prebuiltSelectedSlug = null;
+  let prebuiltFilters = { q: '', direction: 'all', category: 'All', letter: '' };
 
   const EQUITY_CATEGORIES = new Set([
     'equity', 'trend following', 'momentum', 'mean reversion',
@@ -2584,6 +3135,10 @@
     localStorage.setItem('strykex-theme', next);
     updateThemeButtons(next);
     lucide.createIcons();
+    window.dispatchEvent(new Event('strykex-theme-change'));
+    if (lastChartPayload) {
+      renderTradingViewCharts(lastChartPayload.data, lastChartPayload.symbol);
+    }
   }
 
   function updateThemeButtons(theme) {
@@ -2620,6 +3175,7 @@
     // Load dynamic variables from DB
     loadStrategiesFromDb();
     loadSymbolsFromDb();
+    loadPrebuiltCatalog();
     renderHistory();
   });
 
@@ -2667,6 +3223,238 @@
     window.location.hash = id;
   }
 
+  /* PRE-BUILT SUGGESTIONS ASSISTANT */
+  async function loadPrebuiltCatalog() {
+    const strip = document.getElementById('prebuiltStrip');
+    try {
+      const res = await fetch(`${API_BASE}/strategies/prebuilt/catalog`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      prebuiltCatalog = await res.json();
+      prebuiltFiltered = prebuiltCatalog;
+      if (!prebuiltSelectedIndicator && prebuiltCatalog.indicators?.length) {
+        prebuiltSelectedIndicator = prebuiltCatalog.indicators[0].id;
+      }
+      renderPrebuiltStrip();
+    } catch (err) {
+      console.warn('Could not load prebuilt catalog:', err);
+      if (strip) {
+        strip.innerHTML = '<div class="prebuilt-empty" style="padding:12px;">Suggestions unavailable — start backend</div>';
+      }
+    }
+  }
+
+  function filterPrebuiltCatalogLocal() {
+    if (!prebuiltCatalog) return null;
+    const q = prebuiltFilters.q.trim().toLowerCase();
+    const dir = prebuiltFilters.direction;
+    const cat = prebuiltFilters.category;
+    const letter = prebuiltFilters.letter;
+
+    let indicators = [...(prebuiltCatalog.indicators || [])];
+    if (letter) indicators = indicators.filter(i => i.letter === letter);
+    if (cat && cat !== 'All') {
+      indicators = indicators.filter(i => i.category === cat || i.category_slug === cat.toLowerCase());
+    }
+
+    const suggestionsByIndicator = prebuiltCatalog.suggestions_by_indicator || {};
+    const filteredMap = {};
+    for (const ind of indicators) {
+      let items = suggestionsByIndicator[ind.id] || [];
+      if (dir && dir !== 'all') items = items.filter(s => s.direction === dir);
+      if (q) {
+        items = items.filter(s => {
+          const hay = `${s.name} ${s.condition_text || ''} ${s.hypothesis || ''} ${s.style_tag || ''}`.toLowerCase();
+          return hay.includes(q);
+        });
+      }
+      if (items.length) filteredMap[ind.id] = items;
+    }
+
+    indicators = indicators.filter(i => filteredMap[i.id]?.length);
+    if (prebuiltSelectedIndicator && !filteredMap[prebuiltSelectedIndicator]) {
+      prebuiltSelectedIndicator = indicators[0]?.id || null;
+    }
+
+    return {
+      ...prebuiltCatalog,
+      indicators,
+      suggestions_by_indicator: filteredMap,
+      total_indicators: indicators.length,
+      total_strategies: Object.values(filteredMap).reduce((n, arr) => n + arr.length, 0),
+    };
+  }
+
+  function renderPrebuiltStrip() {
+    const strip = document.getElementById('prebuiltStrip');
+    if (!strip || !prebuiltCatalog?.indicators?.length) {
+      if (strip) strip.innerHTML = '<div class="prebuilt-empty" style="padding:12px;">No pre-built setups in database</div>';
+      return;
+    }
+    const top = prebuiltCatalog.indicators.slice(0, 16);
+    strip.innerHTML = top.map(ind => `
+      <button type="button" class="prebuilt-chip" onclick="openPrebuiltModal('${ind.id}')" title="${ind.long_name}">
+        <div class="prebuilt-chip-icon"></div>
+        <div class="prebuilt-chip-name">${ind.name}</div>
+        <div class="prebuilt-chip-count">${ind.count} setups</div>
+      </button>
+    `).join('');
+  }
+
+  function scrollPrebuiltStrip(dir) {
+    const strip = document.getElementById('prebuiltStrip');
+    if (strip) strip.scrollBy({ left: dir * 220, behavior: 'smooth' });
+  }
+
+  function openPrebuiltModal(indicatorId) {
+    if (!prebuiltCatalog) {
+      loadPrebuiltCatalog().then(() => openPrebuiltModal(indicatorId));
+      return;
+    }
+    if (indicatorId) prebuiltSelectedIndicator = indicatorId;
+    else if (!prebuiltSelectedIndicator && prebuiltCatalog.indicators?.length) {
+      prebuiltSelectedIndicator = prebuiltCatalog.indicators[0].id;
+    }
+    prebuiltSelectedSlug = null;
+    prebuiltFiltered = filterPrebuiltCatalogLocal();
+    renderPrebuiltModal();
+    document.getElementById('prebuiltModalOverlay')?.classList.add('open');
+    lucide.createIcons();
+  }
+
+  function closePrebuiltModal(e) {
+    if (e && e.target !== document.getElementById('prebuiltModalOverlay')) return;
+    document.getElementById('prebuiltModalOverlay')?.classList.remove('open');
+  }
+
+  function onPrebuiltSearchInput(value) {
+    prebuiltFilters.q = value;
+    prebuiltFiltered = filterPrebuiltCatalogLocal();
+    renderPrebuiltModal();
+  }
+
+  function setPrebuiltDirection(dir, el) {
+    prebuiltFilters.direction = dir;
+    document.querySelectorAll('.prebuilt-dir-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.dir === dir));
+    prebuiltFiltered = filterPrebuiltCatalogLocal();
+    renderPrebuiltModal();
+  }
+
+  function setPrebuiltCategory(cat) {
+    prebuiltFilters.category = cat;
+    prebuiltFiltered = filterPrebuiltCatalogLocal();
+    renderPrebuiltModal();
+  }
+
+  function setPrebuiltLetter(letter) {
+    prebuiltFilters.letter = prebuiltFilters.letter === letter ? '' : letter;
+    prebuiltFiltered = filterPrebuiltCatalogLocal();
+    renderPrebuiltModal();
+  }
+
+  function selectPrebuiltIndicator(id) {
+    prebuiltSelectedIndicator = id;
+    prebuiltSelectedSlug = null;
+    renderPrebuiltModal();
+  }
+
+  function selectPrebuiltSuggestion(slug) {
+    prebuiltSelectedSlug = slug;
+    renderPrebuiltModal();
+  }
+
+  function renderPrebuiltModal() {
+    const data = prebuiltFiltered || prebuiltCatalog;
+    if (!data) return;
+
+    const alpha = document.getElementById('prebuiltAlpha');
+    const catTabs = document.getElementById('prebuiltCatTabs');
+    const indList = document.getElementById('prebuiltIndicatorList');
+    const sugList = document.getElementById('prebuiltSuggestionList');
+    const indCount = document.getElementById('prebuiltIndicatorCount');
+    const sugCount = document.getElementById('prebuiltSuggestionCount');
+
+    const letters = data.alphabet || [];
+    alpha.innerHTML = letters.map(l => `
+      <button type="button" class="prebuilt-alpha-btn ${prebuiltFilters.letter === l ? 'active' : ''}" onclick="setPrebuiltLetter('${l}')">${l}</button>
+    `).join('');
+
+    const categories = data.categories || ['All'];
+    catTabs.innerHTML = categories.map(cat => `
+      <button type="button" class="prebuilt-cat-tab ${prebuiltFilters.category === cat ? 'active' : ''}" onclick="setPrebuiltCategory('${cat.replace(/'/g, "\\'")}')">${cat}</button>
+    `).join('');
+
+    const indicators = data.indicators || [];
+    indCount.textContent = `Indicators (${indicators.length})`;
+
+    if (!indicators.length) {
+      indList.innerHTML = '<div class="prebuilt-empty">No indicators match your filters</div>';
+      sugList.innerHTML = '';
+      sugCount.textContent = 'Prebuild Suggestions (0)';
+      return;
+    }
+
+    indList.innerHTML = indicators.map(ind => `
+      <button type="button" class="prebuilt-indicator-item ${ind.id === prebuiltSelectedIndicator ? 'active' : ''}" onclick="selectPrebuiltIndicator('${ind.id}')">
+        <div class="prebuilt-indicator-name">${ind.long_name || ind.name}</div>
+        <div class="prebuilt-indicator-desc">${ind.description || ''} · ${ind.count} setups</div>
+      </button>
+    `).join('');
+
+    const suggestions = data.suggestions_by_indicator?.[prebuiltSelectedIndicator] || [];
+    sugCount.textContent = `Prebuild Suggestions (${suggestions.length})`;
+
+    if (!suggestions.length) {
+      sugList.innerHTML = '<div class="prebuilt-empty">No suggestions for this indicator</div>';
+      return;
+    }
+
+    sugList.innerHTML = suggestions.map(s => `
+      <label class="prebuilt-suggestion-item" onclick="selectPrebuiltSuggestion('${s.slug}')">
+        <input type="radio" name="prebuiltSuggestion" value="${s.slug}" ${prebuiltSelectedSlug === s.slug ? 'checked' : ''}>
+        <div>
+          <div class="prebuilt-suggestion-text">${escapeHtml(s.condition_text || s.name)}</div>
+          <div class="prebuilt-suggestion-sub">${escapeHtml(s.name)}</div>
+        </div>
+        <span class="prebuilt-style-tag ${s.direction === 'bullish' ? 'bullish' : s.direction === 'bearish' ? 'bearish' : ''}">${escapeHtml(s.style_tag || s.category || 'Setup')}</span>
+      </label>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function applySelectedPrebuilt() {
+    const data = prebuiltFiltered || prebuiltCatalog;
+    if (!data || !prebuiltSelectedIndicator) {
+      closePrebuiltModal(null);
+      return;
+    }
+    const suggestions = data.suggestions_by_indicator?.[prebuiltSelectedIndicator] || [];
+    const selected = suggestions.find(s => s.slug === prebuiltSelectedSlug) || suggestions[0];
+    if (!selected) {
+      closePrebuiltModal(null);
+      return;
+    }
+    applyPrebuiltSuggestion(selected);
+  }
+
+  function applyPrebuiltSuggestion(suggestion) {
+    const text = suggestion.condition_text
+      ? `${suggestion.name}: ${suggestion.condition_text}`
+      : suggestion.name;
+    document.getElementById('strategyInput').value = text;
+    activeStrategySpec = suggestion.backtest_spec || null;
+    activeTemplate = null;
+    closePrebuiltModal(null);
+    showView('backtest');
+    lucide.createIcons();
+  }
+
   // Load equity strategies from DB (real stats only)
   async function loadStrategiesFromDb() {
     const grid = document.getElementById('templateGrid');
@@ -2688,10 +3476,7 @@
         const totalReturn = hasRealStats ? formatPct(results.total_return) : 'Run to compute';
         const winRate = hasRealStats && results.win_rate !== undefined ? `${Number(results.win_rate).toFixed(0)}%` : '—';
 
-        let heatmap = { 2025: Array(12).fill(0), 2024: Array(12).fill(0) };
-        if (results.equity_curve && results.equity_curve.length > 1) {
-          heatmap[2025] = calculateMonthlyReturns(results.equity_curve);
-        }
+        let heatmap = buildHeatmapFromResults(results);
 
         return {
           id: index + 1,
@@ -2702,11 +3487,12 @@
           wr: winRate,
           hasRealStats,
           symbol: results.symbol || s.backtest_spec?.symbol || 'NIFTY',
+          period: results.period || '2y',
           desc: s.description || s.hypothesis || 'Equity strategy from database.',
           strategy: s.description || s.hypothesis || s.name,
           spec: s.backtest_spec,
           metrics: {
-            total: totalReturn,
+            total: hasRealStats ? Number(results.total_return) : 0,
             sharpe: hasRealStats && results.sharpe !== undefined ? results.sharpe.toFixed(2) : '—',
             max_drawdown: hasRealStats && results.max_drawdown !== undefined ? `${results.max_drawdown.toFixed(1)}%` : '—',
             trades: hasRealStats ? (results.total_trades || 0) : '—'
@@ -2752,35 +3538,70 @@
     }
   }
 
-  // Calculate monthly returns from VectorBT equity values curve
-  function calculateMonthlyReturns(equityCurve) {
-    const monthlyReturns = Array(12).fill(0);
-    if (!equityCurve || equityCurve.length < 2) return monthlyReturns;
-
-    try {
-      // Find latest year
-      const lastDateStr = equityCurve[equityCurve.length - 1].date;
-      const targetYear = new Date(lastDateStr).getFullYear();
-
-      for (let m = 0; m < 12; m++) {
-        const monthData = equityCurve.filter(p => {
-          const d = new Date(p.date);
-          return d.getFullYear() === targetYear && d.getMonth() === m;
-        });
-
-        if (monthData.length > 1) {
-          const startVal = monthData[0].value;
-          const endVal = monthData[monthData.length - 1].value;
-          monthlyReturns[m] = parseFloat((((endVal - startVal) / startVal) * 100).toFixed(2));
-        } else {
-          // generic fallback value if month has insufficient data
-          monthlyReturns[m] = 0.00;
-        }
-      }
-    } catch (e) {
-      console.error("Error calculating monthly returns", e);
+  function buildHeatmapFromResults(results) {
+    if (results.monthly_returns && Object.keys(results.monthly_returns).length) {
+      return results.monthly_returns;
     }
-    return monthlyReturns;
+    if (results.equity_curve && results.equity_curve.length > 1) {
+      return calculateMonthlyReturnsByYear(results.equity_curve);
+    }
+    return {};
+  }
+
+  function calculateMonthlyReturnsByYear(equityCurve) {
+    const byYear = {};
+    if (!equityCurve || equityCurve.length < 2) return byYear;
+
+    const buckets = {};
+    for (const point of equityCurve) {
+      const d = new Date(String(point.date).slice(0, 10));
+      if (Number.isNaN(d.getTime())) continue;
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (!buckets[key]) buckets[key] = [];
+      buckets[key].push(Number(point.value));
+    }
+
+    for (const key of Object.keys(buckets)) {
+      const [yearStr, monthStr] = key.split('-');
+      const year = Number(yearStr);
+      const month = Number(monthStr);
+      const vals = buckets[key];
+      if (!vals.length) continue;
+      const startVal = vals[0];
+      const endVal = vals[vals.length - 1];
+      if (!startVal || startVal === endVal) continue;
+      const yearKey = String(year);
+      if (!byYear[yearKey]) byYear[yearKey] = Array(12).fill(null);
+      byYear[yearKey][month] = parseFloat((((endVal - startVal) / startVal) * 100).toFixed(2));
+    }
+    return byYear;
+  }
+
+  function formatMonthReturn(val) {
+    if (val === null || val === undefined || Number.isNaN(Number(val))) return '—';
+    const n = Number(val);
+    return `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
+  }
+
+  function monthHasHeatmapValue(val) {
+    return val !== null && val !== undefined && !Number.isNaN(Number(val));
+  }
+
+  function pickDefaultHeatmapYear(heatmap) {
+    const years = Object.keys(heatmap || {}).sort((a, b) => Number(b) - Number(a));
+    const withReturns = years.find(y =>
+      (heatmap[y] || []).some(v => monthHasHeatmapValue(v) && Math.abs(Number(v)) > 0.0001)
+    );
+    if (withReturns) return withReturns;
+    const withAny = years.find(y => (heatmap[y] || []).some(v => monthHasHeatmapValue(v)));
+    return withAny || years[0] || new Date().getFullYear().toString();
+  }
+
+  // Legacy alias used by live backtest results panel
+  function calculateMonthlyReturns(equityCurve, year) {
+    const byYear = calculateMonthlyReturnsByYear(equityCurve);
+    const targetYear = year || pickDefaultHeatmapYear(byYear);
+    return (byYear[targetYear] || Array(12).fill(null)).map(v => v ?? 0);
   }
 
   // Home templates — show 6 featured equity strategies from DB
@@ -2919,22 +3740,14 @@
     activeTemplate = TEMPLATES.find(t => t.id === id);
     if (!activeTemplate) return;
 
-    selectedModalYear = "2025";
-    selectedModalTimeframe = "1 Day";
-
-    // Reset modals classes active tabs
-    document.querySelectorAll(".modal-timeframe-tab").forEach(tab => {
-      tab.classList.toggle("active", tab.innerText === "1 Day");
-    });
-    document.querySelectorAll(".modal-year-pill").forEach(pill => {
-      pill.classList.toggle("active", pill.innerText === "2025");
-    });
+    selectedModalYear = pickDefaultHeatmapYear(activeTemplate.heatmap);
 
     document.getElementById('modalTitle').textContent = activeTemplate.name;
     document.getElementById('modalDesc').textContent = activeTemplate.desc;
     document.getElementById('modalTags').innerHTML = `
       <span class="tpl-tag ${activeTemplate.category}">${capitalize(activeTemplate.category)}</span>
       <span class="tpl-symbol" style="font-size:11px">${activeTemplate.symbol}</span>
+      ${activeTemplate.period ? `<span class="tpl-symbol" style="font-size:11px">${String(activeTemplate.period).toUpperCase()}</span>` : ''}
     `;
 
     updateModalMetricsAndHeatmap();
@@ -2953,44 +3766,71 @@
   function updateModalMetricsAndHeatmap() {
     if (!activeTemplate) return;
 
-    let multiplier = 1.0;
-    if (selectedModalTimeframe === "5 Min") multiplier = 0.7;
-    else if (selectedModalTimeframe === "15 Min") multiplier = 0.85;
-
-    // Recalculate metrics return based on active timeframe multiplier
-    const totalReturnNum = parseFloat(activeTemplate.metrics.total) * multiplier;
-    const formattedReturn = totalReturnNum >= 0 ? `+${totalReturnNum.toFixed(2)}%` : `${totalReturnNum.toFixed(2)}%`;
+    const totalReturnNum = Number(activeTemplate.metrics.total) || 0;
+    const formattedReturn = totalReturnNum >= 0
+      ? `+${totalReturnNum.toFixed(2)}%`
+      : `${totalReturnNum.toFixed(2)}%`;
 
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const heatmapContainer = document.getElementById("modalHeatmap");
-    heatmapContainer.innerHTML = "";
+    const heatmap = activeTemplate.heatmap || {};
+    const years = Object.keys(heatmap).sort((a, b) => Number(b) - Number(a));
+    const pillsContainer = document.getElementById('modalYearPills');
 
-    const rawHeatmapData = activeTemplate.heatmap[selectedModalYear];
-    let calculatedMonths = [];
+    if (years.length) {
+      if (!heatmap[selectedModalYear]) {
+        selectedModalYear = pickDefaultHeatmapYear(heatmap);
+      }
+      pillsContainer.innerHTML = years.map(y =>
+        `<button type="button" class="modal-year-pill ${y === selectedModalYear ? 'active' : ''}" onclick="setModalYear('${y}', this)">${y}</button>`
+      ).join('');
+    } else {
+      pillsContainer.innerHTML = '';
+    }
+
+    const heatmapContainer = document.getElementById('modalHeatmap');
+    heatmapContainer.innerHTML = '';
+
+    const rawHeatmapData = heatmap[selectedModalYear] || Array(12).fill(null);
+    const calculatedMonths = [];
 
     rawHeatmapData.forEach((val, i) => {
-      const monthReturnVal = val * multiplier;
-      const formattedVal = monthReturnVal >= 0 ? `+${monthReturnVal.toFixed(2)}%` : `${monthReturnVal.toFixed(2)}%`;
-      calculatedMonths.push({ name: months[i], val: formattedVal });
+      const hasValue = monthHasHeatmapValue(val);
+      const formattedVal = formatMonthReturn(val);
+      calculatedMonths.push({ name: months[i], val: formattedVal, raw: hasValue ? Number(val) : null });
 
-      const cell = document.createElement("div");
-      cell.className = `hm-cell ${monthReturnVal >= 0 ? 'pos' : 'neg'}`;
-      cell.innerHTML = `
-        <span class="hm-month">${months[i]}</span>
-        <span class="hm-val">${formattedVal}</span>
-      `;
+      const cell = document.createElement('div');
+      if (!hasValue) {
+        cell.className = 'hm-cell empty';
+        cell.innerHTML = `
+          <span class="hm-month">${months[i]}</span>
+          <span class="hm-val">—</span>
+        `;
+      } else {
+        const monthReturnVal = Number(val);
+        cell.className = `hm-cell ${monthReturnVal >= 0 ? 'pos' : 'neg'}`;
+        cell.innerHTML = `
+          <span class="hm-month">${months[i]}</span>
+          <span class="hm-val">${formattedVal}</span>
+        `;
+      }
       heatmapContainer.appendChild(cell);
     });
 
-    // Recalculate best and worst months
-    const sortedMonths = [...calculatedMonths].sort((a, b) => parseFloat(b.val) - parseFloat(a.val));
-    const bestMonth = `${sortedMonths[0].name}: ${sortedMonths[0].val}`;
-    const worstMonth = `${sortedMonths[sortedMonths.length - 1].name}: ${sortedMonths[sortedMonths.length - 1].val}`;
+    const validMonths = calculatedMonths.filter(m => m.raw !== null);
+    let bestMonth = '—';
+    let worstMonth = '—';
+    if (validMonths.length) {
+      const sorted = [...validMonths].sort((a, b) => b.raw - a.raw);
+      bestMonth = `${sorted[0].name}: ${sorted[0].val}`;
+      worstMonth = `${sorted[sorted.length - 1].name}: ${sorted[sorted.length - 1].val}`;
+    }
+
+    const returnColor = totalReturnNum >= 0 ? 'var(--green)' : 'var(--red)';
 
     document.getElementById('modalMetrics').innerHTML = `
       <div class="metric-box">
         <div class="metric-label">Total Return</div>
-        <div class="metric-value" style="color:var(--green)">${formattedReturn}</div>
+        <div class="metric-value" style="color:${returnColor}">${formattedReturn}</div>
       </div>
       <div class="metric-box">
         <div class="metric-label">Best Month</div>
@@ -3002,19 +3842,14 @@
       </div>
     `;
 
-    document.getElementById('heatmap-title').innerText = `Monthly Performance — ${selectedModalYear}`;
-  }
-
-  function setModalTimeframe(tf, button) {
-    selectedModalTimeframe = tf;
-    document.querySelectorAll(".modal-timeframe-tab").forEach(tab => tab.classList.remove('active'));
-    button.classList.add('active');
-    updateModalMetricsAndHeatmap();
+    document.getElementById('heatmap-title').innerText = years.length
+      ? `Monthly Performance — ${selectedModalYear}`
+      : 'Monthly Performance — run backtest to populate';
   }
 
   function setModalYear(year, pill) {
     selectedModalYear = year;
-    document.querySelectorAll(".modal-year-pill").forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.modal-year-pill').forEach(p => p.classList.remove('active'));
     pill.classList.add('active');
     updateModalMetricsAndHeatmap();
   }
@@ -3309,7 +4144,11 @@
       const losses = totalTrades - wins;
 
       const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const monthlyReturns = calculateMonthlyReturns(data.equity_curve);
+      const monthlyByYear = data.monthly_returns && Object.keys(data.monthly_returns).length
+        ? data.monthly_returns
+        : calculateMonthlyReturnsByYear(data.equity_curve);
+      const resultsYear = pickDefaultHeatmapYear(monthlyByYear);
+      const monthlyReturns = monthlyByYear[resultsYear] || Array(12).fill(null);
 
       const body = document.getElementById('resultsBody');
       if (!body) return;
@@ -3372,25 +4211,44 @@
         </div>
 
         <div class="chart-card">
-          <div class="chart-title">
-            <i data-lucide="line-chart"></i>
-            Equity Growth Curve (VectorBT)
+          <div class="chart-title-row">
+            <div class="chart-title">
+              <i data-lucide="candlestick-chart"></i>
+              Market & Performance Charts
+            </div>
+            <div class="chart-type-tabs">
+              <button type="button" class="chart-type-tab active" data-chart-tab="candles" onclick="setResultsChartTab('candles', this)">Candles</button>
+              <button type="button" class="chart-type-tab" data-chart-tab="equity" onclick="setResultsChartTab('equity', this)">Equity</button>
+              <button type="button" class="chart-type-tab" data-chart-tab="drawdown" onclick="setResultsChartTab('drawdown', this)">Drawdown</button>
+            </div>
           </div>
-          <canvas id="equityCurveCanvas"></canvas>
+          <div id="tvChartCandles" class="tv-chart-container tv-chart-panel active"></div>
+          <div id="tvChartEquity" class="tv-chart-container tv-chart-panel"></div>
+          <div id="tvChartDrawdown" class="tv-chart-container tv-chart-panel"></div>
         </div>
 
         <div class="chart-card">
           <div class="chart-title">
             <i data-lucide="grid"></i>
-            Monthly Returns Performance (Seeded from OHLC)
+            Monthly Returns — ${resultsYear}
           </div>
           <div class="heatmap-grid">
-            ${monthlyReturns.map((v, i) => `
-              <div class="hm-cell ${v >= 0 ? 'pos' : 'neg'}">
-                <span class="hm-month">${months[i]}</span>
-                <span class="hm-val">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>
-              </div>
-            `).join('')}
+            ${monthlyReturns.map((v, i) => {
+              const hasValue = monthHasHeatmapValue(v);
+              if (!hasValue) {
+                return `
+                  <div class="hm-cell empty">
+                    <span class="hm-month">${months[i]}</span>
+                    <span class="hm-val">—</span>
+                  </div>`;
+              }
+              const n = Number(v);
+              return `
+                <div class="hm-cell ${n >= 0 ? 'pos' : 'neg'}">
+                  <span class="hm-month">${months[i]}</span>
+                  <span class="hm-val">${formatMonthReturn(n)}</span>
+                </div>`;
+            }).join('')}
           </div>
         </div>
 
@@ -3439,10 +4297,9 @@
         </div>
       `;
 
-      // Draw canvas equity curve path
-      const curve = data.equity_curve || [];
+      // TradingView Lightweight Charts
       setTimeout(() => {
-        drawEquityCurve('equityCurveCanvas', curve);
+        renderTradingViewCharts(data, symbol);
         lucide.createIcons();
       }, 100);
     } catch (err) {
@@ -3498,7 +4355,7 @@
     });
 
     // Y-axis labels and grid
-    ctx.font = '12px "IBM Plex Mono", monospace';
+    ctx.font = '12px "Roboto Mono", monospace';
     ctx.fillStyle = labelColor;
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
@@ -3521,7 +4378,7 @@
     if (dates.length >= 2) {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      ctx.font = '12px "Plus Jakarta Sans", sans-serif';
+      ctx.font = '12px "Roboto", sans-serif';
       const firstDate = dates[0];
       const lastDate = dates[dates.length - 1];
       ctx.fillText(formatChartDate(firstDate), padLeft, padTop + graphHeight + 10);
