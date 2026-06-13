@@ -1,9 +1,3 @@
-"""
-Train a PPO agent to optimize RSI mean reversion strategy parameters.
-Uses Stable-Baselines3.
-
-Usage: python -m training.rl.train
-"""
 import os
 import sys
 import numpy as np

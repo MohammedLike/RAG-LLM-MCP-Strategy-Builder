@@ -4,24 +4,16 @@ from pydantic import BaseModel
 from ..mcp.tool_run_backtest import run_backtest_tool, RunBacktestInput
 from ..mcp import tool_run_backtest
 from ..db.backtest_store import get_backtest_run, list_backtest_runs
+from ..db.task_store import task_store
 from ..backtest.indicators import IndicatorManager
-from ..backtest.engine import BacktestEngine
-from ..backtest.cache import backtest_cache
-from ..market.provider_yfinance import YFinanceProvider
 from ..nl_parser import nl_parser
 from ..db.session import is_db_available
-from datetime import datetime, timedelta
+from datetime import datetime
 import uuid
-import asyncio
 import html
 from typing import Optional
 
 router = APIRouter()
-
-engine = BacktestEngine()
-provider = YFinanceProvider()
-
-_tasks: dict = {}
 
 class AsyncBacktestRequest(BaseModel):
     strategy_spec: dict
@@ -154,42 +146,30 @@ async def run_backtest(request: RunBacktestInput):
 @router.post("/backtest/async")
 async def run_backtest_async(requests: list[AsyncBacktestRequest], background_tasks: BackgroundTasks):
     task_id = str(uuid.uuid4())
-    _tasks[task_id] = {"status": "running", "result": None}
+    await task_store.create(task_id, meta={"count": len(requests)})
 
     async def execute():
         try:
             results = []
             for req in requests:
-                days_map = {"1y": 365, "2y": 730, "5y": 1825, "8y": 2920}
-                days = days_map.get(req.period, 365)
-                end_date = datetime.utcnow()
-                start_date = end_date - timedelta(days=days)
-
-                cached = await backtest_cache.get(req.symbol, req.period, req.strategy_spec)
-                if cached:
-                    results.append({"symbol": req.symbol, "period": req.period, "cached": True, **cached})
-                    continue
-
-                df = await provider.get_ohlcv(req.symbol, "1d", start_date, end_date)
-                if df.empty:
-                    results.append({"symbol": req.symbol, "error": f"No data for {req.symbol}"})
-                    continue
-
-                strategy_spec = {**req.strategy_spec, "symbol": req.symbol}
-                result = engine.run(df, strategy_spec)
-                await backtest_cache.set(req.symbol, req.period, req.strategy_spec, result)
+                result = await run_backtest_tool(RunBacktestInput(
+                    strategy_spec=req.strategy_spec,
+                    symbol=req.symbol,
+                    period=req.period,
+                    source="async_batch",
+                    persist=True,
+                ))
                 results.append({"symbol": req.symbol, "period": req.period, **result})
-
-            _tasks[task_id] = {"status": "completed", "result": results}
+            await task_store.complete(task_id, results)
         except Exception as e:
-            _tasks[task_id] = {"status": "failed", "error": str(e)}
+            await task_store.fail(task_id, str(e))
 
     background_tasks.add_task(execute)
     return {"task_id": task_id, "status": "running"}
 
 @router.get("/backtest/async/{task_id}")
 async def get_async_result(task_id: str):
-    task = _tasks.get(task_id)
+    task = await task_store.get(task_id)
     if not task:
         return {"error": "Task not found"}
     return task

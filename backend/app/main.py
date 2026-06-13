@@ -20,6 +20,14 @@ async def lifespan(app: FastAPI):
         print("Qdrant collection initialized")
     except Exception as e:
         print(f"Qdrant init skipped: {e}")
+    try:
+        import redis.asyncio as aioredis
+        r = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+        await r.ping()
+        await r.aclose()
+        print("Redis connected")
+    except Exception as e:
+        print(f"Redis check skipped: {e}")
     yield
     print("Shutting down Quant AI Agent API")
 
@@ -48,5 +56,19 @@ def root():
     }
 
 @app.get("/health")
-def health():
-    return {"status": "ok"}
+async def health():
+    status = {"status": "ok", "redis": "unknown", "database": "unknown"}
+    try:
+        from .db.session import is_db_available
+        status["database"] = "connected" if is_db_available() else "unavailable"
+    except Exception:
+        status["database"] = "unavailable"
+    try:
+        import redis.asyncio as aioredis
+        r = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+        await r.ping()
+        await r.aclose()
+        status["redis"] = "connected"
+    except Exception:
+        status["redis"] = "unavailable"
+    return status
