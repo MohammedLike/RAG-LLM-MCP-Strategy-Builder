@@ -13,8 +13,9 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 
-DATABASE_URL = 'postgresql+asyncpg://quant_user:quant_password@postgres:5432/quant_db'
-STRATEGIES_DIR = '/training/data/strategies/auto_generated'
+from app.config import settings
+
+STRATEGIES_DIR = 'training/data/strategies/auto_generated'
 
 async def seed_auto_generated():
     print(f"Scanning for auto-generated strategies in {STRATEGIES_DIR}...")
@@ -26,7 +27,7 @@ async def seed_auto_generated():
         
     print(f"Found {len(files)} strategy files. Starting database ingestion...")
     
-    engine = create_async_engine(DATABASE_URL)
+    engine = create_async_engine(settings.DATABASE_URL)
     async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     
     success_count = 0

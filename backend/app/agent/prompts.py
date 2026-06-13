@@ -39,8 +39,8 @@ For options:
       "is_credit": true,
       "entry": {"conditions": [], "logical_operator": "AND"},
       "exit": {"conditions": [], "logical_operator": "AND"},
-      "stop_loss": 0.20,
-      "take_profit": 0.50
+      "stop_loss": 20.0,
+      "take_profit": 50.0
     }
   },
   "response": "Short strangle on BankNifty..."
@@ -58,7 +58,8 @@ Response:
     "symbol": "NIFTY", "period": "2y", "instrument_type": "EQUITY",
     "strategy_spec": {
       "entry": {"conditions": [{"indicator": "RSI", "params": {"timeperiod": 14}, "operator": "crosses_below", "value": 30}], "logical_operator": "AND"},
-      "exit": {"conditions": [{"indicator": "RSI", "params": {"timeperiod": 14}, "operator": "crosses_above", "value": 70}], "logical_operator": "AND"}
+      "exit": {"conditions": [{"indicator": "RSI", "params": {"timeperiod": 14}, "operator": "crosses_above", "value": 70}], "logical_operator": "AND"},
+      "stop_loss": 2.0, "take_profit": 5.0
     }
   },
   "response": "Running RSI mean reversion on NIFTY..."
@@ -76,7 +77,7 @@ Response:
       "instrument_type": "OPTION", "strike": "OTM+1", "option_type": "STRADDLE", "is_credit": true,
       "entry": {"conditions": [], "logical_operator": "AND"},
       "exit": {"conditions": [], "logical_operator": "AND"},
-      "stop_loss": 0.20, "take_profit": 0.50
+      "stop_loss": 20.0, "take_profit": 50.0
     }
   },
   "response": "Running short strangle on BANKNIFTY..."

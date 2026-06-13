@@ -46,3 +46,18 @@ class Strategy(Base):
     backtest_results = Column(JSONB)
     strategy_metadata = Column(JSONB)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+
+class IndependentStrategy(Base):
+    __tablename__ = 'independent_strategies'
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False)
+    slug = Column(String, unique=True, nullable=False)
+    category = Column(String, nullable=False)
+    hypothesis = Column(Text)
+    entry_rules = Column(JSONB)
+    exit_rules = Column(JSONB)
+    risk_params = Column(JSONB)
+    strategy_metadata = Column(JSONB)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)

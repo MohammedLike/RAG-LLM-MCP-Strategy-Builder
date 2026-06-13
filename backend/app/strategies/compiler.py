@@ -185,25 +185,25 @@ def compile_db_strategy(db_strat: dict) -> dict:
     if isinstance(risk_params, str):
         risk_params = json.loads(risk_params)
         
-    stop_loss = 0.02
-    take_profit = 0.05
+    stop_loss = 2.0
+    take_profit = 5.0
     
     # Try to extract stop_loss / take_profit
     sl_val = risk_params.get("stop_loss") or exit_rules.get("stop_loss")
     tp_val = risk_params.get("take_profit") or exit_rules.get("target") or risk_params.get("take_profit")
     
-    if sl_val:
+    if sl_val is not None:
         if isinstance(sl_val, str) and "%" in sl_val:
-            stop_loss = float(sl_val.replace("%", "")) / 100.0
+            stop_loss = float(sl_val.replace("%", ""))
         else:
             try:
                 stop_loss = float(sl_val)
             except:
                 pass
                 
-    if tp_val:
+    if tp_val is not None:
         if isinstance(tp_val, str) and "%" in tp_val:
-            take_profit = float(tp_val.replace("%", "")) / 100.0
+            take_profit = float(tp_val.replace("%", ""))
         else:
             try:
                 take_profit = float(tp_val)

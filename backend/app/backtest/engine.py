@@ -159,9 +159,18 @@ class BacktestEngine:
         exits = exits.astype(bool)
 
         # 2. Stop Loss and Take Profit
-        # These should be decimal fractions (e.g., 0.02 for 2%)
+        # UI sends percentages (e.g. 2.0 for 2%), VectorBT expects fractions (0.02)
         stop_loss = strategy_spec.get('stop_loss')
+        if stop_loss is not None and stop_loss > 0:
+            stop_loss = float(stop_loss) / 100.0
+        else:
+            stop_loss = None
+            
         take_profit = strategy_spec.get('take_profit')
+        if take_profit is not None and take_profit > 0:
+            take_profit = float(take_profit) / 100.0
+        else:
+            take_profit = None
         
         # 3. Run VectorBT Portfolio
         portfolio = vbt.Portfolio.from_signals(
@@ -170,8 +179,8 @@ class BacktestEngine:
             exits,
             sl_stop=stop_loss,
             tp_stop=take_profit,
-            fees=strategy_spec.get('fees', 0.001),
-            slippage=strategy_spec.get('slippage', 0.001),
+            fees=float(strategy_spec.get('fees', 0.001)),
+            slippage=float(strategy_spec.get('slippage', 0.001)),
             freq='D'
         )
 

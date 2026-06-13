@@ -157,7 +157,7 @@ function App() {
   );
 
   return (
-    <div className="h-screen w-screen bg-white flex overflow-hidden font-sans">
+    <div className="h-screen w-screen bg-[#06090f] flex overflow-hidden font-sans text-slate-200">
       <Sidebar 
         activeView={activeView} 
         onNavigate={setActiveView} 
@@ -165,7 +165,7 @@ function App() {
         onTradingModeChange={setTradingMode} 
       />
       
-      <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#06090f]">
         {activeView === 'dashboard' && <DashboardView onNavigate={(v) => setActiveView(v as any)} onRunStrategy={handleRunInstant} />}
         {activeView === 'strategies' && <StrategyExplorer onRunStrategy={handleRunInstant} />}
         {activeView === 'backtest' && (
@@ -176,51 +176,6 @@ function App() {
                 <div className="h-7 w-7 rounded bg-[#00d09c] flex items-center justify-center text-[#06090f]"><Cpu size={14} /></div>
                 <span className="text-xs font-black text-white tracking-tighter">STREAK <span className="text-[#00d09c]">AI</span></span>
                 <span className="text-[8px] text-slate-600 font-mono">PRO SIMULATOR</span>
-              </div>
-              <div className="flex items-center gap-2 text-[10px]">
-                <div className="relative">
-                  <input type="text" value={symbolSearch} onFocus={() => setShowSymbolDropdown(true)}
-                    onChange={e => { setSymbolSearch(e.target.value); setShowSymbolDropdown(true); const s = e.target.value.split(' - ')[0].trim().toUpperCase(); if (s) setSymbol(s); }}
-                    className="w-36 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]" placeholder="Symbol..." />
-                  {showSymbolDropdown && companies.length > 0 && (
-                    <><div className="fixed inset-0 z-10" onClick={() => setShowSymbolDropdown(false)} />
-                      <div className="absolute top-full left-0 mt-1 bg-slate-900 border border-slate-800 rounded max-h-40 overflow-y-auto z-20 w-48">
-                        {companies.filter(c => c.symbol.toLowerCase().includes(symbolSearch.split(' - ')[0].toLowerCase())).slice(0, 30).map(c => (
-                          <div key={c.symbol} onClick={() => { setSymbol(c.symbol); setSymbolSearch(`${c.symbol} - ${c.name}`); setShowSymbolDropdown(false); }}
-                            className="px-2 py-1.5 text-[10px] hover:bg-blue-600/30 cursor-pointer text-slate-300">{c.symbol} <span className="text-slate-600">{c.name}</span></div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-                <select value={period} onChange={e => setPeriod(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
-                  <option value="1y">1Y</option><option value="2y">2Y</option><option value="5y">5Y</option><option value="8y">8Y</option>
-                </select>
-                <select value={instrumentType} onChange={e => setInstrumentType(e.target.value as 'EQUITY'|'OPTION')}
-                  className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
-                  <option value="EQUITY">Equity</option><option value="OPTION">Option</option>
-                </select>
-                {instrumentType === 'OPTION' && (
-                  <>
-                    <select value={optionType} onChange={e => setOptionType(e.target.value)}
-                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
-                      <option value="CE">CE</option><option value="PE">PE</option><option value="STRADDLE">Straddle</option>
-                    </select>
-                    <select value={strike} onChange={e => setStrike(e.target.value)}
-                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-[10px]">
-                      <option value="ITM-2">ITM-2</option><option value="ITM-1">ITM-1</option>
-                      <option value="ATM">ATM</option><option value="OTM+1">OTM+1</option><option value="OTM+2">OTM+2</option>
-                    </select>
-                  </>
-                )}
-                <input type="number" step="0.01" value={stopLoss} onChange={e => setStopLoss(Number(e.target.value))}
-                  className="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-1.5 text-slate-200 text-[10px] text-center" placeholder="SL%" />
-                <button onClick={handleRun} disabled={loading}
-                  className="bg-[#00d09c] hover:bg-[#00b386] disabled:bg-slate-700 text-[#06090f] px-4 py-1.5 rounded text-[10px] font-black flex items-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed">
-                  {loading ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
-                  {loading ? 'RUNNING...' : 'RUN'}
-                </button>
               </div>
             </header>
 
@@ -334,15 +289,76 @@ function App() {
                                 <div className="space-y-1">{exitConditions.map((c, i) => renderConditionRow(c, i, 'exit'))}</div>
                               </div>
                             </div>
-                            <div className="flex gap-3 text-[9px]">
-                              <label className="flex items-center gap-1 text-slate-500 font-bold uppercase"><span className="text-blue-400">Fees</span>
-                                <input type="number" step="0.0001" value={fees} onChange={e => setFees(Number(e.target.value))}
-                                  className="w-14 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-slate-200 text-center" />
-                              </label>
-                              <label className="flex items-center gap-1 text-slate-500 font-bold uppercase"><span className="text-blue-400">Slippage</span>
-                                <input type="number" step="0.0001" value={slippage} onChange={e => setSlippage(Number(e.target.value))}
-                                  className="w-14 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-slate-200 text-center" />
-                              </label>
+                            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/40 text-[9px] mt-2">
+                              <div className="flex flex-wrap items-center gap-3">
+                                {/* Symbol Search */}
+                                <div className="relative">
+                                  <input type="text" value={symbolSearch} onFocus={() => setShowSymbolDropdown(true)}
+                                    onChange={e => { setSymbolSearch(e.target.value); setShowSymbolDropdown(true); const s = e.target.value.split(' - ')[0].trim().toUpperCase(); if (s) setSymbol(s); }}
+                                    className="w-32 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-[9px]" placeholder="Symbol..." />
+                                  {showSymbolDropdown && companies.length > 0 && (
+                                    <><div className="fixed inset-0 z-10" onClick={() => setShowSymbolDropdown(false)} />
+                                      <div className="absolute bottom-full left-0 mb-1 bg-slate-900 border border-slate-800 rounded max-h-40 overflow-y-auto z-20 w-48">
+                                        {companies.filter(c => c.symbol.toLowerCase().includes(symbolSearch.split(' - ')[0].toLowerCase())).slice(0, 30).map(c => (
+                                          <div key={c.symbol} onClick={() => { setSymbol(c.symbol); setSymbolSearch(`${c.symbol} - ${c.name}`); setShowSymbolDropdown(false); }}
+                                            className="px-2 py-1 text-[9px] hover:bg-blue-600/30 cursor-pointer text-slate-300">{c.symbol} <span className="text-slate-600">{c.name}</span></div>
+                                        ))}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                                
+                                {/* Period */}
+                                <select value={period} onChange={e => setPeriod(e.target.value)}
+                                  className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-[9px]">
+                                  <option value="1y">1Y</option><option value="2y">2Y</option><option value="5y">5Y</option><option value="8y">8Y</option>
+                                </select>
+
+                                {/* Instrument Type */}
+                                <select value={instrumentType} onChange={e => setInstrumentType(e.target.value as 'EQUITY'|'OPTION')}
+                                  className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-[9px]">
+                                  <option value="EQUITY">Equity</option><option value="OPTION">Option</option>
+                                </select>
+
+                                {/* Options Strike / Option Type */}
+                                {instrumentType === 'OPTION' && (
+                                  <>
+                                    <select value={optionType} onChange={e => setOptionType(e.target.value)}
+                                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-[9px]">
+                                      <option value="CE">CE</option><option value="PE">PE</option><option value="STRADDLE">Straddle</option>
+                                    </select>
+                                    <select value={strike} onChange={e => setStrike(e.target.value)}
+                                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 text-[9px]">
+                                      <option value="ITM-2">ITM-2</option><option value="ITM-1">ITM-1</option>
+                                      <option value="ATM">ATM</option><option value="OTM+1">OTM+1</option><option value="OTM+2">OTM+2</option>
+                                    </select>
+                                  </>
+                                )}
+
+                                {/* Stop Loss */}
+                                <label className="flex items-center gap-1 text-slate-500 font-bold uppercase"><span>SL%</span>
+                                  <input type="number" step="0.01" value={stopLoss} onChange={e => setStopLoss(Number(e.target.value))}
+                                    className="w-12 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200 text-center" placeholder="SL%" />
+                                </label>
+                                
+                                {/* Fees */}
+                                <label className="flex items-center gap-1 text-slate-500 font-bold uppercase"><span>Fees</span>
+                                  <input type="number" step="0.0001" value={fees} onChange={e => setFees(Number(e.target.value))}
+                                    className="w-12 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200 text-center" />
+                                </label>
+
+                                {/* Slippage */}
+                                <label className="flex items-center gap-1 text-slate-500 font-bold uppercase"><span>Slippage</span>
+                                  <input type="number" step="0.0001" value={slippage} onChange={e => setSlippage(Number(e.target.value))}
+                                    className="w-12 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-slate-200 text-center" />
+                                </label>
+                              </div>
+
+                              <button onClick={handleRun} disabled={loading}
+                                className="bg-[#00d09c] hover:bg-[#00b386] disabled:bg-slate-700 text-[#06090f] px-4 py-1.5 rounded text-[9px] font-black flex items-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed">
+                                {loading ? <Loader2 size={10} className="animate-spin" /> : <Play size={10} />}
+                                {loading ? 'RUNNING...' : 'RUN BACKTEST'}
+                              </button>
                             </div>
                           </div>
                         )}

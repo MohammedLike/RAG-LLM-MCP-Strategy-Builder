@@ -28,13 +28,14 @@ async def ingest_historical(symbol: str, years: int = 10):
     print(f"Fetched {len(df)} records. Ingesting into database...")
 
     df["time"] = pd.to_datetime(df["time"], utc=True)
+    df["resolution"] = "1d" # Since we fetched with interval="1d"
     records = df.to_dict(orient="records")
     
     async with async_session() as session:
         # Upsert into PostgreSQL (TimescaleDB)
         stmt = insert(OHLCV).values(records)
         stmt = stmt.on_conflict_do_update(
-            index_elements=['time', 'symbol'],
+            index_elements=['time', 'symbol', 'resolution'],
             set_={
                 'open': stmt.excluded.open,
                 'high': stmt.excluded.high,

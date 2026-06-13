@@ -53,7 +53,7 @@ class OptionsEngine:
     def run(self, df: pd.DataFrame, strategy_spec: dict) -> dict:
         strike_spec = strategy_spec.get('strike', 'ATM')
         option_type = strategy_spec.get('option_type', 'CE').upper()
-        is_credit = strategy_spec.get('is_credit', option_type in ['PE', 'CE'])
+        is_credit = strategy_spec.get('is_credit', False)
 
         first_close = df['close'].iloc[0]
         strike = self._resolve_strike(first_close, strike_spec, strategy_spec.get('symbol', 'NIFTY'))
@@ -63,8 +63,12 @@ class OptionsEngine:
             option_price = self._estimate_option_price(df, strike, option_type)
             premium = float(option_price.iloc[0]) if not option_price.empty else 0.0
 
+        # UI sends percentages, convert to fractions
         stop_loss = strategy_spec.get('stop_loss', 0.0)
+        if stop_loss > 0: stop_loss = float(stop_loss) / 100.0
+        
         take_profit = strategy_spec.get('take_profit', 0.0)
+        if take_profit > 0: take_profit = float(take_profit) / 100.0
 
         entry_signal = pd.Series(False, index=df.index)
         if strategy_spec.get('entry'):
@@ -78,32 +82,45 @@ class OptionsEngine:
 
         in_position = False
         entry_price = 0.0
-        equity = [10000.0]
+        initial_equity = 10000.0
+        equity = []
         trade_list = []
         trade_id = 0
-        pnl_series = [0.0]
+        pnl_series = []
+
+        # We need a proper time series of option prices for marking-to-market
+        option_prices = self._estimate_option_price(df, strike, option_type)
 
         for i in range(len(df)):
-            current_equity = equity[-1]
-
+            current_option_price = float(option_prices.iloc[i])
+            
             if in_position:
-                position_pnl = self._option_payoff(df.iloc[i:i+1], strike, option_type, entry_price, is_credit).iloc[0]
+                # P&L is current price minus entry price (for Long)
+                # or entry price minus current price (for Short/Credit)
+                if is_credit:
+                    position_pnl = (entry_price - current_option_price)
+                else:
+                    position_pnl = (current_option_price - entry_price)
+                
                 pnl_pct = position_pnl / entry_price if entry_price != 0 else 0
                 sl_hit = stop_loss > 0 and pnl_pct <= -stop_loss
                 tp_hit = take_profit > 0 and pnl_pct >= take_profit
 
                 if exit_signal.iloc[i] or sl_hit or tp_hit:
                     exit_reason = "SL" if sl_hit else ("TP" if tp_hit else "Signal")
-                    new_equity = current_equity + position_pnl
-                    equity.append(new_equity)
-                    pnl_series.append(position_pnl)
+                    # Close trade
+                    trade_pnl = position_pnl
+                    initial_equity += trade_pnl
+                    equity.append(initial_equity)
+                    pnl_series.append(trade_pnl)
+                    
                     trade_list.append({
-                        "id": trade_id, "direction": "Long",
+                        "id": trade_id, "direction": "Short" if is_credit else "Long",
                         "entry_date": str(entry_date).split(' ')[0],
                         "exit_date": str(df['time'].iloc[i]).split(' ')[0],
                         "entry_price": float(entry_price),
-                        "exit_price": float(max(position_pnl + entry_price, 0.01)),
-                        "pnl": float(position_pnl),
+                        "exit_price": float(current_option_price),
+                        "pnl": float(trade_pnl),
                         "pnl_pct": float(pnl_pct * 100),
                         "size": 1, "duration_days": i - entry_idx,
                         "exit_reason": exit_reason
@@ -111,21 +128,21 @@ class OptionsEngine:
                     trade_id += 1
                     in_position = False
                 else:
-                    equity.append(current_equity + position_pnl)
+                    # Mark-to-market equity
+                    equity.append(initial_equity + position_pnl)
                     pnl_series.append(position_pnl)
             else:
-                equity.append(current_equity)
+                equity.append(initial_equity)
                 pnl_series.append(0.0)
 
-            if entry_signal.iloc[i] and not in_position:
-                in_position = True
-                entry_price = premium
-                entry_date = df['time'].iloc[i]
-                entry_idx = i
+                if entry_signal.iloc[i]:
+                    in_position = True
+                    entry_price = current_option_price
+                    entry_date = df['time'].iloc[i]
+                    entry_idx = i
 
-        equity = equity[1:] if len(equity) > len(df) else equity
-        equity_series = pd.Series(equity[:len(df)], index=df.index)
-        returns = pd.Series(pnl_series[:len(df)], index=df.index) / (equity_series.shift(1).fillna(10000.0) + 1)
+        equity_series = pd.Series(equity, index=df.index)
+        returns = pd.Series(pnl_series, index=df.index).diff().fillna(0.0) / 10000.0
 
         total_return = ((equity_series.iloc[-1] / 10000.0) - 1) * 100 if len(equity_series) > 0 else 0.0
         days = len(df)
