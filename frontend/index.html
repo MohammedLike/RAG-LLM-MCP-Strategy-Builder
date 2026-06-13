@@ -1526,9 +1526,9 @@
 
     .prebuilt-chip {
       flex: 0 0 auto;
-      min-width: 72px;
-      padding: 8px 10px;
-      border-radius: 10px;
+      width: 78px;
+      padding: 10px 8px 8px;
+      border-radius: 8px;
       border: 1px solid var(--card-border);
       background: var(--card-bg);
       cursor: pointer;
@@ -1569,16 +1569,10 @@
     .prebuilt-chip-name {
       font-size: 11px;
       font-weight: 600;
-      color: var(--text-primary);
+      color: var(--text-secondary);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-
-    .prebuilt-chip-count {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 2px;
     }
 
     .prebuilt-strip-next {
@@ -1593,11 +1587,60 @@
       font-family: inherit;
     }
 
+    /* Prebuilt modal — theme tokens follow dashboard light/dark */
+    [data-theme="dark"] .prebuilt-overlay,
+    [data-theme="dark"] .prebuilt-modal {
+      --pb-bg: var(--card-bg);
+      --pb-surface: var(--surface);
+      --pb-border: var(--card-border);
+      --pb-text: var(--text-primary);
+      --pb-muted: var(--text-muted);
+      --pb-input: var(--input-bg);
+      --pb-hover: rgba(255, 255, 255, 0.04);
+      --pb-shadow: 0 24px 80px rgba(0, 0, 0, 0.65);
+      --pb-overlay: rgba(0, 0, 0, 0.72);
+      --pb-indicator-active-bg: var(--primary-tint);
+      --pb-indicator-active-border: rgba(59, 130, 246, 0.7);
+      --pb-sentiment-active-bg: var(--primary-tint);
+      --pb-sentiment-active-border: rgba(59, 130, 246, 0.6);
+      --pb-sentiment-active-text: var(--primary-light);
+      --pb-bullish-active-bg: rgba(74, 222, 128, 0.12);
+      --pb-bullish-active-border: rgba(74, 222, 128, 0.45);
+      --pb-bullish-active-text: var(--green);
+      --pb-bearish-active-bg: rgba(248, 113, 113, 0.12);
+      --pb-bearish-active-border: rgba(248, 113, 113, 0.45);
+      --pb-bearish-active-text: var(--red);
+    }
+
+    [data-theme="light"] .prebuilt-overlay,
+    [data-theme="light"] .prebuilt-modal {
+      --pb-bg: var(--card-bg);
+      --pb-surface: var(--surface-elevated);
+      --pb-border: var(--card-border);
+      --pb-text: var(--text-primary);
+      --pb-muted: var(--text-muted);
+      --pb-input: var(--input-bg);
+      --pb-hover: rgba(15, 23, 42, 0.04);
+      --pb-shadow: var(--shadow-3d-lg);
+      --pb-overlay: rgba(15, 23, 42, 0.35);
+      --pb-indicator-active-bg: var(--primary-tint);
+      --pb-indicator-active-border: var(--primary);
+      --pb-sentiment-active-bg: var(--primary-tint);
+      --pb-sentiment-active-border: rgba(59, 130, 246, 0.35);
+      --pb-sentiment-active-text: var(--primary-hover);
+      --pb-bullish-active-bg: var(--green-dim);
+      --pb-bullish-active-border: rgba(21, 128, 61, 0.35);
+      --pb-bullish-active-text: var(--green);
+      --pb-bearish-active-bg: var(--red-dim);
+      --pb-bearish-active-border: rgba(220, 38, 38, 0.35);
+      --pb-bearish-active-text: var(--red);
+    }
+
     /* Prebuilt Suggestions Modal */
     .prebuilt-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.72);
+      background: var(--pb-overlay, rgba(0, 0, 0, 0.72));
       backdrop-filter: blur(8px);
       z-index: 1200;
       display: none;
@@ -1611,44 +1654,46 @@
     .prebuilt-modal {
       width: min(1120px, 96vw);
       height: min(760px, 92vh);
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-3d-lg);
+      background: var(--pb-bg);
+      border: 1px solid var(--pb-border);
+      border-radius: 8px;
+      box-shadow: var(--pb-shadow);
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      color: var(--pb-text);
     }
 
     .prebuilt-modal-head {
-      padding: 18px 22px 14px;
-      border-bottom: 1px solid var(--card-border);
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--pb-border);
+      background: var(--pb-bg);
     }
 
     .prebuilt-modal-title {
-      font-size: var(--text-lg);
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--pb-text);
+      margin-bottom: 10px;
     }
 
     .prebuilt-alpha {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 12px;
+      gap: 2px 4px;
+      margin-bottom: 10px;
     }
 
     .prebuilt-alpha-btn {
-      min-width: 24px;
-      height: 24px;
-      padding: 0 6px;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 5px;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
       background: transparent;
-      color: var(--text-muted);
+      color: var(--pb-muted);
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
       font-family: inherit;
     }
@@ -1663,57 +1708,72 @@
       display: flex;
       gap: 10px;
       align-items: center;
-      flex-wrap: wrap;
     }
 
     .prebuilt-search {
       flex: 1;
-      min-width: 220px;
+      min-width: 0;
       position: relative;
     }
 
     .prebuilt-search input {
       width: 100%;
-      padding: 10px 12px 10px 36px;
-      border-radius: var(--radius-btn);
-      border: 1px solid var(--input-border);
-      background: var(--input-bg);
-      color: var(--text-primary);
+      padding: 9px 12px 9px 34px;
+      border-radius: 4px;
+      border: 1px solid var(--pb-border);
+      background: var(--pb-input);
+      color: var(--pb-text);
       font-family: inherit;
-      font-size: var(--text-sm);
+      font-size: 13px;
     }
+
+    .prebuilt-search input::placeholder { color: var(--pb-muted); }
 
     .prebuilt-search svg {
       position: absolute;
-      left: 12px;
+      left: 10px;
       top: 50%;
       transform: translateY(-50%);
       width: 14px;
       height: 14px;
-      color: var(--text-muted);
+      color: var(--pb-muted);
     }
 
-    .prebuilt-dir-toggle {
+    .prebuilt-sentiment-toggle {
       display: inline-flex;
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-btn);
-      overflow: hidden;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
-    .prebuilt-dir-btn {
-      padding: 9px 14px;
-      border: none;
+    .prebuilt-sentiment-btn {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: 1px solid var(--pb-border);
       background: transparent;
-      color: var(--text-secondary);
-      font-size: var(--text-xs);
+      color: var(--pb-muted);
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       font-family: inherit;
+      transition: var(--transition);
     }
 
-    .prebuilt-dir-btn.active {
-      background: var(--primary);
-      color: #fff;
+    .prebuilt-sentiment-btn.active {
+      border-color: var(--pb-sentiment-active-border);
+      background: var(--pb-sentiment-active-bg);
+      color: var(--pb-sentiment-active-text);
+    }
+
+    .prebuilt-sentiment-btn.bullish.active {
+      border-color: var(--pb-bullish-active-border);
+      background: var(--pb-bullish-active-bg);
+      color: var(--pb-bullish-active-text);
+    }
+
+    .prebuilt-sentiment-btn.bearish.active {
+      border-color: var(--pb-bearish-active-border);
+      background: var(--pb-bearish-active-bg);
+      color: var(--pb-bearish-active-text);
     }
 
     .prebuilt-modal-body {
@@ -1724,25 +1784,25 @@
     }
 
     .prebuilt-indicators-pane {
-      border-right: 1px solid var(--card-border);
+      border-right: 1px solid var(--pb-border);
       display: flex;
       flex-direction: column;
       min-height: 0;
-      background: var(--bg-color);
+      background: var(--pb-surface);
     }
 
     .prebuilt-pane-title {
-      padding: 14px 16px 8px;
-      font-size: var(--text-sm);
-      font-weight: 700;
-      color: var(--text-primary);
+      padding: 12px 14px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--pb-text);
     }
 
     .prebuilt-cat-tabs-wrap {
       display: flex;
       align-items: stretch;
-      border-bottom: 1px solid var(--card-border);
-      background: var(--surface);
+      border-bottom: 1px solid var(--pb-border);
+      background: var(--pb-bg);
       flex-shrink: 0;
     }
 
@@ -1758,14 +1818,14 @@
 
     .prebuilt-cat-tab {
       flex: 0 0 auto;
-      padding: 10px 14px;
+      padding: 9px 12px;
       border: none;
-      border-right: 1px solid var(--card-border);
+      border-right: 1px solid var(--pb-border);
       border-radius: 0;
       background: transparent;
-      color: var(--text-secondary);
+      color: var(--pb-muted);
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
       font-family: inherit;
       white-space: nowrap;
@@ -1782,16 +1842,16 @@
     }
 
     .prebuilt-cat-tab:hover:not(.active) {
-      background: var(--surface-elevated);
-      color: var(--text-primary);
+      background: var(--pb-hover);
+      color: var(--pb-text);
     }
 
     .prebuilt-cat-scroll-btn {
-      flex: 0 0 32px;
+      flex: 0 0 28px;
       border: none;
-      border-left: 1px solid var(--card-border);
-      background: var(--surface);
-      color: var(--text-muted);
+      border-left: 1px solid var(--pb-border);
+      background: var(--pb-bg);
+      color: var(--pb-muted);
       cursor: pointer;
       font-family: inherit;
       font-size: 14px;
@@ -1799,43 +1859,43 @@
 
     .prebuilt-indicator-list {
       overflow-y: auto;
-      padding: 8px 0;
+      padding: 6px 8px;
       flex: 1;
     }
 
     .prebuilt-indicator-item {
       width: 100%;
       text-align: left;
-      padding: 14px 16px;
-      border: none;
-      border-left: 3px solid transparent;
-      border-radius: 0;
+      padding: 12px 14px;
+      border: 1px solid transparent;
+      border-radius: 4px;
       background: transparent;
       cursor: pointer;
       font-family: inherit;
       transition: var(--transition);
+      margin-bottom: 2px;
     }
 
     .prebuilt-indicator-item:hover {
-      background: var(--surface-elevated);
+      background: var(--pb-hover);
     }
 
     .prebuilt-indicator-item.active {
-      border-left-color: var(--primary);
-      background: var(--primary-tint);
+      border-color: var(--pb-indicator-active-border);
+      background: var(--pb-indicator-active-bg);
     }
 
     .prebuilt-indicator-name {
-      font-size: var(--text-base);
+      font-size: 13px;
       font-weight: 700;
-      color: var(--text-primary);
+      color: var(--pb-text);
       line-height: 1.2;
     }
 
     .prebuilt-indicator-desc {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 4px;
+      font-size: 11px;
+      color: var(--pb-muted);
+      margin-top: 3px;
       line-height: 1.35;
     }
 
@@ -1843,99 +1903,88 @@
       display: flex;
       flex-direction: column;
       min-height: 0;
-      background: var(--card-bg);
+      background: var(--pb-bg);
     }
 
     .prebuilt-suggestions-head {
-      padding: 14px 18px 10px;
-      border-bottom: 1px solid var(--card-border);
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid var(--pb-border);
       flex-shrink: 0;
     }
 
     .prebuilt-suggestions-title {
-      font-size: var(--text-sm);
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .prebuilt-suggestions-subtitle {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--pb-text);
     }
 
     .prebuilt-suggestion-list {
       overflow-y: auto;
-      padding: 0 18px 16px;
+      padding: 0 16px;
       flex: 1;
     }
 
     .prebuilt-suggestion-item {
       display: grid;
-      grid-template-columns: 24px 1fr auto;
+      grid-template-columns: 20px 1fr auto;
       gap: 12px;
-      align-items: start;
+      align-items: center;
       padding: 14px 0;
-      border-bottom: 1px solid var(--card-border);
+      border-bottom: 1px solid var(--pb-border);
       cursor: pointer;
     }
 
     .prebuilt-suggestion-item:last-child { border-bottom: none; }
 
-    .prebuilt-suggestion-item input { margin-top: 3px; accent-color: var(--primary); }
-
-    .prebuilt-suggestion-text {
-      font-size: var(--text-sm);
-      color: var(--text-primary);
-      line-height: 1.5;
-      font-family: var(--mono-family);
+    .prebuilt-suggestion-item input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--primary);
+      cursor: pointer;
     }
 
-    .prebuilt-suggestion-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 4px;
+    .prebuilt-suggestion-text {
+      font-size: 13px;
+      color: var(--pb-text);
+      line-height: 1.45;
       font-family: var(--font-family);
     }
 
     .prebuilt-style-tag {
-      padding: 4px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--card-border);
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--pb-muted);
       white-space: nowrap;
     }
 
-    .prebuilt-style-tag.bullish { color: var(--green); border-color: rgba(21,128,61,0.35); }
-    .prebuilt-style-tag.bearish { color: var(--red); border-color: rgba(220,38,38,0.35); }
-
     .prebuilt-modal-foot {
-      padding: 14px 18px;
-      border-top: 1px solid var(--card-border);
+      padding: 12px 16px;
+      border-top: 1px solid var(--pb-border);
       display: flex;
       justify-content: flex-end;
+      background: var(--pb-bg);
     }
 
     .prebuilt-done-btn {
-      padding: 10px 28px;
+      padding: 8px 24px;
       border: none;
-      border-radius: var(--radius-btn);
-      background: var(--gradient-brand);
+      border-radius: 4px;
+      background: var(--primary);
       color: #fff;
-      font-size: var(--text-sm);
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
       font-family: inherit;
-      box-shadow: 0 6px 20px var(--primary-glow);
     }
+
+    .prebuilt-done-btn:hover { background: var(--primary-hover); }
 
     .prebuilt-empty {
       padding: 40px 20px;
       text-align: center;
-      color: var(--text-muted);
-      font-size: var(--text-sm);
+      color: var(--pb-muted);
+      font-size: 13px;
     }
 
     .run-full-btn {
@@ -2943,12 +2992,11 @@
             </div>
 
             <div class="prebuilt-section">
-              <div class="prebuilt-section-head">
-                <span class="prebuilt-title">Pre-built Setups by Indicator</span>
-                <button type="button" class="prebuilt-see-all" onclick="openPrebuiltModal()">Browse all</button>
-              </div>
-              <div class="prebuilt-sections-list" id="prebuiltSections">
-                <div class="prebuilt-empty" style="padding:12px;">Loading suggestions…</div>
+              <div class="prebuilt-strip-wrap">
+                <div class="prebuilt-strip" id="prebuiltStrip">
+                  <div class="prebuilt-empty" style="padding:12px;">Loading suggestions…</div>
+                </div>
+                <button type="button" class="prebuilt-strip-next" onclick="scrollPrebuiltStrip(1)" aria-label="Scroll indicators">›</button>
               </div>
             </div>
 
@@ -3105,10 +3153,9 @@
           <i data-lucide="search"></i>
           <input type="text" id="prebuiltSearchInput" placeholder="Search for conditions..." oninput="onPrebuiltSearchInput(this.value)">
         </div>
-        <div class="prebuilt-dir-toggle">
-          <button type="button" class="prebuilt-dir-btn active" data-dir="all" onclick="setPrebuiltDirection('all', this)">All</button>
-          <button type="button" class="prebuilt-dir-btn" data-dir="bullish" onclick="setPrebuiltDirection('bullish', this)">Bullish</button>
-          <button type="button" class="prebuilt-dir-btn" data-dir="bearish" onclick="setPrebuiltDirection('bearish', this)">Bearish</button>
+        <div class="prebuilt-sentiment-toggle">
+          <button type="button" class="prebuilt-sentiment-btn bullish" id="prebuiltBullishBtn" onclick="togglePrebuiltSentiment('bullish')">Bullish</button>
+          <button type="button" class="prebuilt-sentiment-btn bearish" id="prebuiltBearishBtn" onclick="togglePrebuiltSentiment('bearish')">Bearish</button>
         </div>
       </div>
     </div>
@@ -3124,7 +3171,6 @@
       <div class="prebuilt-suggestions-pane">
         <div class="prebuilt-suggestions-head">
           <div class="prebuilt-suggestions-title" id="prebuiltSuggestionCount">Prebuild Suggestions</div>
-          <div class="prebuilt-suggestions-subtitle" id="prebuiltSuggestionSubtitle">Select an indicator on the left</div>
         </div>
         <div class="prebuilt-suggestion-list" id="prebuiltSuggestionList"></div>
       </div>
@@ -3161,8 +3207,8 @@
   // Pre-built suggestions assistant (from strategies table)
   let prebuiltCatalog = null;
   let prebuiltSelectedIndicator = null;
-  let prebuiltSelectedSlug = null;
-  let prebuiltFilters = { q: '', direction: 'all', category: 'All', letter: '' };
+  let prebuiltSelectedSlugs = new Set();
+  let prebuiltFilters = { q: '', category: 'All', letter: '', bullish: false, bearish: false };
 
   const EQUITY_CATEGORIES = new Set([
     'equity', 'trend following', 'momentum', 'mean reversion',
@@ -3333,7 +3379,7 @@
 
   /* PRE-BUILT SUGGESTIONS ASSISTANT */
   async function loadPrebuiltCatalog() {
-    const container = document.getElementById('prebuiltSections');
+    const strip = document.getElementById('prebuiltStrip');
     try {
       const res = await fetch(`${API_BASE}/strategies/prebuilt/catalog`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -3341,11 +3387,11 @@
       if (!prebuiltSelectedIndicator && prebuiltCatalog.indicators?.length) {
         prebuiltSelectedIndicator = prebuiltCatalog.indicators[0].id;
       }
-      renderPrebuiltSections();
+      renderPrebuiltStrip();
     } catch (err) {
       console.warn('Could not load prebuilt catalog:', err);
-      if (container) {
-        container.innerHTML = '<div class="prebuilt-empty" style="padding:12px;">Suggestions unavailable — start backend</div>';
+      if (strip) {
+        strip.innerHTML = '<div class="prebuilt-empty" style="padding:12px;">Suggestions unavailable — start backend</div>';
       }
     }
   }
@@ -3374,11 +3420,16 @@
   function getFilteredSuggestionsForIndicator(indicatorId) {
     if (!prebuiltCatalog || !indicatorId) return [];
     let items = [...((prebuiltCatalog.suggestions_by_indicator || {})[indicatorId] || [])];
-    const { q, direction } = prebuiltFilters;
+    const { q, bullish, bearish } = prebuiltFilters;
 
-    if (direction && direction !== 'all') {
-      items = items.filter(s => s.direction === direction);
+    if (bullish && !bearish) {
+      items = items.filter(s => s.direction === 'bullish');
+    } else if (bearish && !bullish) {
+      items = items.filter(s => s.direction === 'bearish');
+    } else if (bullish && bearish) {
+      items = items.filter(s => s.direction === 'bullish' || s.direction === 'bearish');
     }
+
     if (q.trim()) {
       const qLower = q.trim().toLowerCase();
       items = items.filter(s => {
@@ -3389,6 +3440,30 @@
     return items;
   }
 
+  function getSuggestionTag(s, indicatorMeta) {
+    const tag = s.style_tag || '';
+    if (tag && !['General', 'Equity', 'Setup'].includes(tag)) return tag;
+    const cat = (indicatorMeta?.category || '').toLowerCase();
+    if (cat.includes('oscillator')) return 'Oscillator';
+    if (cat.includes('overlap')) return 'Overlap Studies';
+    if (cat.includes('volume')) return 'Volume';
+    if (cat.includes('volatility')) return 'Volatility';
+    if (cat.includes('momentum')) return 'Momentum';
+    if (cat.includes('price')) return 'Price Action';
+    return 'Setup';
+  }
+
+  function renderSuggestionRow(s, indicatorMeta) {
+    const checked = prebuiltSelectedSlugs.has(s.slug) ? 'checked' : '';
+    const tag = getSuggestionTag(s, indicatorMeta);
+    return `
+      <label class="prebuilt-suggestion-item">
+        <input type="checkbox" value="${s.slug}" ${checked} onchange="togglePrebuiltSuggestion('${s.slug}', this.checked)">
+        <div class="prebuilt-suggestion-text">${escapeHtml(s.condition_text || s.name)}</div>
+        <span class="prebuilt-style-tag">${escapeHtml(tag)}</span>
+      </label>`;
+  }
+
   function syncPrebuiltSelection() {
     const indicators = getFilteredIndicators();
     if (!indicators.length) {
@@ -3397,47 +3472,33 @@
     }
     if (!prebuiltSelectedIndicator || !indicators.some(i => i.id === prebuiltSelectedIndicator)) {
       prebuiltSelectedIndicator = indicators[0].id;
-      prebuiltSelectedSlug = null;
+      prebuiltSelectedSlugs = new Set();
     }
   }
 
-  function renderPrebuiltSections() {
-    const container = document.getElementById('prebuiltSections');
-    if (!container || !prebuiltCatalog?.indicators?.length) {
-      if (container) container.innerHTML = '<div class="prebuilt-empty" style="padding:12px;">No pre-built setups in database</div>';
+  function renderPrebuiltStrip() {
+    const strip = document.getElementById('prebuiltStrip');
+    if (!strip) return;
+    if (!prebuiltCatalog?.indicators?.length) {
+      strip.innerHTML = '<div class="prebuilt-empty" style="padding:12px;">No pre-built setups in database</div>';
       return;
     }
-
-    const grouped = {};
-    for (const ind of prebuiltCatalog.indicators) {
-      const cat = ind.category || 'General';
-      if (!grouped[cat]) grouped[cat] = [];
-      grouped[cat].push(ind);
-    }
-
-    container.innerHTML = Object.entries(grouped).map(([category, items]) => `
-      <div class="prebuilt-category-block">
-        <div class="prebuilt-category-label">${escapeHtml(category)}</div>
-        <div class="prebuilt-chip-row">
-          ${items.slice(0, 12).map(ind => `
-            <button type="button" class="prebuilt-chip" onclick="openPrebuiltModal('${ind.id}')" title="${escapeHtml(ind.long_name || ind.name)}">
-              <div class="prebuilt-chip-name">${escapeHtml(ind.name)}</div>
-              <div class="prebuilt-chip-count">${ind.count}</div>
-            </button>
-          `).join('')}
-          ${items.length > 12 ? `<button type="button" class="prebuilt-see-all" onclick="openPrebuiltModal('${items[0].id}')">+${items.length - 12} more</button>` : ''}
-        </div>
-      </div>
+    strip.innerHTML = prebuiltCatalog.indicators.map(ind => `
+      <button type="button" class="prebuilt-chip" onclick="openPrebuiltModal('${ind.id}')" title="${escapeHtml(ind.long_name || ind.name)}">
+        <div class="prebuilt-chip-icon"></div>
+        <div class="prebuilt-chip-name">${escapeHtml(ind.name)}</div>
+      </button>
     `).join('');
+  }
+
+  function scrollPrebuiltStrip(dir) {
+    const strip = document.getElementById('prebuiltStrip');
+    if (strip) strip.scrollBy({ left: dir * 200, behavior: 'smooth' });
   }
 
   function scrollPrebuiltCatTabs(dir) {
     const tabs = document.getElementById('prebuiltCatTabs');
     if (tabs) tabs.scrollBy({ left: dir * 160, behavior: 'smooth' });
-  }
-
-  function renderPrebuiltStrip() {
-    renderPrebuiltSections();
   }
 
   function openPrebuiltModal(indicatorId) {
@@ -3449,7 +3510,7 @@
     else if (!prebuiltSelectedIndicator && prebuiltCatalog.indicators?.length) {
       prebuiltSelectedIndicator = prebuiltCatalog.indicators[0].id;
     }
-    prebuiltSelectedSlug = null;
+    prebuiltSelectedSlugs = new Set();
     syncPrebuiltSelection();
     renderPrebuiltModal();
     document.getElementById('prebuiltModalOverlay')?.classList.add('open');
@@ -3466,9 +3527,9 @@
     renderPrebuiltModal();
   }
 
-  function setPrebuiltDirection(dir, el) {
-    prebuiltFilters.direction = dir;
-    document.querySelectorAll('.prebuilt-dir-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.dir === dir));
+  function togglePrebuiltSentiment(dir) {
+    if (dir === 'bullish') prebuiltFilters.bullish = !prebuiltFilters.bullish;
+    if (dir === 'bearish') prebuiltFilters.bearish = !prebuiltFilters.bearish;
     renderPrebuiltModal();
   }
 
@@ -3486,13 +3547,13 @@
 
   function selectPrebuiltIndicator(id) {
     prebuiltSelectedIndicator = id;
-    prebuiltSelectedSlug = null;
+    prebuiltSelectedSlugs = new Set();
     renderPrebuiltModal();
   }
 
-  function selectPrebuiltSuggestion(slug) {
-    prebuiltSelectedSlug = slug;
-    renderPrebuiltModal();
+  function togglePrebuiltSuggestion(slug, checked) {
+    if (checked) prebuiltSelectedSlugs.add(slug);
+    else prebuiltSelectedSlugs.delete(slug);
   }
 
   function renderPrebuiltModal() {
@@ -3504,7 +3565,9 @@
     const sugList = document.getElementById('prebuiltSuggestionList');
     const indCount = document.getElementById('prebuiltIndicatorCount');
     const sugCount = document.getElementById('prebuiltSuggestionCount');
-    const sugSubtitle = document.getElementById('prebuiltSuggestionSubtitle');
+
+    document.getElementById('prebuiltBullishBtn')?.classList.toggle('active', prebuiltFilters.bullish);
+    document.getElementById('prebuiltBearishBtn')?.classList.toggle('active', prebuiltFilters.bearish);
 
     const letters = prebuiltCatalog.alphabet || [];
     alpha.innerHTML = letters.map(l => `
@@ -3524,7 +3587,6 @@
       indList.innerHTML = '<div class="prebuilt-empty">No indicators in this category</div>';
       sugList.innerHTML = '';
       sugCount.textContent = 'Prebuild Suggestions (0)';
-      if (sugSubtitle) sugSubtitle.textContent = 'Select an indicator on the left';
       return;
     }
 
@@ -3537,35 +3599,20 @@
 
     const selectedMeta = getSelectedIndicatorMeta();
     const suggestions = getFilteredSuggestionsForIndicator(prebuiltSelectedIndicator);
-    const totalForIndicator = (prebuiltCatalog.suggestions_by_indicator || {})[prebuiltSelectedIndicator]?.length || 0;
 
-    if (selectedMeta) {
-      sugCount.textContent = `Prebuild Suggestions (${suggestions.length})`;
-      if (sugSubtitle) {
-        sugSubtitle.textContent = suggestions.length === totalForIndicator
-          ? `${selectedMeta.long_name || selectedMeta.name} · ${totalForIndicator} setups`
-          : `${selectedMeta.long_name || selectedMeta.name} · showing ${suggestions.length} of ${totalForIndicator}`;
-      }
-    } else {
-      sugCount.textContent = 'Prebuild Suggestions (0)';
-      if (sugSubtitle) sugSubtitle.textContent = 'Select an indicator on the left';
-    }
+    sugCount.textContent = `Prebuild Suggestions (${suggestions.length})`;
 
-    if (!prebuiltSelectedIndicator || !suggestions.length) {
-      sugList.innerHTML = `<div class="prebuilt-empty">${prebuiltSelectedIndicator ? 'No setups match your search or filter for this indicator' : 'Select an indicator on the left'}</div>`;
+    if (!prebuiltSelectedIndicator) {
+      sugList.innerHTML = '<div class="prebuilt-empty">Select an indicator on the left</div>';
       return;
     }
 
-    sugList.innerHTML = suggestions.map(s => `
-      <label class="prebuilt-suggestion-item" onclick="selectPrebuiltSuggestion('${s.slug}')">
-        <input type="radio" name="prebuiltSuggestion" value="${s.slug}" ${prebuiltSelectedSlug === s.slug ? 'checked' : ''}>
-        <div>
-          <div class="prebuilt-suggestion-text">${escapeHtml(s.condition_text || s.name)}</div>
-          <div class="prebuilt-suggestion-sub">${escapeHtml(s.name)}</div>
-        </div>
-        <span class="prebuilt-style-tag ${s.direction === 'bullish' ? 'bullish' : s.direction === 'bearish' ? 'bearish' : ''}">${escapeHtml(s.style_tag || s.category || 'Setup')}</span>
-      </label>
-    `).join('');
+    if (!suggestions.length) {
+      sugList.innerHTML = '<div class="prebuilt-empty">No setups match your search or filter</div>';
+      return;
+    }
+
+    sugList.innerHTML = suggestions.map(s => renderSuggestionRow(s, selectedMeta)).join('');
   }
 
   function escapeHtml(str) {
@@ -3581,13 +3628,27 @@
       closePrebuiltModal(null);
       return;
     }
-    const suggestions = getFilteredSuggestionsForIndicator(prebuiltSelectedIndicator);
-    const selected = suggestions.find(s => s.slug === prebuiltSelectedSlug) || suggestions[0];
-    if (!selected) {
+    const allForIndicator = (prebuiltCatalog.suggestions_by_indicator || {})[prebuiltSelectedIndicator] || [];
+    let selected = allForIndicator.filter(s => prebuiltSelectedSlugs.has(s.slug));
+    if (!selected.length) {
+      const visible = getFilteredSuggestionsForIndicator(prebuiltSelectedIndicator);
+      selected = visible.length ? [visible[0]] : [];
+    }
+    if (!selected.length) {
       closePrebuiltModal(null);
       return;
     }
-    applyPrebuiltSuggestion(selected);
+    if (selected.length === 1) {
+      applyPrebuiltSuggestion(selected[0]);
+      return;
+    }
+    const text = selected.map(s => s.condition_text || s.name).join(' AND ');
+    document.getElementById('strategyInput').value = text;
+    activeStrategySpec = selected[0].backtest_spec || null;
+    activeTemplate = null;
+    closePrebuiltModal(null);
+    showView('backtest');
+    lucide.createIcons();
   }
 
   function applyPrebuiltSuggestion(suggestion) {

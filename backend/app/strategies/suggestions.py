@@ -215,7 +215,7 @@ def build_prebuilt_catalog(rows: list) -> dict:
 
         condition_text = format_condition_display(entry_rules, backtest_spec)
         primary = extract_primary_indicator(entry_rules, name)
-        direction = infer_direction(name, condition_text, entry_rules)
+        direction = infer_direction(name, condition_text, entry_rules, slug)
         style_tag = infer_style_tag(category, entry_rules, name)
 
         suggestion = {
