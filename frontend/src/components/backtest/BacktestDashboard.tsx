@@ -129,20 +129,28 @@ export const BacktestDashboard = () => {
         <div className="flex flex-col gap-4">
           <StrategyMetricsKPI />
 
-          {/* Chart Section */}
+          {/* TradingView Charts */}
           <div className="bg-[#131c31] border border-slate-800/80 rounded-lg p-6 shadow-2xl min-h-[350px]">
             <div className="flex items-center justify-between mb-6 border-b border-slate-800/50 pb-4">
               <div className="flex items-center gap-2">
-                <div className={`h-2 w-2 rounded-full ${chartType === 'equity' ? 'bg-[#3b82f6]' : 'bg-red-500'}`}></div>
+                <div className={`h-2 w-2 rounded-full ${chartType === 'drawdown' ? 'bg-red-500' : 'bg-[#2962FF]'}`}></div>
                 <h3 className="font-black text-slate-200 text-xs uppercase tracking-widest">
-                  {chartType === 'equity' ? 'Growth Performance Analysis' : 'Risk Exposure & Drawdowns'}
+                  {chartType === 'candles' ? 'Price Action (Candlesticks)' : chartType === 'equity' ? 'Equity Curve' : 'Drawdown'}
                 </h3>
               </div>
               <div className="flex bg-slate-900/50 p-1 rounded border border-slate-800/80">
                 <button
+                  onClick={() => setChartType('candles')}
+                  className={`px-4 py-1.5 rounded text-[10px] font-black tracking-widest transition cursor-pointer ${
+                    chartType === 'candles' ? 'bg-[#2962FF] text-white' : 'text-slate-500 hover:text-slate-200'
+                  }`}
+                >
+                  CANDLES
+                </button>
+                <button
                   onClick={() => setChartType('equity')}
                   className={`px-4 py-1.5 rounded text-[10px] font-black tracking-widest transition cursor-pointer ${
-                    chartType === 'equity' ? 'bg-[#3b82f6] text-[#0c1222]' : 'text-slate-500 hover:text-slate-200'
+                    chartType === 'equity' ? 'bg-[#2962FF] text-white' : 'text-slate-500 hover:text-slate-200'
                   }`}
                 >
                   EQUITY
@@ -157,47 +165,26 @@ export const BacktestDashboard = () => {
                 </button>
               </div>
             </div>
-            
-            {chartType === 'equity' ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={latestBacktest.equity_curve}>
-                  <defs>
-                    <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} strokeOpacity={0.2} />
-                  <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} axisLine={false} tickLine={false} minTickGap={30} />
-                  <YAxis tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#131c31', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
-                    labelStyle={{ fontWeight: 'black', color: '#94a3b8', marginBottom: 4 }}
-                    itemStyle={{ fontWeight: 'black', color: '#3b82f6' }}
-                  />
-                  <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="url(#colorEquity)" strokeWidth={2} name="NAV" />
-                </AreaChart>
-              </ResponsiveContainer>
+
+            {chartType === 'candles' ? (
+              <TradingViewChart
+                kind="candlestick"
+                candles={toOhlcvSeries((latestBacktest as { ohlcv?: [] }).ohlcv || [])}
+                markers={buildTradeMarkers(latestBacktest.trades || [])}
+                height={280}
+              />
+            ) : chartType === 'equity' ? (
+              <TradingViewChart
+                kind="area"
+                lineData={toLineSeries(latestBacktest.equity_curve || [])}
+                height={280}
+              />
             ) : (
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={latestBacktest.drawdown}>
-                  <defs>
-                    <linearGradient id="colorDD" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} strokeOpacity={0.2} />
-                  <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} axisLine={false} tickLine={false} minTickGap={30} />
-                  <YAxis tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#131c31', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
-                    labelStyle={{ fontWeight: 'black', color: '#94a3b8', marginBottom: 4 }}
-                    itemStyle={{ fontWeight: 'black', color: '#ef4444' }}
-                  />
-                  <Area type="monotone" dataKey="value" stroke="#ef4444" fill="url(#colorDD)" strokeWidth={2} name="Drawdown %" />
-                </AreaChart>
-              </ResponsiveContainer>
+              <TradingViewChart
+                kind="histogram"
+                lineData={toLineSeries(latestBacktest.drawdown || [])}
+                height={280}
+              />
             )}
           </div>
         </div>
