@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useBacktestStore } from '../../stores/backtestStore';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { BarChart3, List, Activity, Settings2, LineChart, Layers, PieChart } from 'lucide-react';
+import { BarChart3, List, Activity, Settings2, LineChart, Layers } from 'lucide-react';
 import { StrategyMetricsKPI } from './StrategyMetricsKPI';
 import { MonthlyReturnsHeatmap } from './MonthlyReturnsHeatmap';
 import { RollingMetricsChart } from './RollingMetricsChart';
@@ -9,10 +8,16 @@ import { MonteCarloSimulation } from './MonteCarloSimulation';
 import { TradeDistribution } from './TradeDistribution';
 import { ParameterOptimizer } from './ParameterOptimizer';
 import { BacktestComparison } from './BacktestComparison';
+import {
+  TradingViewChart,
+  buildTradeMarkers,
+  toLineSeries,
+  toOhlcvSeries,
+} from '../charts/TradingViewChart';
 
 export const BacktestDashboard = () => {
   const { latestBacktest, loading, error } = useBacktestStore();
-  const [chartType, setChartType] = useState<'equity' | 'drawdown'>('equity');
+  const [chartType, setChartType] = useState<'candles' | 'equity' | 'drawdown'>('candles');
   const [activeSubTab, setActiveSubTab] = useState<'summary' | 'performance' | 'trades' | 'optimize' | 'compare'>('summary');
 
   if (error) {

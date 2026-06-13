@@ -13,6 +13,7 @@ const STORAGE_KEY = 'strykex-theme';
 function applyTheme(theme: ThemeMode) {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem(STORAGE_KEY, theme);
+  window.dispatchEvent(new Event('strykex-theme-change'));
 }
 
 const initialTheme = ((): ThemeMode => {
