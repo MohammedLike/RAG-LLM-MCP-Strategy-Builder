@@ -57,13 +57,13 @@ export const RollingMetricsChart = () => {
   }
 
   const colorMap = {
-    sharpe: '#00d09c',
+    sharpe: '#3b82f6',
     drawdown: '#ef4444',
     volatility: '#3b82f6'
   };
 
   return (
-    <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full h-[300px] flex flex-col">
+    <div className="bg-[#131c31] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full h-[300px] flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xs font-black text-slate-200 uppercase tracking-widest">6-Month Rolling Metrics</h3>
         <select 
@@ -84,7 +84,7 @@ export const RollingMetricsChart = () => {
             <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} minTickGap={30} />
             <YAxis tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
             <Tooltip
-              contentStyle={{ backgroundColor: '#0a0e17', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
+              contentStyle={{ backgroundColor: '#131c31', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
               labelStyle={{ fontWeight: 'black', color: '#94a3b8', marginBottom: 4 }}
               itemStyle={{ fontWeight: 'black', color: colorMap[metric] }}
             />

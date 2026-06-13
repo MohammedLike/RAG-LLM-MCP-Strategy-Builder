@@ -22,7 +22,8 @@ class BacktestEngine:
         lhs_indicator = cond.get("indicator")
         if not lhs_indicator:
             return pd.Series(False, index=df.index)
-            
+        
+        lhs_indicator = self.indicator_manager.normalize_name(lhs_indicator)
         lhs_params = cond.get("params", {})
         
         # Check if LHS is a direct column
@@ -35,7 +36,7 @@ class BacktestEngine:
         rhs_input = cond.get("value")
         if isinstance(rhs_input, dict) and "indicator" in rhs_input:
             # RHS is another indicator
-            rhs_indicator = rhs_input.get("indicator")
+            rhs_indicator = self.indicator_manager.normalize_name(rhs_input.get("indicator"))
             rhs_params = rhs_input.get("params", {})
             if rhs_indicator.upper() in ["CLOSE", "OPEN", "HIGH", "LOW", "VOLUME"]:
                 rhs_series = df[rhs_indicator.lower()]

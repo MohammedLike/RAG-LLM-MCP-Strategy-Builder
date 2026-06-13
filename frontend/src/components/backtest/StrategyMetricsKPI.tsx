@@ -27,9 +27,9 @@ export const StrategyMetricsKPI = () => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {metrics.map((m) => (
-        <div key={m.label} className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-4 flex flex-col shadow-xl relative overflow-hidden group">
+        <div key={m.label} className="bg-[#131c31] border border-slate-800/80 rounded-lg p-4 flex flex-col shadow-xl relative overflow-hidden group">
           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{m.label}</span>
-          <span className={`text-xl font-black font-mono mt-1 ${m.bad ? (m.label === 'Max Drawdown' ? 'text-red-400' : 'text-slate-200') : 'text-[#00d09c]'}`}>
+          <span className={`text-xl font-black font-mono mt-1 ${m.bad ? (m.label === 'Max Drawdown' ? 'text-red-400' : 'text-slate-200') : 'text-[#3b82f6]'}`}>
             {m.value}
           </span>
           <span className="text-[9px] text-slate-600 mt-2 font-bold uppercase truncate">{m.sub}</span>

@@ -29,7 +29,12 @@ export const useBacktestStore = create<BacktestState>((set) => ({
         set({ latestBacktest: result, loading: false });
       }
     } catch (err: any) {
-      set({ error: err.message || 'Failed to run backtest', loading: false });
+      const message = err.response?.data?.error
+        || err.response?.data?.detail
+        || (err.code === 'ERR_NETWORK' ? 'Cannot reach backend API. Make sure the backend is running on port 8001.' : null)
+        || err.message
+        || 'Failed to run backtest';
+      set({ error: message, loading: false });
     }
   },
 

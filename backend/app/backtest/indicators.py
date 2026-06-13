@@ -5,6 +5,25 @@ from .indicator_db import INDICATORS_DB
 class IndicatorManager:
     """Manages 100+ technical indicators for backtesting using pure numpy/pandas implementations."""
 
+    _ALIASES = {
+        "PLUSDI": "PLUS_DI",
+        "MINUSDI": "MINUS_DI",
+        "DMI_PLUS": "PLUS_DI",
+        "DMI_MINUS": "MINUS_DI",
+        "BB": "BBANDS",
+        "BOLLINGER": "BBANDS",
+        "BOLLINGER_BANDS": "BBANDS",
+        "SIMPLE_MOVING_AVERAGE": "SMA",
+        "EXPONENTIAL_MOVING_AVERAGE": "EMA",
+        "WILLIAMS_R": "WILLR",
+        "WILLIAMS_PERCENT_R": "WILLR",
+    }
+
+    @staticmethod
+    def normalize_name(name: str) -> str:
+        normalized = name.upper().strip().replace(" ", "_").replace("-", "_")
+        return IndicatorManager._ALIASES.get(normalized, normalized)
+
     @staticmethod
     def get_indicators_list():
         return INDICATORS_DB
@@ -13,7 +32,7 @@ class IndicatorManager:
     def apply_indicator(df: pd.DataFrame, name: str, params: dict = None) -> pd.Series:
         if params is None:
             params = {}
-        name = name.upper()
+        name = IndicatorManager.normalize_name(name)
 
         if name == "VWAP":
             pv = df['close'] * df['volume']

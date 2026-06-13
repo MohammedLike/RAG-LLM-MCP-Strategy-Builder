@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { TrendingDown, TrendingUp, Zap, Rocket } from 'lucide-react';
 import { useMarketStore } from '../../stores/marketStore';
 import { fetchQuote, fetchStrategies } from '../../services/api';
+import './Dashboard.css';
 
 const extraIndices = [
   { name: 'NIFTY MIDCAP SELECT', value: '13,201.05', change: '-0.40%', up: false },
@@ -31,15 +32,16 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
       try {
         const data = await fetchStrategies();
         const rows = data || [];
-        // Filter to include 'Equity', 'Options', and 'Indicator Based' strategies on the dashboard
+        // Prefer categories with fully-defined entry/exit rules on the dashboard
         const filtered = rows.filter((s: any) => 
           s.category === 'Equity' || 
           s.category === 'Options' || 
-          s.category === 'Indicator Based'
+          s.category === 'Trend Following' ||
+          s.category === 'Momentum' ||
+          s.category === 'Mean Reversion'
         );
         setStrategies(filtered);
-        // Ensure a fixed clean tab order for key categories
-        setCategories(['All', 'Equity', 'Options', 'Indicator Based']);
+        setCategories(['All', 'Equity', 'Options', 'Trend Following', 'Momentum', 'Mean Reversion']);
       } catch (err) {
         console.error('Error loading dashboard strategies', err);
       } finally {
@@ -52,12 +54,12 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
   const formatPrice = (v?: number) => (v ? v.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '—');
 
   return (
-    <div className="p-6 space-y-6 overflow-y-auto h-full bg-[#06090f]">
-      <div className="flex items-center justify-between">
+    <div className="dashboard-shell p-6 space-y-6 overflow-y-auto h-full">
+      <div className="flex items-center justify-between dashboard-hero px-6 py-4">
         <h2 className="text-2xl font-bold text-white">
-          👋 Good Afternoon, <span className="text-brand">Mohammed Like</span>
+          👋 Good Afternoon, <span className="text-brand-light">Mohammed Like</span>
         </h2>
-        <span className="bg-emerald-500/10 text-brand text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded border border-brand/20">Market Open</span>
+        <span className="dashboard-badge text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded">Market Open</span>
       </div>
 
       {/* Market indices bar */}
@@ -67,7 +69,7 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
           { name: 'BANK NIFTY', value: formatPrice(bankNiftyQuote?.ltp), change: bankNiftyQuote?.change ?? -0.4, up: (bankNiftyQuote?.change ?? -0.4) >= 0 },
           ...extraIndices.map((i) => ({ ...i, change: parseFloat(i.change), up: i.up })),
         ].map((idx) => (
-          <div key={idx.name} className="bg-[#0a0e17] border border-slate-800/60 p-4 min-w-[160px] shrink-0 rounded-xl">
+          <div key={idx.name} className="bg-[#131c31] border border-slate-800/60 p-4 min-w-[160px] shrink-0 rounded-xl">
             <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">{idx.name}</div>
             <div className="text-lg font-black text-white">{idx.value}</div>
             <div className={`flex items-center gap-1 text-xs font-bold mt-0.5 ${idx.up ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -76,7 +78,7 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
             </div>
           </div>
         ))}
-        <div className="bg-[#0a0e17] border border-slate-800/60 p-4 min-w-[140px] shrink-0 flex flex-col justify-center items-center rounded-xl">
+        <div className="bg-[#131c31] border border-slate-800/60 p-4 min-w-[140px] shrink-0 flex flex-col justify-center items-center rounded-xl">
           <div className="text-[10px] font-bold text-slate-500 uppercase mb-1">Market Sentiment</div>
           <div className="text-sm font-black text-rose-400">Bearish</div>
           <div className="text-2xl mt-1">🐻</div>
@@ -86,11 +88,11 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
       {/* Middle row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-[#0a0e17] border border-slate-800/60 p-5 rounded-xl">
+          <div className="bg-[#131c31] border border-slate-800/60 p-5 rounded-xl">
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-bold text-slate-400">Overall Profit/Loss</span>
               <div className="flex bg-slate-900 rounded-lg p-0.5 border border-slate-800 text-[10px]">
-                <button className="px-3 py-1 rounded-md bg-brand text-[#06090f] font-black uppercase">Live</button>
+                <button className="px-3 py-1 rounded-md bg-brand text-[#0c1222] font-black uppercase">Live</button>
                 <button className="px-3 py-1 rounded-md text-slate-500 font-bold uppercase">Virtual</button>
               </div>
             </div>
@@ -110,17 +112,17 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
             </div>
           </div>
 
-          <div className="bg-[#0a0e17] border border-slate-800/60 p-8 flex flex-col items-center text-center rounded-xl">
+          <div className="bg-[#131c31] border border-slate-800/60 p-8 flex flex-col items-center text-center rounded-xl">
             <div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center mb-3 border border-brand/20">
               <Zap size={24} className="text-brand" />
             </div>
             <h3 className="font-black text-white mb-1 uppercase tracking-tight">No Deployed Strategies</h3>
             <p className="text-xs text-slate-500 mb-4">Deploy your first algo strategy to get started</p>
-            <button onClick={() => onNavigate?.('strategies')} className="bg-brand hover:bg-brand-dark text-[#06090f] px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition cursor-pointer">Deploy Algo Strategy</button>
+            <button onClick={() => onNavigate?.('strategies')} className="bg-brand hover:bg-brand-dark text-[#0c1222] px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition cursor-pointer">Deploy Algo Strategy</button>
           </div>
         </div>
 
-        <div className="bg-[#0a0e17] border border-slate-800/60 p-5 flex flex-col rounded-xl">
+        <div className="bg-[#131c31] border border-slate-800/60 p-5 flex flex-col rounded-xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-black text-white uppercase tracking-tight text-sm">Deployed Algos</h3>
             <div className="flex gap-2 text-[10px]">
@@ -152,7 +154,7 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
                 key={tab}
                 onClick={() => setSelectedCategory(tab)}
                 className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition shrink-0 ${
-                  selectedCategory === tab ? 'bg-brand text-[#06090f]' : 'bg-slate-900 text-slate-500 hover:text-slate-300 border border-slate-800'
+                  selectedCategory === tab ? 'bg-brand text-[#0c1222]' : 'bg-slate-900 text-slate-500 hover:text-slate-300 border border-slate-800'
                 }`}
               >
                 {tab}
@@ -167,7 +169,7 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
                 .filter((s) => selectedCategory === 'All' || s.category === selectedCategory)
                 .slice(0, 30)
                 .map((s) => (
-                  <div key={s.slug} className="bg-[#0a0e17] border border-slate-800/60 p-5 rounded-xl flex flex-col">
+                  <div key={s.slug} className="bg-[#131c31] border border-slate-800/60 p-5 rounded-xl flex flex-col">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-[8px] uppercase font-black tracking-widest text-slate-600">{s.category || 'General'}</span>
                       <span className="text-[10px] font-black text-brand">{s.backtest_results?.win_rate ? `${s.backtest_results.win_rate}% WR` : ''}</span>
@@ -182,7 +184,7 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
                     <div className="flex items-center gap-2 mt-auto">
                       <button
                         onClick={() => onRunStrategy?.({ ...s.backtest_spec, symbol: s.backtest_spec?.symbol || 'NIFTY' })}
-                        className="bg-brand hover:bg-brand-dark text-[#06090f] flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded transition cursor-pointer"
+                        className="bg-brand hover:bg-brand-dark text-[#0c1222] flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded transition cursor-pointer"
                       >
                         Run
                       </button>
@@ -194,8 +196,8 @@ export const DashboardView = ({ onNavigate, onRunStrategy }: DashboardViewProps)
           </div>
         </div>
 
-        <div className="bg-[#0a0e17] border border-slate-800/60 rounded-xl overflow-hidden flex flex-col">
-          <div className="bg-gradient-to-r from-brand to-emerald-600 px-4 py-3 flex items-center gap-2 text-[#06090f]">
+        <div className="bg-[#131c31] border border-slate-800/60 rounded-xl overflow-hidden flex flex-col">
+          <div className="bg-gradient-to-r from-brand to-brand-light px-4 py-3 flex items-center gap-2 text-[#0c1222]">
             <Rocket size={16} />
             <span className="font-black text-xs uppercase tracking-tight">Algos of the Week</span>
           </div>

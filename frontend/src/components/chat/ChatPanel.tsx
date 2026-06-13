@@ -86,27 +86,27 @@ export const ChatPanel = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0e17] text-slate-100">
+    <div className="flex flex-col h-full bg-[#131c31] text-slate-100">
       <div className="px-3 py-2.5 border-b border-slate-800/80 bg-slate-900/40 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded bg-[#00d09c]/10 border border-[#00d09c]/20 flex items-center justify-center text-[#00d09c]">
+          <div className="h-6 w-6 rounded bg-[#3b82f6]/10 border border-[#3b82f6]/20 flex items-center justify-center text-[#3b82f6]">
             <Bot size={12} />
           </div>
           <div>
-            <div className="font-black text-[10px] text-white uppercase tracking-tight">STREAK <span className="text-[#00d09c]">AI</span></div>
+            <div className="font-black text-[10px] text-white uppercase tracking-tight">STREAK <span className="text-[#3b82f6]">AI</span></div>
             <div className="text-[7px] text-slate-500 font-bold uppercase tracking-widest">QUANT ASSISTANT</div>
           </div>
         </div>
         <span className="flex h-1.5 w-1.5 relative">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00d09c] opacity-40"></span>
-          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#00d09c]"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#3b82f6] opacity-40"></span>
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#3b82f6]"></span>
         </span>
       </div>
  
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 text-[10px] bg-slate-950/10">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col justify-center items-center text-center px-2 space-y-4">
-            <div className="h-10 w-10 rounded-2xl bg-[#00d09c]/5 border border-[#00d09c]/10 flex items-center justify-center text-[#00d09c]/40">
+            <div className="h-10 w-10 rounded-2xl bg-[#3b82f6]/5 border border-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6]/40">
               <Sparkles size={20} />
             </div>
             <div>
@@ -128,7 +128,7 @@ export const ChatPanel = () => {
             <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
               <div className={`max-w-[95%] px-2.5 py-2 rounded text-[10px] leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-[#00d09c] text-[#06090f] font-bold rounded-tr-none'
+                  ? 'bg-[#3b82f6] text-[#0c1222] font-bold rounded-tr-none'
                   : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'
               }`}>
                 {msg.role === 'user' ? (
@@ -142,9 +142,9 @@ export const ChatPanel = () => {
         )}
         {isStreaming && (
           <div className="flex items-center gap-2 text-slate-500 bg-slate-900/50 p-2 rounded border border-slate-800/80 max-w-[120px]">
-            <div className="flex gap-0.5"><span className="h-1 w-1 bg-[#00d09c] rounded-full animate-bounce" style={{animationDelay:'0s'}}></span>
-              <span className="h-1 w-1 bg-[#00d09c] rounded-full animate-bounce" style={{animationDelay:'0.2s'}}></span>
-              <span className="h-1 w-1 bg-[#00d09c] rounded-full animate-bounce" style={{animationDelay:'0.4s'}}></span></div>
+            <div className="flex gap-0.5"><span className="h-1 w-1 bg-[#3b82f6] rounded-full animate-bounce" style={{animationDelay:'0s'}}></span>
+              <span className="h-1 w-1 bg-[#3b82f6] rounded-full animate-bounce" style={{animationDelay:'0.2s'}}></span>
+              <span className="h-1 w-1 bg-[#3b82f6] rounded-full animate-bounce" style={{animationDelay:'0.4s'}}></span></div>
             <span className="font-black text-[8px] uppercase tracking-widest">Thinking...</span>
           </div>
         )}
@@ -156,9 +156,9 @@ export const ChatPanel = () => {
           <input type="text" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
             placeholder="Describe your strategy..." disabled={isStreaming}
-            className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-[10px] text-white placeholder-slate-600 focus:outline-none focus:border-[#00d09c]/50 disabled:opacity-50 font-medium" />
+            className="flex-1 bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-[10px] text-white placeholder-slate-600 focus:outline-none focus:border-[#3b82f6]/50 disabled:opacity-50 font-medium" />
           <button onClick={() => handleSend()} disabled={isStreaming || !input.trim()}
-            className="bg-[#00d09c] hover:bg-[#00b386] disabled:bg-slate-800 disabled:text-slate-600 text-[#06090f] p-1.5 rounded transition cursor-pointer disabled:cursor-not-allowed">
+            className="bg-[#3b82f6] hover:bg-[#2563eb] disabled:bg-slate-800 disabled:text-slate-600 text-[#0c1222] p-1.5 rounded transition cursor-pointer disabled:cursor-not-allowed">
             <Send size={12} />
           </button>
         </div>

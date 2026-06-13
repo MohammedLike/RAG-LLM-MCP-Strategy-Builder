@@ -26,7 +26,7 @@ export const MonthlyReturnsHeatmap = () => {
     if (val === undefined || isNaN(val)) return 'bg-slate-900/40 text-slate-600';
     if (val > 0) {
       const intensity = Math.min(val / 10, 1); // Cap at 10% for color
-      return `bg-[#00d09c] text-[#06090f] font-bold`} 
+      return `bg-[#3b82f6] text-[#0c1222] font-bold`} 
     else if (val < 0) {
       const intensity = Math.min(Math.abs(val) / 10, 1);
       return `bg-red-500 text-white font-bold`;
@@ -35,7 +35,7 @@ export const MonthlyReturnsHeatmap = () => {
   };
 
   return (
-    <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full">
+    <div className="bg-[#131c31] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full">
       <h3 className="text-xs font-black text-slate-200 uppercase tracking-widest mb-4">Monthly Return Distribution</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-xs text-center border-collapse">
@@ -66,7 +66,7 @@ export const MonthlyReturnsHeatmap = () => {
                       </td>
                     );
                   })}
-                  <td className={`p-2 font-mono font-black ${ytd >= 0 ? 'text-[#00d09c]' : 'text-red-500'}`}>
+                  <td className={`p-2 font-mono font-black ${ytd >= 0 ? 'text-[#3b82f6]' : 'text-red-500'}`}>
                     {ytd > 0 ? '+' : ''}{ytd.toFixed(1)}%
                   </td>
                 </tr>

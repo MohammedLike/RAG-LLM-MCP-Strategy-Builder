@@ -1,5 +1,49 @@
 import re
 import json
+from ..backtest.indicators import IndicatorManager
+
+def _normalize_indicator_ref(ref: dict | float | int | str) -> dict | float | int | str:
+    if isinstance(ref, dict) and "indicator" in ref:
+        return {
+            **ref,
+            "indicator": IndicatorManager.normalize_name(ref["indicator"]),
+        }
+    return ref
+
+def _normalize_condition(cond: dict) -> dict:
+    normalized = dict(cond)
+    if "indicator" in normalized:
+        normalized["indicator"] = IndicatorManager.normalize_name(normalized["indicator"])
+    if "value" in normalized:
+        normalized["value"] = _normalize_indicator_ref(normalized["value"])
+    return normalized
+
+def _normalize_rule_group(rule_group: dict) -> dict:
+    if not rule_group:
+        return {}
+    if "conditions" in rule_group:
+        return {
+            **rule_group,
+            "conditions": [_normalize_condition(c) for c in rule_group.get("conditions", [])],
+        }
+    if "indicator" in rule_group:
+        return _normalize_condition(rule_group)
+    return rule_group
+
+def _compile_exit_rules(exit_rules: dict) -> dict:
+    if "condition" in exit_rules:
+        return {
+            "conditions": [_normalize_condition(parse_condition_str(exit_rules["condition"]))],
+            "logical_operator": "AND",
+        }
+    if exit_rules.get("conditions"):
+        return _normalize_rule_group(exit_rules)
+    if any(k in exit_rules for k in ("target", "stop_loss", "take_profit")):
+        # Risk-only exits are handled via strategy-level stop_loss / take_profit.
+        return {}
+    if "indicator" in exit_rules:
+        return _normalize_condition(exit_rules)
+    return {}
 
 def parse_single_indicator(part: str) -> dict | float:
     part = part.strip()
@@ -100,7 +144,7 @@ def parse_single_indicator(part: str) -> dict | float:
             ind_name = name
             
         return {
-            "indicator": ind_name,
+            "indicator": IndicatorManager.normalize_name(ind_name),
             "params": {"timeperiod": period}
         }
         
@@ -159,20 +203,13 @@ def compile_db_strategy(db_strat: dict) -> dict:
     if "condition" in entry_rules:
         cond_str = entry_rules["condition"]
         compiled_entry = {
-            "conditions": [parse_condition_str(cond_str)],
+            "conditions": [_normalize_condition(parse_condition_str(cond_str))],
             "logical_operator": "AND"
         }
     else:
-        compiled_entry = entry_rules
+        compiled_entry = _normalize_rule_group(entry_rules)
 
-    if "condition" in exit_rules:
-        cond_str = exit_rules["condition"]
-        compiled_exit = {
-            "conditions": [parse_condition_str(cond_str)],
-            "logical_operator": "AND"
-        }
-    else:
-        compiled_exit = exit_rules
+    compiled_exit = _compile_exit_rules(exit_rules)
 
     # Handle Options format
     instrument_type = db_strat.get("category", "Equity")

@@ -34,7 +34,7 @@ export const StrategyExplorer = ({ onRunStrategy }: { onRunStrategy?: (spec: any
   ];
 
   return (
-    <div className="p-6 space-y-8 overflow-y-auto h-full bg-[#06090f]">
+    <div className="p-6 space-y-8 overflow-y-auto h-full bg-[#0c1222]">
       <div className="flex items-center gap-2">
         <span className="text-lg">👍</span>
         <h2 className="text-xl font-black text-white uppercase tracking-tight">Strategy Library</h2>
@@ -51,7 +51,7 @@ export const StrategyExplorer = ({ onRunStrategy }: { onRunStrategy?: (spec: any
             onClick={() => setSelectedCategory(category)}
             className={`px-4 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition shrink-0 ${
               selectedCategory === category
-                ? 'bg-brand text-[#06090f]'
+                ? 'bg-brand text-[#0c1222]'
                 : 'bg-slate-900 text-slate-500 hover:text-slate-300 border border-slate-800'
             }`}
           >
@@ -70,7 +70,7 @@ export const StrategyExplorer = ({ onRunStrategy }: { onRunStrategy?: (spec: any
           {strategies
             .filter((s) => selectedCategory === 'All' || (s.category || 'Uncategorized') === selectedCategory)
             .map((s) => (
-              <div key={s.slug} className="bg-[#0a0e17] border border-slate-800/60 p-5 flex flex-col hover:border-slate-700 transition-colors rounded-xl">
+              <div key={s.slug} className="bg-[#131c31] border border-slate-800/60 p-5 flex flex-col hover:border-slate-700 transition-colors rounded-xl">
               <div className="flex justify-between mb-3">
                 <div>
                   <h3 className="font-black text-white text-xs uppercase tracking-tight">{s.name}</h3>
@@ -102,7 +102,7 @@ export const StrategyExplorer = ({ onRunStrategy }: { onRunStrategy?: (spec: any
               <div className="flex gap-2">
                 <button 
                   onClick={() => onRunStrategy?.(s.backtest_spec)}
-                  className="bg-brand hover:bg-brand-dark text-[#06090f] flex-1 py-2 text-[10px] flex items-center justify-center gap-1 font-black uppercase tracking-widest rounded transition cursor-pointer"
+                  className="bg-brand hover:bg-brand-dark text-[#0c1222] flex-1 py-2 text-[10px] flex items-center justify-center gap-1 font-black uppercase tracking-widest rounded transition cursor-pointer"
                 >
                   <Zap size={12} /> Instant Deploy
                 </button>
@@ -117,7 +117,7 @@ export const StrategyExplorer = ({ onRunStrategy }: { onRunStrategy?: (spec: any
         <h2 className="text-xl font-black text-white uppercase tracking-tight mb-4">Featured Performance</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {featured.map((f) => (
-            <div key={f.title} className="bg-[#0a0e17] border border-slate-800/60 rounded-xl overflow-hidden flex flex-col">
+            <div key={f.title} className="bg-[#131c31] border border-slate-800/60 rounded-xl overflow-hidden flex flex-col">
               <div className={`bg-gradient-to-r ${f.color} px-4 py-3 flex items-center gap-2 text-white`}>
                 {f.icon}
                 <span className="font-black text-xs uppercase tracking-tight">{f.title}</span>
@@ -126,7 +126,7 @@ export const StrategyExplorer = ({ onRunStrategy }: { onRunStrategy?: (spec: any
                 <div className="text-3xl font-black text-white">{f.stat}</div>
                 <div className="text-[10px] text-slate-500 mt-1 font-black uppercase tracking-widest">{f.label}</div>
                 <div className="flex gap-2 mt-auto pt-6">
-                  <button className="bg-brand hover:bg-brand-dark text-[#06090f] flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest rounded transition cursor-pointer">Instant Deploy</button>
+                  <button className="bg-brand hover:bg-brand-dark text-[#0c1222] flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest rounded transition cursor-pointer">Instant Deploy</button>
                   <button className="bg-slate-800 hover:bg-slate-700 text-white flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest rounded transition cursor-pointer">Details</button>
                 </div>
               </div>

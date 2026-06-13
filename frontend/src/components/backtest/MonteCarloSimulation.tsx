@@ -60,17 +60,17 @@ export const MonteCarloSimulation = () => {
   }
 
   return (
-    <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full h-[300px] flex flex-col">
+    <div className="bg-[#131c31] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full h-[300px] flex flex-col">
       <div className="flex justify-between items-start mb-2">
         <h3 className="text-xs font-black text-slate-200 uppercase tracking-widest">Monte Carlo Simulation</h3>
         <div className="text-right">
           <div className="text-[10px] text-slate-500 font-bold uppercase">Prob. of Profit</div>
-          <div className="text-sm font-black text-[#00d09c]">{simulationData.probProfit.toFixed(1)}%</div>
+          <div className="text-sm font-black text-[#3b82f6]">{simulationData.probProfit.toFixed(1)}%</div>
         </div>
       </div>
       <div className="flex gap-4 mb-4 border-b border-slate-800 pb-2">
          <span className="text-[10px] text-slate-400 font-bold">5th %ile: <span className="text-red-400">{simulationData.p5End.toFixed(2)}</span></span>
-         <span className="text-[10px] text-slate-400 font-bold">Median: <span className="text-[#00d09c]">{simulationData.medianEnd.toFixed(2)}</span></span>
+         <span className="text-[10px] text-slate-400 font-bold">Median: <span className="text-[#3b82f6]">{simulationData.medianEnd.toFixed(2)}</span></span>
          <span className="text-[10px] text-slate-400 font-bold">95th %ile: <span className="text-blue-400">{simulationData.p95End.toFixed(2)}</span></span>
       </div>
 
@@ -81,11 +81,11 @@ export const MonteCarloSimulation = () => {
             <XAxis dataKey="step" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
             <Tooltip
-              contentStyle={{ backgroundColor: '#0a0e17', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
+              contentStyle={{ backgroundColor: '#131c31', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
               labelStyle={{ fontWeight: 'black', color: '#94a3b8', marginBottom: 4 }}
             />
             <Line type="monotone" dataKey="p95" stroke="#3b82f6" strokeWidth={1} dot={false} strokeDasharray="3 3" name="95th Percentile" />
-            <Line type="monotone" dataKey="median" stroke="#00d09c" strokeWidth={2} dot={false} name="Median Path" />
+            <Line type="monotone" dataKey="median" stroke="#3b82f6" strokeWidth={2} dot={false} name="Median Path" />
             <Line type="monotone" dataKey="p5" stroke="#ef4444" strokeWidth={1} dot={false} strokeDasharray="3 3" name="5th Percentile" />
           </LineChart>
         </ResponsiveContainer>

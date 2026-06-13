@@ -76,16 +76,16 @@ export const ParameterOptimizer = () => {
   };
 
   return (
-    <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full h-[400px] flex flex-col">
+    <div className="bg-[#131c31] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full h-[400px] flex flex-col">
       <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
         <div className="flex items-center gap-2">
-          <Settings2 className="text-[#00d09c]" size={16} />
+          <Settings2 className="text-[#3b82f6]" size={16} />
           <h3 className="font-black text-slate-200 text-xs uppercase tracking-widest">Parameter Optimizer (Grid Search)</h3>
         </div>
         <button 
           onClick={handleOptimize}
           disabled={isOptimizing || !latestBacktest} 
-          className="px-4 py-1.5 bg-[#00d09c] text-[#06090f] rounded text-[10px] font-black uppercase tracking-widest cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="px-4 py-1.5 bg-[#3b82f6] text-[#0c1222] rounded text-[10px] font-black uppercase tracking-widest cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {isOptimizing ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} />}
           {isOptimizing ? 'Optimizing...' : 'Run Grid Search'}
@@ -100,7 +100,7 @@ export const ParameterOptimizer = () => {
           </div>
         ) : isOptimizing ? (
           <div className="h-full flex flex-col items-center justify-center">
-            <Loader2 size={32} className="animate-spin text-[#00d09c] mb-4" />
+            <Loader2 size={32} className="animate-spin text-[#3b82f6] mb-4" />
             <span className="text-slate-400 font-bold uppercase tracking-widest text-xs">Running Parallel Backtests...</span>
             <span className="text-slate-600 font-bold uppercase tracking-widest text-[10px] mt-2">Iterating Stop Loss variations</span>
           </div>
@@ -118,12 +118,12 @@ export const ParameterOptimizer = () => {
                  <YAxis dataKey="name" type="category" tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 'bold' }} axisLine={false} tickLine={false} width={60} />
                  <Tooltip
                    cursor={{fill: '#1e293b', opacity: 0.4}}
-                   contentStyle={{ backgroundColor: '#0a0e17', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
+                   contentStyle={{ backgroundColor: '#131c31', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
                    labelStyle={{ fontWeight: 'black', color: '#94a3b8', marginBottom: 4 }}
                  />
                  <Bar dataKey="sharpe" radius={[0, 4, 4, 0]}>
                    {results.map((entry, index) => (
-                     <Cell key={`cell-${index}`} fill={entry.sharpe > 1 ? '#00d09c' : (entry.sharpe > 0 ? '#3b82f6' : '#ef4444')} />
+                     <Cell key={`cell-${index}`} fill={entry.sharpe > 1 ? '#3b82f6' : (entry.sharpe > 0 ? '#3b82f6' : '#ef4444')} />
                    ))}
                  </Bar>
                </BarChart>

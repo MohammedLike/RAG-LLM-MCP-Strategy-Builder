@@ -30,7 +30,7 @@ export const TradeDistribution = () => {
     }));
 
   return (
-    <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full h-[300px] flex flex-col">
+    <div className="bg-[#131c31] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full h-[300px] flex flex-col">
       <h3 className="text-xs font-black text-slate-200 uppercase tracking-widest mb-4">Trade P&L Distribution</h3>
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
@@ -38,14 +38,14 @@ export const TradeDistribution = () => {
             <XAxis dataKey="range" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
             <Tooltip
-              contentStyle={{ backgroundColor: '#0a0e17', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
+              contentStyle={{ backgroundColor: '#131c31', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
               labelStyle={{ fontWeight: 'black', color: '#94a3b8', marginBottom: 4 }}
               cursor={{fill: '#1e293b', opacity: 0.4}}
             />
             <ReferenceLine x="0.0% to 1.0%" stroke="#475569" strokeDasharray="3 3" />
             <Bar dataKey="count" radius={[2, 2, 0, 0]}>
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.isProfit ? '#00d09c' : '#ef4444'} />
+                <Cell key={`cell-${index}`} fill={entry.isProfit ? '#3b82f6' : '#ef4444'} />
               ))}
             </Bar>
           </BarChart>

@@ -68,7 +68,7 @@ export const BacktestPanel = () => {
   };
 
   return (
-    <div className="p-6 flex flex-col h-full gap-6 overflow-y-auto bg-[#06090f] text-slate-200">
+    <div className="p-6 flex flex-col h-full gap-6 overflow-y-auto bg-[#0c1222] text-slate-200">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-black text-white uppercase tracking-tight">Quant Backtest Engine</h2>
@@ -77,7 +77,7 @@ export const BacktestPanel = () => {
         <button
           onClick={handleRun}
           disabled={loading}
-          className="bg-brand hover:bg-brand-dark text-[#06090f] px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-60 transition-all shadow-lg cursor-pointer"
+          className="bg-brand hover:bg-brand-dark text-[#0c1222] px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 disabled:opacity-60 transition-all shadow-lg cursor-pointer"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
           Run Backtest
@@ -90,7 +90,7 @@ export const BacktestPanel = () => {
 
       {/* Strategy Builder */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-[#0a0e17] rounded-xl border border-slate-800/60 p-5">
+        <div className="lg:col-span-2 bg-[#131c31] rounded-xl border border-slate-800/60 p-5">
           <div className="flex items-center gap-2 mb-4">
             <Settings2 size={18} className="text-brand" />
             <h3 className="font-black text-white uppercase tracking-tight text-sm">Strategy Rules</h3>
@@ -141,7 +141,7 @@ export const BacktestPanel = () => {
           </div>
         </div>
 
-        <div className="bg-[#0a0e17] rounded-xl border border-slate-800/60 p-5">
+        <div className="bg-[#131c31] rounded-xl border border-slate-800/60 p-5">
           <div className="flex items-center gap-2 mb-4">
             <Settings2 size={18} className="text-brand" />
             <h3 className="font-black text-white uppercase tracking-tight text-sm">Parameters</h3>
@@ -173,7 +173,7 @@ export const BacktestPanel = () => {
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {metrics.map((m) => (
-          <div key={m.label} className="bg-[#0a0e17] border border-slate-800/60 p-4 rounded-xl text-center">
+          <div key={m.label} className="bg-[#131c31] border border-slate-800/60 p-4 rounded-xl text-center">
             <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">{m.label}</div>
             <div className="text-xl font-black text-white">{m.value}</div>
           </div>
@@ -181,7 +181,7 @@ export const BacktestPanel = () => {
       </div>
 
       {/* Chart Section */}
-      <div className="bg-[#0a0e17] border border-slate-800/60 p-5 min-h-[400px] rounded-xl">
+      <div className="bg-[#131c31] border border-slate-800/60 p-5 min-h-[400px] rounded-xl">
         <div className="flex items-center gap-2 mb-6">
           <BarChart3 size={18} className="text-brand" />
           <h3 className="font-black text-white uppercase tracking-tight text-sm">Equity Curve</h3>
@@ -191,8 +191,8 @@ export const BacktestPanel = () => {
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00d09c" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="#00d09c" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
@@ -200,9 +200,9 @@ export const BacktestPanel = () => {
               <YAxis tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} stroke="#334155" axisLine={false} tickLine={false} />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '10px' }}
-                itemStyle={{ color: '#00d09c', fontWeight: 'bold' }}
+                itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
               />
-              <Area type="monotone" dataKey="equity" stroke="#00d09c" fill="url(#colorEquity)" strokeWidth={2.5} />
+              <Area type="monotone" dataKey="equity" stroke="#3b82f6" fill="url(#colorEquity)" strokeWidth={2.5} />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
@@ -213,7 +213,7 @@ export const BacktestPanel = () => {
       </div>
 
       {/* Trade Log */}
-      <div className="bg-[#0a0e17] border border-slate-800/60 p-5 rounded-xl">
+      <div className="bg-[#131c31] border border-slate-800/60 p-5 rounded-xl">
         <div className="flex items-center gap-2 mb-4">
           <List size={18} className="text-brand" />
           <h3 className="font-black text-white uppercase tracking-tight text-sm">Trade Log</h3>

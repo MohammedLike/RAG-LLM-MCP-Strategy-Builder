@@ -27,10 +27,10 @@ export const BacktestDashboard = () => {
 
   if (loading) {
     return (
-      <div className="bg-[#0a0e17] border border-slate-800/80 rounded-xl p-10 text-slate-100 shadow-2xl h-full flex flex-col items-center justify-center text-center">
+      <div className="bg-[#131c31] border border-slate-800/80 rounded-xl p-10 text-slate-100 shadow-2xl h-full flex flex-col items-center justify-center text-center">
         <div className="relative h-14 w-14 mb-5">
-          <div className="absolute inset-0 rounded-full border-[3px] border-[#00d09c]/10"></div>
-          <div className="absolute inset-0 rounded-full border-[3px] border-[#00d09c] border-t-transparent animate-spin"></div>
+          <div className="absolute inset-0 rounded-full border-[3px] border-[#3b82f6]/10"></div>
+          <div className="absolute inset-0 rounded-full border-[3px] border-[#3b82f6] border-t-transparent animate-spin"></div>
         </div>
         <h4 className="font-black text-sm text-slate-100 tracking-tight uppercase">Running Quantitative Simulation</h4>
         <p className="text-[10px] text-slate-500 mt-1.5 font-bold uppercase tracking-widest">Processing NSE Ticker Data & Signals</p>
@@ -40,7 +40,7 @@ export const BacktestDashboard = () => {
 
   if (!latestBacktest) {
     return (
-      <div className="bg-[#0a0e17] border border-slate-800/50 rounded-xl p-10 text-slate-100 shadow-2xl h-full flex flex-col items-center justify-center text-center border-dashed">
+      <div className="bg-[#131c31] border border-slate-800/50 rounded-xl p-10 text-slate-100 shadow-2xl h-full flex flex-col items-center justify-center text-center border-dashed">
         <div className="h-16 w-16 rounded-2xl bg-slate-900/50 flex items-center justify-center border border-slate-800 mb-4">
           <BarChart3 className="text-slate-600" size={32} />
         </div>
@@ -56,10 +56,10 @@ export const BacktestDashboard = () => {
     <div className="flex flex-col gap-4 text-slate-100 pb-10">
       
       {/* Run Metadata Header */}
-      <div className="flex justify-between items-center bg-[#0a0e17] p-4 border border-slate-800/80 rounded-lg shadow-lg">
+      <div className="flex justify-between items-center bg-[#131c31] p-4 border border-slate-800/80 rounded-lg shadow-lg">
         <div className="flex items-center gap-4">
-          <div className="bg-[#00d09c]/10 px-3 py-1.5 rounded border border-[#00d09c]/20">
-            <h4 className="font-mono text-sm font-black text-[#00d09c]">{latestBacktest.symbol}</h4>
+          <div className="bg-[#3b82f6]/10 px-3 py-1.5 rounded border border-[#3b82f6]/20">
+            <h4 className="font-mono text-sm font-black text-[#3b82f6]">{latestBacktest.symbol}</h4>
           </div>
           <div className="flex flex-col">
             <span className="text-[9px] uppercase tracking-widest text-slate-500 font-black">Time Period</span>
@@ -74,7 +74,7 @@ export const BacktestDashboard = () => {
       </div>
 
       {/* Internal Tabs */}
-      <div className="flex bg-[#0a0e17] p-1 border border-slate-800/80 rounded-lg max-w-fit shadow-lg">
+      <div className="flex bg-[#131c31] p-1 border border-slate-800/80 rounded-lg max-w-fit shadow-lg">
         <button
           onClick={() => setActiveSubTab('summary')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest transition cursor-pointer ${
@@ -125,10 +125,10 @@ export const BacktestDashboard = () => {
           <StrategyMetricsKPI />
 
           {/* Chart Section */}
-          <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-6 shadow-2xl min-h-[350px]">
+          <div className="bg-[#131c31] border border-slate-800/80 rounded-lg p-6 shadow-2xl min-h-[350px]">
             <div className="flex items-center justify-between mb-6 border-b border-slate-800/50 pb-4">
               <div className="flex items-center gap-2">
-                <div className={`h-2 w-2 rounded-full ${chartType === 'equity' ? 'bg-[#00d09c]' : 'bg-red-500'}`}></div>
+                <div className={`h-2 w-2 rounded-full ${chartType === 'equity' ? 'bg-[#3b82f6]' : 'bg-red-500'}`}></div>
                 <h3 className="font-black text-slate-200 text-xs uppercase tracking-widest">
                   {chartType === 'equity' ? 'Growth Performance Analysis' : 'Risk Exposure & Drawdowns'}
                 </h3>
@@ -137,7 +137,7 @@ export const BacktestDashboard = () => {
                 <button
                   onClick={() => setChartType('equity')}
                   className={`px-4 py-1.5 rounded text-[10px] font-black tracking-widest transition cursor-pointer ${
-                    chartType === 'equity' ? 'bg-[#00d09c] text-[#06090f]' : 'text-slate-500 hover:text-slate-200'
+                    chartType === 'equity' ? 'bg-[#3b82f6] text-[#0c1222]' : 'text-slate-500 hover:text-slate-200'
                   }`}
                 >
                   EQUITY
@@ -158,19 +158,19 @@ export const BacktestDashboard = () => {
                 <AreaChart data={latestBacktest.equity_curve}>
                   <defs>
                     <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#00d09c" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#00d09c" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} strokeOpacity={0.2} />
                   <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} axisLine={false} tickLine={false} minTickGap={30} />
                   <YAxis tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#0a0e17', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
+                    contentStyle={{ backgroundColor: '#131c31', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
                     labelStyle={{ fontWeight: 'black', color: '#94a3b8', marginBottom: 4 }}
-                    itemStyle={{ fontWeight: 'black', color: '#00d09c' }}
+                    itemStyle={{ fontWeight: 'black', color: '#3b82f6' }}
                   />
-                  <Area type="monotone" dataKey="value" stroke="#00d09c" fill="url(#colorEquity)" strokeWidth={2} name="NAV" />
+                  <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="url(#colorEquity)" strokeWidth={2} name="NAV" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
@@ -186,7 +186,7 @@ export const BacktestDashboard = () => {
                   <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} axisLine={false} tickLine={false} minTickGap={30} />
                   <YAxis tick={{ fontSize: 9, fill: '#64748b', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#0a0e17', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
+                    contentStyle={{ backgroundColor: '#131c31', border: '1px solid #1e293b', borderRadius: 4, color: '#f8fafc', fontSize: 11 }}
                     labelStyle={{ fontWeight: 'black', color: '#94a3b8', marginBottom: 4 }}
                     itemStyle={{ fontWeight: 'black', color: '#ef4444' }}
                   />
@@ -213,10 +213,10 @@ export const BacktestDashboard = () => {
       {activeSubTab === 'trades' && (
         <div className="flex flex-col gap-4">
           <TradeDistribution />
-          <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-6 shadow-2xl">
+          <div className="bg-[#131c31] border border-slate-800/80 rounded-lg p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6 border-b border-slate-800/50 pb-4">
               <div className="flex items-center gap-2">
-                <List className="text-[#00d09c]" size={14} />
+                <List className="text-[#3b82f6]" size={14} />
                 <h3 className="font-black text-slate-200 text-xs uppercase tracking-widest">Order Log ({latestBacktest.trades.length} Positions)</h3>
               </div>
             </div>

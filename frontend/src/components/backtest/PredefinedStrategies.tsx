@@ -42,18 +42,18 @@ export const PredefinedStrategies = ({ onLoadStrategy }: PredefinedStrategiesPro
   };
 
   return (
-    <div className="bg-[#0a0e17] border border-slate-800/80 rounded-xl p-6 text-slate-100 shadow-2xl">
+    <div className="bg-[#131c31] border border-slate-800/80 rounded-xl p-6 text-slate-100 shadow-2xl">
       <div className="flex justify-between items-center mb-6 border-b border-slate-800/50 pb-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-[#00d09c]/10 flex items-center justify-center border border-[#00d09c]/20">
-            <Layers className="text-[#00d09c]" size={20} />
+          <div className="h-10 w-10 rounded-lg bg-[#3b82f6]/10 flex items-center justify-center border border-[#3b82f6]/20">
+            <Layers className="text-[#3b82f6]" size={20} />
           </div>
           <div>
             <h3 className="font-black text-slate-200 text-sm uppercase tracking-tighter">Discover Alpha</h3>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Pre-built NSE/BSE Strategy Templates</p>
           </div>
         </div>
-        <span className="text-[10px] bg-[#00d09c]/10 text-[#00d09c] border border-[#00d09c]/30 px-3 py-1 rounded-full font-black uppercase tracking-widest flex items-center gap-1.5">
+        <span className="text-[10px] bg-[#3b82f6]/10 text-[#3b82f6] border border-[#3b82f6]/30 px-3 py-1 rounded-full font-black uppercase tracking-widest flex items-center gap-1.5">
           <Sparkles size={10} /> Verified
         </span>
       </div>
@@ -72,7 +72,7 @@ export const PredefinedStrategies = ({ onLoadStrategy }: PredefinedStrategiesPro
                 key={strat.slug}
                 className={`flex flex-col bg-slate-900/30 border rounded-lg p-5 transition-all duration-300 group ${
                   isCurrentlyDisplayed 
-                    ? 'border-[#00d09c]/50 bg-[#00d09c]/5' 
+                    ? 'border-[#3b82f6]/50 bg-[#3b82f6]/5' 
                     : 'border-slate-800/60 hover:bg-slate-800/40 hover:border-slate-700'
                 }`}
               >
@@ -89,7 +89,7 @@ export const PredefinedStrategies = ({ onLoadStrategy }: PredefinedStrategiesPro
                     className={`px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition cursor-pointer shadow-lg ${
                       isCurrentlyDisplayed
                         ? 'bg-green-500/20 text-green-400 border border-green-500/40'
-                        : 'bg-[#00d09c] hover:bg-[#00b386] text-[#06090f]'
+                        : 'bg-[#3b82f6] hover:bg-[#2563eb] text-[#0c1222]'
                     }`}
                   >
                     {isRunningThis ? (
@@ -120,7 +120,7 @@ export const PredefinedStrategies = ({ onLoadStrategy }: PredefinedStrategiesPro
                     <div className="flex gap-4">
                       <div className="flex flex-col items-end">
                         <span className="text-[8px] font-black text-slate-600 uppercase">Sharpe</span>
-                        <span className="text-[10px] font-black text-[#00d09c]">{strat.backtest_results.sharpe}</span>
+                        <span className="text-[10px] font-black text-[#3b82f6]">{strat.backtest_results.sharpe}</span>
                       </div>
                       <div className="flex flex-col items-end">
                         <span className="text-[8px] font-black text-slate-600 uppercase">MaxDD</span>

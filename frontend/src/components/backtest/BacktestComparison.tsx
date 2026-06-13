@@ -3,9 +3,9 @@ import { Layers } from 'lucide-react';
 
 export const BacktestComparison = () => {
   return (
-    <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full">
+    <div className="bg-[#131c31] border border-slate-800/80 rounded-lg p-5 shadow-xl w-full">
       <div className="flex items-center gap-2 mb-4 border-b border-slate-800/80 pb-3">
-        <Layers className="text-[#00d09c]" size={16} />
+        <Layers className="text-[#3b82f6]" size={16} />
         <h3 className="font-black text-slate-200 text-xs uppercase tracking-widest">Strategy Comparison</h3>
       </div>
       <div className="flex flex-col items-center justify-center py-10">

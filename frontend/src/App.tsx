@@ -43,7 +43,7 @@ function App() {
   const [slippage, setSlippage] = useState(0.001);
   const [stopLoss, setStopLoss] = useState(0.0);
   const [takeProfit, setTakeProfit] = useState(0.0);
-  const [showBuilder, setShowBuilder] = useState(false);
+  const [showBuilder, setShowBuilder] = useState(true);
   const [showTradeLog, setShowTradeLog] = useState(true);
   const [companies, setCompanies] = useState<{symbol: string, name: string}[]>([]);
   const [showSymbolDropdown, setShowSymbolDropdown] = useState(false);
@@ -100,11 +100,12 @@ function App() {
 
   const handleRunInstant = async (spec: any) => {
     if (!spec) return;
-    const targetSymbol = spec.symbol || 'NIFTY';
+    const targetSymbol = (spec.symbol || 'NIFTY').toUpperCase();
+    const { symbol: _ignored, ...strategySpec } = spec;
     setSymbol(targetSymbol);
     setSymbolSearch(targetSymbol);
     setActiveView('backtest');
-    await runBacktest(targetSymbol, spec, period);
+    await runBacktest(targetSymbol, strategySpec, period);
   };
 
   const metrics = latestBacktest ? [
@@ -157,7 +158,7 @@ function App() {
   );
 
   return (
-    <div className="h-screen w-screen bg-[#06090f] flex overflow-hidden font-sans text-slate-200">
+    <div className="h-screen w-screen bg-[#0c1222] flex overflow-hidden font-sans text-slate-200">
       <Sidebar 
         activeView={activeView} 
         onNavigate={setActiveView} 
@@ -165,16 +166,16 @@ function App() {
         onTradingModeChange={setTradingMode} 
       />
       
-      <div className="flex-1 flex flex-col overflow-hidden bg-[#06090f]">
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#0c1222]">
         {activeView === 'dashboard' && <DashboardView onNavigate={(v) => setActiveView(v as any)} onRunStrategy={handleRunInstant} />}
         {activeView === 'strategies' && <StrategyExplorer onRunStrategy={handleRunInstant} />}
         {activeView === 'backtest' && (
-          <div className="h-full flex flex-col overflow-hidden text-slate-200 bg-[#06090f]">
+          <div className="h-full flex flex-col overflow-hidden text-slate-200 bg-[#0c1222]">
             {/* TOP HEADER */}
-            <header className="h-12 bg-[#0a0e17] border-b border-slate-800/60 px-4 flex items-center justify-between shrink-0 z-10">
+            <header className="h-12 bg-[#131c31] border-b border-slate-800/60 px-4 flex items-center justify-between shrink-0 z-10">
               <div className="flex items-center gap-3">
-                <div className="h-7 w-7 rounded bg-[#00d09c] flex items-center justify-center text-[#06090f]"><Cpu size={14} /></div>
-                <span className="text-xs font-black text-white tracking-tighter">STREAK <span className="text-[#00d09c]">AI</span></span>
+                <div className="h-7 w-7 rounded bg-brand flex items-center justify-center text-white"><Cpu size={14} /></div>
+                <span className="text-xs font-black text-white tracking-tighter">STREAK <span className="text-brand-light">AI</span></span>
                 <span className="text-[8px] text-slate-600 font-mono">PRO SIMULATOR</span>
               </div>
             </header>
@@ -200,72 +201,73 @@ function App() {
 
                 {/* MAIN CHART AREA */}
                 <div className="flex-1 p-3 overflow-auto">
-                  {!latestBacktest && !loading && (
-                    <div className="h-full flex flex-col items-center justify-center text-center">
-                      <div className="h-12 w-12 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center justify-center mb-3">
-                        <BarChart3 className="text-slate-600" size={24} />
-                      </div>
-                      <h3 className="text-sm font-black text-slate-400 uppercase tracking-tight">Backtest Simulator Ready</h3>
-                      <p className="text-[10px] text-slate-600 mt-1 max-w-md">Configure entry/exit conditions, select a symbol, and hit RUN. Supports Equity & Options (CE/PE/Straddle).</p>
-                    </div>
-                  )}
-
                   {loading && (
-                    <div className="h-full flex flex-col items-center justify-center">
+                    <div className="h-48 flex flex-col items-center justify-center mb-3">
                       <div className="relative h-10 w-10 mb-3">
                         <div className="absolute inset-0 rounded-full border-2 border-slate-800"></div>
-                        <div className="absolute inset-0 rounded-full border-2 border-[#00d09c] border-t-transparent animate-spin"></div>
+                        <div className="absolute inset-0 rounded-full border-2 border-brand border-t-transparent animate-spin"></div>
                       </div>
                       <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Backtesting {symbol}...</p>
                     </div>
                   )}
 
-                  {latestBacktest && !loading && (
+                  {!loading && (
                     <div className="flex flex-col gap-3">
-                      {/* Chart */}
-                      <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-[#00d09c]"></div>
-                            <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Performance {chartView === 'both' ? '& Drawdown' : 'Curve'}</h3>
+                      {!latestBacktest && (
+                        <div className="py-8 flex flex-col items-center justify-center text-center bg-[#131c31] border border-slate-800/80 rounded-lg">
+                          <div className="h-12 w-12 rounded-xl bg-slate-900/50 border border-slate-800 flex items-center justify-center mb-3">
+                            <BarChart3 className="text-slate-600" size={24} />
                           </div>
-                          <div className="flex bg-slate-900 rounded p-0.5 border border-slate-800">
-                            <button onClick={() => setChartView('equity')}
-                              className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider cursor-pointer ${chartView==='equity'?'bg-[#00d09c] text-[#06090f]':'text-slate-500 hover:text-slate-300'}`}>EQUITY</button>
-                            <button onClick={() => setChartView('both')}
-                              className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider cursor-pointer ${chartView==='both'?'bg-[#00d09c] text-[#06090f]':'text-slate-500 hover:text-slate-300'}`}>BOTH</button>
-                          </div>
+                          <h3 className="text-sm font-black text-slate-400 uppercase tracking-tight">Backtest Simulator Ready</h3>
+                          <p className="text-[10px] text-slate-600 mt-1 max-w-md">Configure entry/exit conditions below, select a symbol, and hit RUN.</p>
                         </div>
-                        <ResponsiveContainer width="100%" height={220}>
-                          <ComposedChart data={latestBacktest.equity_curve}>
-                            <defs>
-                              <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#00d09c" stopOpacity={0.15}/>
-                                <stop offset="95%" stopColor="#00d09c" stopOpacity={0}/>
-                              </linearGradient>
-                              <linearGradient id="ddGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
-                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} strokeOpacity={0.2} />
-                            <XAxis dataKey="date" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false} />
-                            <YAxis yAxisId="equity" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false} domain={['auto','auto']} />
-                            {chartView === 'both' && (
-                              <YAxis yAxisId="drawdown" orientation="right" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false}
-                                domain={[-100, 5]} tickFormatter={(v: number) => `${v.toFixed(0)}%`} />
-                            )}
-                            <Tooltip contentStyle={{backgroundColor:'#0a0e17',border:'1px solid #1e293b',borderRadius:4,color:'#f8fafc',fontSize:10}} />
-                            <Area yAxisId="equity" type="monotone" dataKey="value" stroke="#00d09c" fill="url(#eqGrad)" strokeWidth={2} name="Equity" />
-                            {chartView === 'both' && latestBacktest.drawdown && (
-                              <Area yAxisId="drawdown" type="monotone" data={latestBacktest.drawdown} dataKey="value" stroke="#ef4444" fill="url(#ddGrad)" strokeWidth={1.5} name="Drawdown %" />
-                            )}
-                          </ComposedChart>
-                        </ResponsiveContainer>
-                      </div>
+                      )}
 
-                      {/* INLINE STRATEGY BUILDER */}
-                      <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg">
+                      {latestBacktest && (
+                        <div className="bg-[#131c31] border border-slate-800/80 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-brand"></div>
+                              <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Performance {chartView === 'both' ? '& Drawdown' : 'Curve'}</h3>
+                            </div>
+                            <div className="flex bg-slate-900 rounded p-0.5 border border-slate-800">
+                              <button onClick={() => setChartView('equity')}
+                                className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider cursor-pointer ${chartView==='equity'?'bg-brand text-white':'text-slate-500 hover:text-slate-300'}`}>EQUITY</button>
+                            <button onClick={() => setChartView('both')}
+                                className={`px-2 py-0.5 rounded text-[8px] font-black tracking-wider cursor-pointer ${chartView==='both'?'bg-brand text-white':'text-slate-500 hover:text-slate-300'}`}>BOTH</button>
+                            </div>
+                          </div>
+                          <ResponsiveContainer width="100%" height={220}>
+                            <ComposedChart data={latestBacktest.equity_curve}>
+                              <defs>
+                                <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.15}/>
+                                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                </linearGradient>
+                                <linearGradient id="ddGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
+                                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} strokeOpacity={0.2} />
+                              <XAxis dataKey="date" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false} />
+                              <YAxis yAxisId="equity" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false} domain={['auto','auto']} />
+                              {chartView === 'both' && (
+                                <YAxis yAxisId="drawdown" orientation="right" tick={{fontSize:8,fill:'#64748b'}} axisLine={false} tickLine={false}
+                                  domain={[-100, 5]} tickFormatter={(v: number) => `${v.toFixed(0)}%`} />
+                              )}
+                              <Tooltip contentStyle={{backgroundColor:'#131c31',border:'1px solid #1e293b',borderRadius:4,color:'#f8fafc',fontSize:10}} />
+                              <Area yAxisId="equity" type="monotone" dataKey="value" stroke="#3b82f6" fill="url(#eqGrad)" strokeWidth={2} name="Equity" />
+                              {chartView === 'both' && latestBacktest.drawdown && (
+                                <Area yAxisId="drawdown" type="monotone" data={latestBacktest.drawdown} dataKey="value" stroke="#ef4444" fill="url(#ddGrad)" strokeWidth={1.5} name="Drawdown %" />
+                              )}
+                            </ComposedChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )}
+
+                      {/* STRATEGY BUILDER - always visible */}
+                      <div className="bg-[#131c31] border border-slate-800/80 rounded-lg">
                         <button onClick={() => setShowBuilder(!showBuilder)}
                           className="w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-200 transition">
                           <span className="flex items-center gap-2"><Settings2 size={12} /> Strategy Builder</span>
@@ -355,7 +357,7 @@ function App() {
                               </div>
 
                               <button onClick={handleRun} disabled={loading}
-                                className="bg-[#00d09c] hover:bg-[#00b386] disabled:bg-slate-700 text-[#06090f] px-4 py-1.5 rounded text-[9px] font-black flex items-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed">
+                                className="bg-brand hover:bg-brand-light disabled:bg-slate-700 text-white px-4 py-1.5 rounded text-[9px] font-black flex items-center gap-1.5 transition cursor-pointer disabled:cursor-not-allowed">
                                 {loading ? <Loader2 size={10} className="animate-spin" /> : <Play size={10} />}
                                 {loading ? 'RUNNING...' : 'RUN BACKTEST'}
                               </button>
@@ -365,7 +367,8 @@ function App() {
                       </div>
 
                       {/* TRADE LOG */}
-                      <div className="bg-[#0a0e17] border border-slate-800/80 rounded-lg">
+                      {latestBacktest && (
+                      <div className="bg-[#131c31] border border-slate-800/80 rounded-lg">
                         <button onClick={() => setShowTradeLog(!showTradeLog)}
                           className="w-full flex items-center justify-between px-4 py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-widest cursor-pointer hover:text-slate-200 transition">
                           <span className="flex items-center gap-2"><List size={12} /> Trade Log ({latestBacktest.trades?.length || 0} trades)</span>
@@ -375,7 +378,7 @@ function App() {
                           <div className="px-4 pb-4 border-t border-slate-800/50 pt-2 overflow-x-auto max-h-64 overflow-y-auto">
                             {latestBacktest.trades && latestBacktest.trades.length > 0 ? (
                               <table className="w-full text-[10px] text-left">
-                                <thead className="text-slate-500 uppercase text-[8px] font-black sticky top-0 bg-[#0a0e17]">
+                                <thead className="text-slate-500 uppercase text-[8px] font-black sticky top-0 bg-[#131c31]">
                                   <tr><th className="px-2 py-1.5">ID</th><th className="px-2 py-1.5">Entry</th><th className="px-2 py-1.5">Exit</th>
                                     <th className="px-2 py-1.5">Entry</th><th className="px-2 py-1.5">Exit</th><th className="px-2 py-1.5">P&L</th>
                                     <th className="px-2 py-1.5">Return</th><th className="px-2 py-1.5">Reason</th></tr>
@@ -404,13 +407,14 @@ function App() {
                           </div>
                         )}
                       </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
 
               {/* RIGHT SIDEBAR - AI CHAT */}
-              <div className="w-[340px] min-w-[340px] border-l border-slate-800/80 bg-[#0a0e17] flex flex-col">
+              <div className="w-[340px] min-w-[340px] border-l border-slate-800/80 bg-[#131c31] flex flex-col">
                 <ChatPanel />
               </div>
             </div>

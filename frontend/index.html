@@ -1,46 +1,93 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StrykeX — Quant AI Backtesting</title>
+  <title>StrykeX — Quant Research Platform</title>
+  <script>
+    (function () {
+      var theme = localStorage.getItem('strykex-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
   <!-- Lucide Icons via CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
   <style>
-    /* CSS Variables & Theme Configuration (FinStocks AI) */
+    /* Shared design tokens */
     :root {
-      --bg-color: #0d0d0d;
-      --sidebar-bg: #111111;
-      --card-bg: #1a1a1a;
-      --card-border: #2a2a2a;
-      --primary: #7c3aed;
-      --primary-hover: #6d28d9;
-      --primary-tint: rgba(124, 58, 237, 0.12);
-      --primary-glow: rgba(124, 58, 237, 0.2);
-      --green: #22c55e;
-      --green-dim: rgba(34, 197, 94, 0.1);
-      --red: #ef4444;
-      --red-dim: rgba(239, 68, 68, 0.1);
-      --yellow: #eab308;
-      --yellow-dim: rgba(234, 179, 8, 0.1);
-      --text-primary: #f0f0f0;
-      --text-secondary: #888888;
-      --text-muted: #555555;
-      --input-bg: #1e1e1e;
-      --input-border: #333333;
-      --font-family: 'Inter', sans-serif;
-      --mono-family: 'JetBrains Mono', monospace;
-      
-      --radius-card: 12px;
-      --radius-btn: 8px;
-      --radius-pill: 20px;
-      --transition: 150ms ease;
-      --sidebar-width: 220px;
+      --primary: #1d4ed8;
+      --primary-light: #2563eb;
+      --primary-hover: #1e40af;
+      --primary-dark: #1e3a8a;
+      --primary-tint: rgba(29, 78, 216, 0.08);
+      --green: #15803d;
+      --green-dim: rgba(21, 128, 61, 0.1);
+      --red: #dc2626;
+      --red-dim: rgba(220, 38, 38, 0.1);
+      --yellow: #a16207;
+      --yellow-dim: rgba(161, 98, 7, 0.1);
+      --font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+      --mono-family: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace;
+      --radius-card: 8px;
+      --radius-btn: 6px;
+      --radius-pill: 999px;
+      --transition: 120ms ease;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.06);
+      --sidebar-width: 232px;
+    }
+
+    /* Dark mode (default) */
+    [data-theme="dark"] {
+      --bg-color: #0f1117;
+      --sidebar-bg: #13151c;
+      --card-bg: #181b24;
+      --card-border: #2a3040;
+      --text-primary: #e8eaef;
+      --text-secondary: #9aa3b5;
+      --text-muted: #6b7289;
+      --input-bg: #13151c;
+      --input-border: #2a3040;
+      --primary-tint: rgba(37, 99, 235, 0.1);
+      --green: #4ade80;
+      --red: #f87171;
+      --yellow: #fbbf24;
+    }
+
+    /* Light mode */
+    [data-theme="light"] {
+      --bg-color: #f7f8fa;
+      --sidebar-bg: #ffffff;
+      --card-bg: #ffffff;
+      --card-border: #dde1ea;
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --text-muted: #6b7280;
+      --input-bg: #ffffff;
+      --input-border: #cfd4df;
+      --primary-tint: rgba(29, 78, 216, 0.06);
+    }
+
+    [data-theme="dark"] .sidebar {
+      background-color: var(--sidebar-bg);
+    }
+
+    [data-theme="light"] .sidebar {
+      background-color: var(--sidebar-bg);
+    }
+
+    [data-theme="light"] .nav-item.active {
+      color: var(--text-primary);
+    }
+
+    [data-theme="light"] .modal {
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
     }
 
     * {
@@ -53,12 +100,14 @@
       background-color: var(--bg-color);
       color: var(--text-primary);
       font-family: var(--font-family);
-      font-size: 0.875rem;
+      font-size: 14px;
       font-weight: 400;
-      line-height: 1.5;
+      line-height: 1.55;
       overflow: hidden;
       height: 100vh;
       display: flex;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     body.sidebar-collapsed {
@@ -76,7 +125,6 @@
     /* Sidebar Styling */
     .sidebar {
       width: var(--sidebar-width);
-      background-color: var(--sidebar-bg);
       border-right: 1px solid var(--card-border);
       display: flex;
       flex-direction: column;
@@ -101,9 +149,9 @@
       align-items: center;
       gap: 10px;
       color: var(--text-primary);
-      font-weight: 800;
-      font-size: 1.1rem;
-      letter-spacing: -0.5px;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
       overflow: hidden;
       white-space: nowrap;
       text-decoration: none;
@@ -114,13 +162,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      filter: drop-shadow(0 0 4px rgba(124, 58, 237, 0.4));
-      animation: pulse-glow 3s infinite alternate;
-    }
-
-    @keyframes pulse-glow {
-      0% { filter: drop-shadow(0 0 2px rgba(124, 58, 237, 0.3)); }
-      100% { filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.7)); }
     }
 
     .logo-text {
@@ -128,15 +169,14 @@
     }
 
     .logo-badge {
-      font-size: 9px;
-      font-weight: 600;
-      background: var(--primary-tint);
-      color: var(--primary);
-      border: 1px solid var(--primary);
+      font-size: 10px;
+      font-weight: 500;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
       border-radius: 4px;
-      padding: 2px 5px;
-      letter-spacing: 0.5px;
-      margin-left: 6px;
+      padding: 1px 6px;
+      margin-left: 4px;
       transition: opacity var(--transition);
     }
 
@@ -180,12 +220,11 @@
     }
 
     .nav-section-label {
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 500;
       color: var(--text-muted);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      padding: 12px 10px 6px;
+      letter-spacing: 0.02em;
+      padding: 14px 12px 6px;
       transition: opacity var(--transition), height var(--transition);
       white-space: nowrap;
       overflow: hidden;
@@ -203,21 +242,25 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 12px;
+      padding: 9px 12px;
       color: var(--text-secondary);
       text-decoration: none;
-      font-size: 0.875rem;
+      font-size: 13px;
       font-weight: 500;
       border-left: 2px solid transparent;
-      border-radius: 8px;
+      border-radius: var(--radius-btn);
       transition: var(--transition);
       cursor: pointer;
       position: relative;
     }
 
     .nav-item:hover {
-      background-color: rgba(255, 255, 255, 0.02);
+      background-color: rgba(255, 255, 255, 0.04);
       color: var(--text-primary);
+    }
+
+    [data-theme="light"] .nav-item:hover {
+      background-color: rgba(15, 23, 42, 0.04);
     }
 
     .nav-item.active {
@@ -261,26 +304,32 @@
       padding: 16px 12px;
       border-top: 1px solid var(--card-border);
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: stretch;
       gap: 10px;
       overflow: hidden;
-      height: 64px;
       flex-shrink: 0;
+    }
+
+    .sidebar-footer-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .user-avatar {
       width: 32px;
       height: 32px;
-      background-color: var(--primary);
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 0.8rem;
+      background-color: var(--card-bg);
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 12px;
       border-radius: 50%;
+      border: 1px solid var(--card-border);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      box-shadow: 0 0 8px rgba(124, 58, 237, 0.3);
     }
 
     .user-info {
@@ -319,31 +368,32 @@
 
     /* Topbar Layout */
     .topbar {
-      height: 54px;
+      height: 52px;
       border-bottom: 1px solid var(--card-border);
       display: flex;
       align-items: center;
-      padding: 0 24px;
+      padding: 0 28px;
       gap: 12px;
-      background-color: var(--sidebar-bg);
       flex-shrink: 0;
+      background-color: var(--sidebar-bg);
+      transition: background-color var(--transition), border-color var(--transition);
     }
 
     .topbar-title {
-      font-size: 0.9rem;
+      font-size: 13px;
       font-weight: 600;
       color: var(--text-primary);
     }
 
-    .topbar-sep {
-      width: 1px;
-      height: 16px;
-      background-color: var(--card-border);
+    .topbar-breadcrumb {
+      font-size: 13px;
+      color: var(--text-muted);
     }
 
-    .topbar-breadcrumb {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
+    .topbar-sep {
+      width: 1px;
+      height: 14px;
+      background-color: var(--card-border);
     }
 
     .topbar-right {
@@ -402,6 +452,57 @@
       height: 12px;
     }
 
+    /* Theme toggle */
+    .theme-switch {
+      display: flex;
+      align-items: center;
+      padding: 3px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-btn);
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer .theme-switch {
+      width: 100%;
+    }
+
+    .sidebar-footer .theme-switch-btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .theme-switch-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    .theme-switch-btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .theme-switch-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .theme-switch-btn.active {
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+
     /* Main Content Area */
     .content {
       flex: 1;
@@ -420,12 +521,12 @@
 
     .view.active {
       display: flex;
-      animation: fadeIn var(--transition) forwards;
+      animation: fadeIn 180ms ease forwards;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     /* ========================================================
@@ -434,58 +535,78 @@
     #view-home {
       flex-direction: column;
       overflow-y: auto;
-      padding: 50px 60px;
+      padding: 40px 48px 72px;
       align-items: center;
+      background-color: var(--bg-color);
+    }
+
+    .home-container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
     }
 
     .home-hero {
-      text-align: center;
-      max-width: 640px;
+      text-align: left;
       width: 100%;
-      margin-bottom: 32px;
+      padding: 0;
+      border: none;
+      background: none;
     }
 
     .home-kicker {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--primary);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: normal;
+      text-transform: none;
+      margin-bottom: 10px;
     }
 
     .home-headline {
-      font-size: 2.2rem;
-      font-weight: 700;
-      line-height: 1.2;
-      letter-spacing: -0.5px;
+      font-family: var(--font-display);
+      font-size: 2.125rem;
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
       margin-bottom: 12px;
-      background: linear-gradient(135deg, #ffffff 40%, #a78bfa 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text-primary);
     }
 
     .home-sub {
-      font-size: 0.9rem;
+      font-size: 15px;
       color: var(--text-secondary);
       line-height: 1.6;
+      max-width: 640px;
+      margin: 0;
+    }
+
+    .home-search {
+      width: 100%;
+    }
+
+    .home-suggestions {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
     }
 
     .chat-box {
       width: 100%;
-      max-width: 680px;
       background-color: var(--input-bg);
       border: 1px solid var(--input-border);
       border-radius: var(--radius-card);
       overflow: hidden;
-      margin-bottom: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
       transition: border-color var(--transition), box-shadow var(--transition);
+      box-shadow: var(--shadow-sm);
     }
 
     .chat-box:focus-within {
       border-color: var(--primary);
-      box-shadow: 0 0 16px rgba(124, 58, 237, 0.2);
+      box-shadow: 0 0 0 3px var(--primary-tint);
     }
 
     .chat-input {
@@ -495,11 +616,11 @@
       outline: none;
       color: var(--text-primary);
       font-family: inherit;
-      font-size: 0.925rem;
-      padding: 16px 18px 12px;
+      font-size: 15px;
+      padding: 18px 20px 12px;
       resize: none;
-      line-height: 1.5;
-      min-height: 60px;
+      line-height: 1.55;
+      min-height: 68px;
     }
 
     .chat-input::placeholder {
@@ -509,30 +630,38 @@
     .chat-bar {
       display: flex;
       align-items: center;
-      padding: 10px 14px;
+      padding: 12px 16px;
       border-top: 1px solid var(--card-border);
-      gap: 8px;
-      background-color: rgba(0, 0, 0, 0.15);
+      gap: 10px;
+      background-color: var(--card-bg);
     }
 
     .chat-tag {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 500;
       color: var(--text-secondary);
-      background-color: rgba(255, 255, 255, 0.03);
+      background-color: transparent;
       border: 1px solid var(--card-border);
-      border-radius: 6px;
-      padding: 4px 10px;
-      cursor: pointer;
+      border-radius: var(--radius-btn);
+      padding: 5px 10px;
+      cursor: default;
       transition: var(--transition);
     }
 
+    [data-theme="light"] .chat-tag {
+      background-color: var(--bg-color);
+    }
+
+    [data-theme="dark"] .chat-tag {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
     .chat-tag:hover {
-      border-color: var(--text-secondary);
-      color: var(--text-primary);
+      border-color: var(--card-border);
+      color: var(--text-secondary);
     }
 
     .chat-tag svg {
@@ -542,22 +671,25 @@
 
     .chat-send {
       margin-left: auto;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: var(--radius-btn);
       background-color: var(--primary);
       border: none;
       cursor: pointer;
       color: #ffffff;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      transition: background-color var(--transition), transform var(--transition);
+      gap: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background-color var(--transition);
     }
 
     .chat-send:hover {
       background-color: var(--primary-hover);
-      transform: scale(1.05);
     }
 
     .chat-send svg {
@@ -567,43 +699,49 @@
 
     .suggestions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      max-width: 680px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
       width: 100%;
-      margin-bottom: 48px;
+    }
+
+    .suggestions-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: normal;
+      margin-bottom: 2px;
     }
 
     .sug-card {
       background-color: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: var(--radius-card);
-      padding: 14px 16px;
+      padding: 16px 18px;
       cursor: pointer;
-      transition: border-color var(--transition), background-color var(--transition), transform var(--transition);
+      transition: border-color var(--transition), background-color var(--transition);
       display: flex;
       align-items: flex-start;
-      gap: 10px;
+      gap: 12px;
+      min-height: 68px;
     }
 
     .sug-card:hover {
-      border-color: #444;
-      background-color: rgba(255,255,255,0.01);
-      transform: translateY(-1px);
+      border-color: var(--primary-light);
+      background-color: var(--card-bg);
     }
 
     .sug-icon {
       font-size: 14px;
       flex-shrink: 0;
       margin-top: 2px;
-      color: var(--primary);
+      color: var(--text-muted);
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .sug-text {
-      font-size: 0.8rem;
+      font-size: 14px;
       color: var(--text-secondary);
       line-height: 1.5;
     }
@@ -612,16 +750,87 @@
       color: var(--text-primary);
     }
 
+    .sug-card:hover .sug-icon {
+      color: var(--primary);
+    }
+
     .templates-section {
       width: 100%;
-      max-width: 900px;
-      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .view-all {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 0;
+      border-radius: 0;
+      transition: color var(--transition);
+      white-space: nowrap;
+    }
+
+    .view-all:hover {
+      background-color: transparent;
+      color: var(--primary);
     }
 
     .templates-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+      gap: 20px;
+    }
+
+    @media (max-width: 1100px) {
+      .templates-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .templates-row {
+        grid-template-columns: 1fr;
+      }
+
+      #view-home {
+        padding: 32px 20px 64px;
+      }
+
+      .home-container {
+        gap: 36px;
+      }
+
+      .home-hero {
+        padding: 28px 24px;
+      }
+
+      .home-headline {
+        font-size: 2rem;
+      }
+
+      .suggestions {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* ========================================================
@@ -638,16 +847,19 @@
     }
 
     .page-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      margin-bottom: 4px;
+      font-family: var(--font-display);
+      font-size: 1.625rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
       color: var(--text-primary);
     }
 
     .page-sub {
-      font-size: 0.875rem;
+      font-size: 14px;
       color: var(--text-secondary);
+      line-height: 1.55;
+      max-width: 720px;
     }
 
     .filter-bar {
@@ -685,12 +897,10 @@
     }
 
     .sort-label {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
       margin-right: 4px;
-      text-transform: uppercase;
       font-weight: 500;
-      letter-spacing: 0.5px;
     }
 
     .sort-pill {
@@ -715,7 +925,7 @@
     .sort-pill.active {
       border-color: var(--primary);
       color: var(--primary);
-      background-color: rgba(124, 58, 237, 0.08);
+      background-color: rgba(37, 99, 235, 0.08);
     }
 
     .tpl-grid {
@@ -731,36 +941,36 @@
       border-radius: var(--radius-card);
       padding: 20px;
       cursor: pointer;
-      transition: border-color var(--transition), transform var(--transition);
+      transition: border-color var(--transition), box-shadow var(--transition);
       position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      min-height: 180px;
+      gap: 6px;
+      box-shadow: var(--shadow-sm);
     }
 
     .tpl-card:hover {
-      border-color: #444;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      border-color: var(--primary-light);
+      box-shadow: var(--shadow-md);
     }
 
     .tpl-card-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .tpl-tag {
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
+      font-size: 11px;
+      font-weight: 500;
       padding: 3px 8px;
-      border-radius: 5px;
-      text-transform: uppercase;
+      border-radius: 4px;
     }
 
-    .tpl-tag.swing { background: rgba(124, 58, 237, 0.15); color: #a78bfa; }
+    .tpl-tag.swing { background: rgba(37, 99, 235, 0.12); color: #3b82f6; }
     .tpl-tag.intraday { background: rgba(8, 145, 178, 0.15); color: #22d3ee; }
     .tpl-tag.longterm { background: rgba(22, 163, 74, 0.15); color: #4ade80; }
     .tpl-tag.options { background: rgba(234, 88, 12, 0.15); color: #fb923c; }
@@ -772,8 +982,8 @@
     }
 
     .tpl-pnl {
-      font-size: 0.75rem;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 600;
       color: var(--green);
       font-family: var(--mono-family);
     }
@@ -784,31 +994,33 @@
     }
 
     .tpl-name {
-      font-size: 0.95rem;
+      font-size: 15px;
       font-weight: 600;
       margin-bottom: 8px;
-      line-height: 1.35;
+      line-height: 1.4;
       color: var(--text-primary);
     }
 
     .tpl-desc {
-      font-size: 0.8rem;
+      font-size: 13px;
       color: var(--text-secondary);
-      line-height: 1.5;
+      line-height: 1.55;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
       flex-grow: 1;
+      margin-bottom: 8px;
     }
 
     .tpl-footer {
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-top: 14px;
-      border-top: 1px solid rgba(255,255,255,0.02);
-      padding-top: 12px;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
     }
 
     .tpl-symbol {
@@ -824,22 +1036,21 @@
 
     .tpl-run {
       margin-left: auto;
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 500;
       color: var(--primary);
-      background-color: var(--primary-tint);
-      border: 1px solid rgba(124, 58, 237, 0.3);
-      border-radius: 5px;
-      padding: 3px 10px;
+      background-color: transparent;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-btn);
+      padding: 4px 10px;
       cursor: pointer;
       opacity: 0;
-      transition: opacity var(--transition);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      transition: opacity var(--transition), border-color var(--transition);
     }
 
     .tpl-card:hover .tpl-run {
       opacity: 1;
+      border-color: var(--primary-light);
     }
 
     .pagination {
@@ -884,8 +1095,11 @@
        3. BACKTEST VIEW (Config + Results panels)
        ======================================================== */
     #view-backtest {
-      display: none;
       flex-direction: row;
+    }
+
+    #view-backtest.active {
+      display: flex;
     }
 
     .bt-left {
@@ -904,11 +1118,9 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.75rem;
+      font-size: 12px;
       font-weight: 600;
       color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 1px;
       flex-shrink: 0;
     }
 
@@ -945,11 +1157,9 @@
     }
 
     .form-label {
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 500;
       color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     .form-input, .form-select {
@@ -967,7 +1177,7 @@
 
     .form-input:focus, .form-select:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 8px rgba(124, 58, 237, 0.15);
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
     }
 
     .form-select {
@@ -1003,7 +1213,7 @@
 
     .form-textarea:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 8px rgba(124, 58, 237, 0.15);
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
     }
 
     .form-hint {
@@ -1074,11 +1284,9 @@
     }
 
     .result-state {
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 500;
       color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     .result-state.running { color: var(--yellow); }
@@ -1119,17 +1327,15 @@
     }
 
     .stat-label {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 8px;
     }
 
     .stat-value {
-      font-size: 1.35rem;
-      font-weight: 700;
+      font-size: 1.25rem;
+      font-weight: 600;
       font-family: var(--mono-family);
     }
 
@@ -1152,15 +1358,13 @@
     }
 
     .chart-title {
-      font-size: 0.8rem;
+      font-size: 13px;
       font-weight: 600;
       color: var(--text-secondary);
       margin-bottom: 16px;
       display: flex;
       align-items: center;
       gap: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     .chart-title svg {
@@ -1189,26 +1393,19 @@
       padding: 10px 8px;
       text-align: center;
       cursor: default;
-      transition: transform var(--transition);
-    }
-
-    .hm-cell:hover {
-      transform: scale(1.03);
     }
 
     .hm-cell .hm-month {
-      font-size: 9px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
       display: block;
       margin-bottom: 4px;
     }
 
     .hm-cell .hm-val {
-      font-size: 0.8rem;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 600;
       font-family: var(--mono-family);
     }
 
@@ -1242,13 +1439,11 @@
     thead th {
       text-align: left;
       padding: 10px 14px;
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
       border-bottom: 1px solid var(--card-border);
-      background-color: rgba(0, 0, 0, 0.2);
+      background-color: var(--bg-color);
     }
 
     tbody tr {
@@ -1304,7 +1499,7 @@
     /* AI PROGRESS / THINKING BOX */
     .ai-thinking {
       background-color: var(--card-bg);
-      border: 1px solid rgba(124, 58, 237, 0.3);
+      border: 1px solid rgba(37, 99, 235, 0.3);
       border-radius: var(--radius-card);
       padding: 16px 20px;
       display: flex;
@@ -1316,8 +1511,8 @@
     }
 
     @keyframes pulse-border {
-      0% { border-color: rgba(124, 58, 237, 0.2); }
-      100% { border-color: rgba(124, 58, 237, 0.5); }
+      0% { border-color: rgba(37, 99, 235, 0.2); }
+      100% { border-color: rgba(37, 99, 235, 0.5); }
     }
 
     /* LOADING DOTS */
@@ -1405,11 +1600,10 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 0.7rem;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 500;
       padding: 3px 8px;
       border-radius: var(--radius-pill);
-      text-transform: uppercase;
     }
 
     .status-badge.live {
@@ -1565,27 +1759,23 @@
     }
 
     .metric-label {
-      font-size: 9px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
       margin-bottom: 4px;
     }
 
     .metric-value {
-      font-size: 1.05rem;
-      font-weight: 700;
+      font-size: 1rem;
+      font-weight: 600;
       font-family: var(--mono-family);
     }
 
     .heatmap-label {
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--text-secondary);
       margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     /* Modal year & timeframe controls */
@@ -1664,12 +1854,10 @@
       border-radius: var(--radius-btn);
       color: #ffffff;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
       font-family: inherit;
       transition: background-color var(--transition);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     .btn-primary:hover {
@@ -1702,9 +1890,9 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <a href="#home" class="logo-container">
-        <span class="logo-icon"><i data-lucide="zap" style="width: 18px; height: 18px; fill: var(--primary);"></i></span>
-        <span class="logo-text">Stryke<span>X</span></span>
-        <span class="logo-badge">BETA</span>
+        <span class="logo-icon"><i data-lucide="bar-chart-3" style="width: 18px; height: 18px;"></i></span>
+        <span class="logo-text">StrykeX</span>
+        <span class="logo-badge">Beta</span>
       </a>
       <button class="collapse-btn" id="sidebar-toggle" title="Toggle Sidebar">
         <i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i>
@@ -1735,10 +1923,22 @@
     </nav>
     
     <div class="sidebar-footer">
-      <div class="user-avatar">ML</div>
-      <div class="user-info">
-        <div class="user-name">Mohammed Like</div>
-        <div class="user-role">Quant Researcher</div>
+      <div class="theme-switch" role="group" aria-label="Color theme" style="width:100%;margin-bottom:10px;">
+        <button type="button" class="theme-switch-btn" id="themeLightBtnSide" onclick="setTheme('light')" title="Light mode">
+          <i data-lucide="sun"></i>
+          <span>Light</span>
+        </button>
+        <button type="button" class="theme-switch-btn active" id="themeDarkBtnSide" onclick="setTheme('dark')" title="Dark mode">
+          <i data-lucide="moon"></i>
+          <span>Dark</span>
+        </button>
+      </div>
+      <div class="sidebar-footer-user">
+        <div class="user-avatar">ML</div>
+        <div class="user-info">
+          <div class="user-name">Mohammed Liba</div>
+          <div class="user-role">Quant Researcher</div>
+        </div>
       </div>
     </div>
   </aside>
@@ -1750,20 +1950,6 @@
       <span class="topbar-title" id="topbar-title">Research Home</span>
       <div class="topbar-sep"></div>
       <span class="topbar-breadcrumb" id="topbar-crumb">StrykeX / Home</span>
-      <div class="topbar-right">
-        <div class="topbar-pill">
-          <i data-lucide="compass"></i>
-          NIFTY
-        </div>
-        <div class="topbar-pill">
-          <i data-lucide="calendar"></i>
-          2Y
-        </div>
-        <button class="run-btn" onclick="showView('backtest')">
-          <i data-lucide="play" style="fill: #ffffff;"></i>
-          Run Backtest
-        </button>
-      </div>
     </div>
 
     <!-- CONTENT WRAPPER -->
@@ -1771,76 +1957,85 @@
 
       <!-- 1. HOME VIEW -->
       <div id="view-home" class="view active">
-        <div class="home-hero">
-          <div class="home-kicker">StrykeX Backtest Engine</div>
-          <div class="home-headline">What strategy should we test?</div>
-          <div class="home-sub">Describe it in plain English. The AI will parse your logic, build the rules, and run a full backtest on NSE data.</div>
-        </div>
+        <div class="home-container">
+          <div class="home-hero">
+            <div class="home-kicker">Research workspace</div>
+            <div class="home-headline">Define and backtest a strategy</div>
+            <div class="home-sub">Describe entry, exit, and risk rules in plain language. StrykeX compiles the logic and runs it against NSE equity data.</div>
+          </div>
 
-        <div class="chat-box">
-          <textarea class="chat-input" id="homeInput" placeholder="e.g. Buy NIFTY when RSI < 30 and price is above 200 EMA. Exit when RSI crosses above 60 or 2% stop loss. Test on 2 years daily data." rows="2"></textarea>
-          <div class="chat-bar">
-            <div class="chat-tag">
-              <i data-lucide="map-pin"></i>
-              NIFTY
+          <div class="home-search">
+            <div class="chat-box">
+              <textarea class="chat-input" id="homeInput" placeholder="e.g. Buy NIFTY when RSI < 30 and price is above 200 EMA. Exit when RSI crosses above 60 or 2% stop loss. Test on 2 years daily data." rows="2"></textarea>
+              <div class="chat-bar">
+                <div class="chat-tag">
+                  <i data-lucide="map-pin"></i>
+                  NIFTY
+                </div>
+                <div class="chat-tag">
+                  <i data-lucide="clock"></i>
+                  2Y Daily
+                </div>
+                <div class="chat-tag">
+                  <i data-lucide="database"></i>
+                  Equity
+                </div>
+                <button class="chat-send" onclick="sendToBacktest()" title="Open in Backtest Engine">
+                  <span>Continue</span>
+                  <i data-lucide="arrow-right"></i>
+                </button>
+              </div>
             </div>
-            <div class="chat-tag">
-              <i data-lucide="clock"></i>
-              2Y Daily
-            </div>
-            <div class="chat-tag">
-              <i data-lucide="database"></i>
-              Equity
-            </div>
-            <button class="chat-send" onclick="sendToBacktest()" title="Send to Backtest Engine">
-              <i data-lucide="send"></i>
-            </button>
           </div>
-        </div>
 
-        <!-- Suggestion Cards -->
-        <div class="suggestions">
-          <div class="sug-card" onclick="fillAndGo('Buy NIFTY when RSI(14) < 30 and price above 200 EMA. Sell when RSI > 70. SL 1.5%. Test 2Y daily.')">
-            <span class="sug-icon"><i data-lucide="trending-up" style="width: 14px; height: 14px;"></i></span>
-            <span class="sug-text">RSI oversold entry with trend filter on NIFTY</span>
+          <div class="home-suggestions">
+            <div class="suggestions-label">Quick start</div>
+            <div class="suggestions">
+              <div class="sug-card" onclick="fillAndGo('Buy NIFTY when RSI(14) < 30 and price above 200 EMA. Sell when RSI > 70. SL 1.5%. Test 2Y daily.')">
+                <span class="sug-icon"><i data-lucide="trending-up" style="width: 14px; height: 14px;"></i></span>
+                <span class="sug-text">RSI oversold entry with trend filter on NIFTY</span>
+              </div>
+              <div class="sug-card" onclick="fillAndGo('Short BANKNIFTY when price opens below previous day low AND VIX > 18. Cover at EOD. Test 1Y on 15min data.')">
+                <span class="sug-icon"><i data-lucide="zap" style="width: 14px; height: 14px;"></i></span>
+                <span class="sug-text">BANKNIFTY intraday short below prev day low</span>
+              </div>
+              <div class="sug-card" onclick="fillAndGo('Buy when MACD histogram turns positive AND price above 50 SMA. Exit when MACD histogram turns negative. NIFTY 100 stocks, 3Y daily.')">
+                <span class="sug-icon"><i data-lucide="layout" style="width: 14px; height: 14px;"></i></span>
+                <span class="sug-text">MACD histogram trend following on NIFTY 100</span>
+              </div>
+              <div class="sug-card" onclick="fillAndGo('Buy NIFTY when ADX > 25 and +DI crosses above -DI. Exit when +DI crosses below -DI. SL 2%. Test 2Y daily.')">
+                <span class="sug-icon"><i data-lucide="layers" style="width: 14px; height: 14px;"></i></span>
+                <span class="sug-text">ADX directional trend strategy on NIFTY</span>
+              </div>
+            </div>
           </div>
-          <div class="sug-card" onclick="fillAndGo('Short BANKNIFTY when price opens below previous day low AND VIX > 18. Cover at EOD. Test 1Y on 15min data.')">
-            <span class="sug-icon"><i data-lucide="zap" style="width: 14px; height: 14px;"></i></span>
-            <span class="sug-text">BANKNIFTY intraday short below prev day low</span>
-          </div>
-          <div class="sug-card" onclick="fillAndGo('Buy when MACD histogram turns positive AND price above 50 SMA. Exit when MACD histogram turns negative. NIFTY 100 stocks, 3Y daily.')">
-            <span class="sug-icon"><i data-lucide="layout" style="width: 14px; height: 14px;"></i></span>
-            <span class="sug-text">MACD histogram trend following on NIFTY 100</span>
-          </div>
-          <div class="sug-card" onclick="fillAndGo('Sell ATM straddle on NIFTY every Monday at 9:30 AM. Close at 3:15 PM or 2% loss. Backtest 1Y on 5min data.')">
-            <span class="sug-icon"><i data-lucide="layers" style="width: 14px; height: 14px;"></i></span>
-            <span class="sug-text">Weekly short straddle on NIFTY options</span>
-          </div>
-        </div>
 
-        <!-- Scroll Row section -->
-        <div class="templates-section">
-          <div class="section-header">
-            <span class="section-title">Strategy Templates made just for you</span>
-            <span class="view-all" onclick="showView('templates')">View all <i data-lucide="arrow-right" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i></span>
+          <div class="templates-section">
+            <div class="section-header">
+              <span class="section-title">Featured strategies</span>
+              <span class="view-all" onclick="showView('templates')">View all <i data-lucide="arrow-right" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i></span>
+            </div>
+            <div class="templates-row" id="homeTemplates"></div>
           </div>
-          <div class="templates-row" id="homeTemplates"></div>
         </div>
       </div>
 
       <!-- 2. STRATEGY TEMPLATES VIEW (Strategy Library) -->
       <div id="view-templates" class="view">
         <div class="page-header">
-          <div class="page-title">Indicator Based Library</div>
-          <div class="page-sub">Pre-built, battle-tested strategies. Click to inspect performance, then load into the backtest engine.</div>
+          <div class="page-title">Equity Strategy Library</div>
+          <div class="page-sub">Pre-built equity strategies with real backtest stats from your database. Search, inspect, then load into the backtest engine.</div>
         </div>
-        <div class="filter-bar">
-          <div class="filter-tab active" onclick="filterTemplates('all', this)">All Algos</div>
-          <div class="filter-tab" onclick="filterTemplates('indicator based', this)">Indicator Based</div>
+        <div class="filter-bar" style="flex-wrap: wrap; gap: 8px;">
+          <input type="search" id="strategySearch" placeholder="Search strategies by name or description..." oninput="onStrategySearch(this.value)"
+            style="flex:1; min-width:220px; background:var(--input-bg); border:1px solid var(--input-border); border-radius:8px; padding:8px 12px; color:var(--text-primary); font-size:12px;">
+          <div class="filter-tab active" onclick="filterTemplates('all', this)">All Equity</div>
           <div class="filter-tab" onclick="filterTemplates('equity', this)">Equity</div>
-          <div class="filter-tab" onclick="filterTemplates('options', this)">Options</div>
+          <div class="filter-tab" onclick="filterTemplates('trend following', this)">Trend</div>
+          <div class="filter-tab" onclick="filterTemplates('momentum', this)">Momentum</div>
+          <div class="filter-tab" onclick="filterTemplates('mean reversion', this)">Mean Reversion</div>
           <div class="filter-sep"></div>
-          <span class="sort-label">SORT:</span>
+          <span class="sort-label">Sort by</span>
           <button class="sort-pill" id="sort-winrate" onclick="toggleSort('Win Rate', this)">Win Rate</button>
           <button class="sort-pill" id="sort-pnl" onclick="toggleSort('P&L', this)">P&L</button>
         </div>
@@ -1865,7 +2060,7 @@
             <div class="form-group">
               <div class="form-label">Strategy (Natural Language)</div>
               <textarea class="form-textarea" id="strategyInput" placeholder="Describe your strategy in plain English...&#10;&#10;e.g. Buy NIFTY when RSI(14) drops below 30 and price is above 200-day EMA. Exit when RSI crosses above 60 or 2% stop loss hits."></textarea>
-              <div class="form-hint">The AI will parse this into entry/exit rules automatically.</div>
+              <div class="form-hint">Rules are parsed into structured entry and exit conditions automatically.</div>
             </div>
             <div class="form-divider"></div>
             <div class="form-row">
@@ -1884,11 +2079,6 @@
                 <div class="form-label">Asset Type</div>
                 <select class="form-select" id="assetType">
                   <option>Equity / Index</option>
-                  <option>Options CE</option>
-                  <option>Options PE</option>
-                  <option>Futures</option>
-                  <option>Straddle</option>
-                  <option>Strangle</option>
                 </select>
               </div>
             </div>
@@ -1976,34 +2166,8 @@
                   <th>Trades</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td style="color:var(--text-secondary);">2026-06-12 15:30</td>
-                  <td style="font-weight:600; color:var(--text-primary);">RSI Oversold with EMA filter</td>
-                  <td>NIFTY</td>
-                  <td class="trade-pos" style="font-weight:600;">+41.85%</td>
-                  <td>78%</td>
-                  <td class="trade-neg">-6.40%</td>
-                  <td>42</td>
-                </tr>
-                <tr>
-                  <td style="color:var(--text-secondary);">2026-06-11 11:22</td>
-                  <td style="font-weight:600; color:var(--text-primary);">Bollinger Band Mean Reversion</td>
-                  <td>BANKNIFTY</td>
-                  <td class="trade-pos" style="font-weight:600;">+18.42%</td>
-                  <td>72%</td>
-                  <td class="trade-neg">-5.20%</td>
-                  <td>28</td>
-                </tr>
-                <tr>
-                  <td style="color:var(--text-secondary);">2026-06-08 09:45</td>
-                  <td style="font-weight:600; color:var(--text-primary);">Opening Range Breakout</td>
-                  <td>BANKNIFTY</td>
-                  <td class="trade-pos" style="font-weight:600;">+19.20%</td>
-                  <td>67%</td>
-                  <td class="trade-neg">-6.40%</td>
-                  <td>56</td>
-                </tr>
+              <tbody id="historyTableBody">
+                <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No backtests run yet.</td></tr>
               </tbody>
             </table>
           </div>
@@ -2048,18 +2212,17 @@
 </div>
 
 <script>
-  // API Config
-  const API_BASE = (window.location.protocol === 'file:') 
-    ? 'http://localhost:8001/api' 
-    : `${window.location.protocol}//${window.location.hostname}:8001/api`;
+  // API Config — backend always on port 8001 when using Docker/local dev
+  const API_BASE = `${window.location.protocol}//${window.location.hostname}:8001/api`;
 
-  // Fallback Templates Dataset (Page 1 to 4, total 36 items)
-  // Strategies Dataset (populated from database)
+  // Strategies loaded from database (equity only, real stats)
   let TEMPLATES = [];
+  let searchQuery = '';
+  let backtestHistory = JSON.parse(localStorage.getItem('strykex_backtest_history') || '[]');
 
   // App global state variables
   let activeTemplate = null;
-  let activeStrategySpec = null; // Spec loaded from DB
+  let activeStrategySpec = null;
   let currentCategory = 'all';
   let currentSort = '';
   let currentPage = 1;
@@ -2068,8 +2231,101 @@
   let selectedModalYear = "2025";
   let selectedModalTimeframe = "1 Day";
 
+  const EQUITY_CATEGORIES = new Set([
+    'equity', 'trend following', 'momentum', 'mean reversion',
+    'breakout', 'pullback', 'trend strength', 'volatility',
+    'support & resistance', 'swing'
+  ]);
+
+  function isEquityStrategy(s) {
+    const cat = (s.category || '').toLowerCase();
+    if (cat === 'options' || cat === 'indicator based' || cat === 'fundamental') return false;
+    const inst = (s.backtest_spec?.instrument_type || 'EQUITY').toUpperCase();
+    return inst !== 'OPTION';
+  }
+
+  function formatPct(val, fallback = '—') {
+    if (val === undefined || val === null || Number.isNaN(val)) return fallback;
+    const n = Number(val);
+    return `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`;
+  }
+
+  function saveBacktestToHistory(data, symbol, strategyLabel) {
+    const entry = {
+      timestamp: new Date().toISOString(),
+      strategy: strategyLabel || 'Custom Strategy',
+      symbol,
+      total_return: data.total_return,
+      win_rate: data.win_rate,
+      max_drawdown: data.max_drawdown,
+      trades: data.trades ? data.trades.length : 0
+    };
+    backtestHistory.unshift(entry);
+    backtestHistory = backtestHistory.slice(0, 50);
+    localStorage.setItem('strykex_backtest_history', JSON.stringify(backtestHistory));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const tbody = document.getElementById('historyTableBody');
+    if (!tbody) return;
+    if (!backtestHistory.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No backtests run yet. Run a strategy from the Backtest Engine.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = backtestHistory.map(h => {
+      const dt = new Date(h.timestamp);
+      const retClass = (h.total_return || 0) >= 0 ? 'trade-pos' : 'trade-neg';
+      return `<tr>
+        <td style="color:var(--text-secondary);">${dt.toLocaleString()}</td>
+        <td style="font-weight:600;color:var(--text-primary);">${h.strategy}</td>
+        <td>${h.symbol}</td>
+        <td class="${retClass}" style="font-weight:600;">${formatPct(h.total_return)}</td>
+        <td>${h.win_rate !== undefined ? `${Number(h.win_rate).toFixed(0)}%` : '—'}</td>
+        <td class="trade-neg">${formatPct(h.max_drawdown)}</td>
+        <td>${h.trades ?? 0}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function triggerBacktestFromTopbar() {
+    const hash = (window.location.hash || '#home').replace('#', '');
+    if (hash !== 'backtest') {
+      showView('backtest');
+      setTimeout(() => runBacktest(), 300);
+    } else {
+      runBacktest();
+    }
+  }
+
+  function onStrategySearch(q) {
+    searchQuery = (q || '').trim().toLowerCase();
+    currentPage = 1;
+    renderTemplates();
+  }
+
+  function setTheme(theme) {
+    const next = theme === 'light' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('strykex-theme', next);
+    updateThemeButtons(next);
+    lucide.createIcons();
+  }
+
+  function updateThemeButtons(theme) {
+    ['themeLightBtnSide'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('active', theme === 'light');
+    });
+    ['themeDarkBtnSide'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('active', theme === 'dark');
+    });
+  }
+
   // Bootstrapping
   window.addEventListener("DOMContentLoaded", () => {
+    updateThemeButtons(document.documentElement.getAttribute('data-theme') || 'dark');
     lucide.createIcons();
     
     // Wire routing logic
@@ -2090,10 +2346,7 @@
     // Load dynamic variables from DB
     loadStrategiesFromDb();
     loadSymbolsFromDb();
-
-    // Populate initial local views (overridden by DB fetch once completed)
-    renderHomeTemplates();
-    renderTemplates();
+    renderHistory();
   });
 
   // Client-side Routing Engine
@@ -2140,53 +2393,66 @@
     window.location.hash = id;
   }
 
-  // Load Strategies list from DB
+  // Load equity strategies from DB (real stats only)
   async function loadStrategiesFromDb() {
+    const grid = document.getElementById('templateGrid');
+    const home = document.getElementById('homeTemplates');
     try {
-      const res = await fetch(`${API_BASE}/strategies`);
+      const res = await fetch(`${API_BASE}/strategies?equity_only=true`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (data && data.length > 0) {
-        // Map database strategies to TEMPLATES structures
-        TEMPLATES = data.map((s, index) => {
-          const results = s.backtest_results || {};
-          const totalReturn = results.total_return !== undefined ? `${results.total_return >= 0 ? '+' : ''}${results.total_return.toFixed(1)}%` : '+14.6%';
-          const winRate = results.win_rate !== undefined ? `${results.win_rate.toFixed(0)}%` : '74%';
-
-          let heatmap = { 2025: [], 2024: [] };
-          if (results.equity_curve) {
-            const monthly = calculateMonthlyReturns(results.equity_curve);
-            heatmap[2025] = monthly;
-            heatmap[2024] = monthly.map(v => v * 0.85); // modified mock for prev year
-          } else {
-            heatmap[2025] = [3.1, 2.4, -1.2, 4.2, 5.9, 1.7, 7.1, -2.3, 4.8, 3.3, 2.1, 5.0];
-            heatmap[2024] = [2.1, 1.8, -6.1, 3.1, 4.2, 1.15, 5.4, -1.1, 3.1, 2.1, 1.8, 4.1];
-          }
-
-          return {
-            id: index + 1,
-            category: s.category ? s.category.toLowerCase() : 'swing',
-            name: s.name,
-            pnl: totalReturn,
-            wr: winRate,
-            symbol: s.backtest_spec?.symbol || 'NIFTY',
-            desc: s.description || s.hypothesis || 'Pre-configured trading logic loaded from local database.',
-            strategy: s.description || s.hypothesis || '',
-            spec: s.backtest_spec,
-            metrics: {
-              total: totalReturn,
-              best: s.backtest_results?.best_month || "May: +8.28%",
-              worst: s.backtest_results?.worst_month || "Oct: -7.30%"
-            },
-            heatmap: heatmap
-          };
-        });
-
-        // Re-render
-        renderHomeTemplates();
-        renderTemplates();
+      if (!data || data.length === 0) {
+        TEMPLATES = [];
+        if (grid) grid.innerHTML = '<div style="padding:40px;color:var(--text-muted);text-align:center;">No equity strategies found in database. Run the seed script first.</div>';
+        if (home) home.innerHTML = '';
+        return;
       }
+
+      TEMPLATES = data.filter(isEquityStrategy).map((s, index) => {
+        const results = s.backtest_results || {};
+        const hasRealStats = results.total_return !== undefined && results.source === 'live_backtest';
+        const totalReturn = hasRealStats ? formatPct(results.total_return) : 'Run to compute';
+        const winRate = hasRealStats && results.win_rate !== undefined ? `${Number(results.win_rate).toFixed(0)}%` : '—';
+
+        let heatmap = { 2025: Array(12).fill(0), 2024: Array(12).fill(0) };
+        if (results.equity_curve && results.equity_curve.length > 1) {
+          heatmap[2025] = calculateMonthlyReturns(results.equity_curve);
+        }
+
+        return {
+          id: index + 1,
+          slug: s.slug,
+          category: (s.category || 'equity').toLowerCase(),
+          name: s.name,
+          pnl: totalReturn,
+          wr: winRate,
+          hasRealStats,
+          symbol: results.symbol || s.backtest_spec?.symbol || 'NIFTY',
+          desc: s.description || s.hypothesis || 'Equity strategy from database.',
+          strategy: s.description || s.hypothesis || s.name,
+          spec: s.backtest_spec,
+          metrics: {
+            total: totalReturn,
+            sharpe: hasRealStats && results.sharpe !== undefined ? results.sharpe.toFixed(2) : '—',
+            max_drawdown: hasRealStats && results.max_drawdown !== undefined ? `${results.max_drawdown.toFixed(1)}%` : '—',
+            trades: hasRealStats ? (results.total_trades || 0) : '—'
+          },
+          heatmap
+        };
+      });
+
+      document.querySelector('.nav-item#nav-templates .badge')?.remove();
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = String(TEMPLATES.length);
+      document.getElementById('nav-templates')?.appendChild(badge);
+
+      renderHomeTemplates();
+      renderTemplates();
     } catch (err) {
-      console.warn("Could not connect to strategies database. Operating with offline mock values.", err);
+      console.warn('Could not load strategies from database:', err);
+      if (grid) grid.innerHTML = `<div style="padding:40px;color:var(--red);text-align:center;">Cannot reach backend at ${API_BASE}. Start Docker: <code>docker compose up -d</code></div>`;
+      if (home) home.innerHTML = '';
     }
   }
 
@@ -2243,33 +2509,43 @@
     return monthlyReturns;
   }
 
-  // Home templates horizontal rows
+  // Home templates — show 6 featured equity strategies from DB
   function renderHomeTemplates() {
     const container = document.getElementById("homeTemplates");
-    const selection = TEMPLATES.slice(0, 3);
-    container.innerHTML = selection.map(renderCard).join('');
+    if (!container) return;
+
+    const featured = [...TEMPLATES]
+      .sort((a, b) => {
+        if (a.hasRealStats !== b.hasRealStats) return a.hasRealStats ? -1 : 1;
+        return parseFloat(String(b.pnl)) - parseFloat(String(a.pnl));
+      })
+      .slice(0, 6);
+
+    container.innerHTML = featured.length
+      ? featured.map(renderCard).join('')
+      : '<div style="color:var(--text-muted);padding:24px;text-align:center;">Loading strategies from database...</div>';
     lucide.createIcons();
   }
 
   // Template HTML card generator
   function renderCard(t) {
-    const isPositive = parseFloat(t.pnl) >= 0;
-    const pnlClass = isPositive ? "positive" : "negative";
+    const isPositive = t.hasRealStats && parseFloat(String(t.pnl)) >= 0;
+    const pnlClass = !t.hasRealStats ? '' : (isPositive ? "positive" : "negative");
 
     return `
       <div class="tpl-card" onclick="openModal(${t.id})">
         <div class="tpl-card-top">
-          <span class="tpl-tag ${t.category}">${capitalize(t.category)}</span>
+          <span class="tpl-tag ${t.category.replace(/\s+/g, '-')}">${capitalize(t.category)}</span>
           <div class="tpl-metrics">
-            <span class="tpl-pnl">${t.pnl}</span>
-            <span class="tpl-wr">${t.wr} WR</span>
+            <span class="tpl-pnl ${pnlClass}">${t.pnl}</span>
+            <span class="tpl-wr">${t.wr}${t.wr !== '—' ? ' WR' : ''}</span>
           </div>
         </div>
         <div class="tpl-name">${t.name}</div>
         <div class="tpl-desc">${t.desc}</div>
         <div class="tpl-footer">
           <span class="tpl-symbol">${t.symbol}</span>
-          <span class="tpl-run" onclick="event.stopPropagation(); loadDirectTemplate(${t.id})">Load</span>
+          <span class="tpl-run" onclick="event.stopPropagation(); loadDirectTemplate(${t.id})">Run Backtest</span>
         </div>
       </div>
     `;
@@ -2281,9 +2557,17 @@
 
   // Core Templates render (Catalog Grid)
   function renderTemplates() {
-    let filtered = currentCategory === 'all' 
-      ? TEMPLATES 
+    let filtered = currentCategory === 'all'
+      ? TEMPLATES
       : TEMPLATES.filter(t => t.category === currentCategory);
+
+    if (searchQuery) {
+      filtered = filtered.filter(t =>
+        t.name.toLowerCase().includes(searchQuery) ||
+        t.desc.toLowerCase().includes(searchQuery) ||
+        t.category.includes(searchQuery)
+      );
+    }
 
     // Apply Sorting logic
     if (currentSort === 'Win Rate') {
@@ -2569,7 +2853,10 @@
   /* BACKTEST ENGINE SIMULATION EXECUTION (DB CONNECTED) */
   async function runBacktest() {
     const strategyText = document.getElementById('strategyInput').value.trim();
-    if (!strategyText) { alert('Please describe your strategy first.'); return; }
+    if (!strategyText && !activeStrategySpec) {
+      alert('Describe your strategy or load one from the Strategy Library.');
+      return;
+    }
 
     const btn = document.getElementById('runBtn');
     if (btn) {
@@ -2607,20 +2894,13 @@
     let spec = activeStrategySpec;
     const isTemplateText = activeTemplate && activeTemplate.strategy === strategyText;
 
-    if (!isTemplateText || !spec) {
+    if (!spec) {
+      spec = parseNaturalLanguageStrategy(strategyText || 'Buy when RSI < 30, sell when RSI > 70');
+    } else if (!isTemplateText && strategyText) {
       spec = parseNaturalLanguageStrategy(strategyText);
     }
 
-    // Set asset type options if required
-    const assetTypeSelect = document.getElementById("assetType");
-    const assetType = assetTypeSelect ? assetTypeSelect.value : "Equity / Index";
-    if (assetType.includes("Option") || assetType.includes("Straddle") || assetType.includes("Strangle")) {
-      spec.instrument_type = "OPTION";
-      spec.strike = "ATM";
-      spec.option_type = assetType.includes("PE") ? "PE" : (assetType.includes("CE") ? "CE" : "STRADDLE");
-    } else {
-      spec.instrument_type = "EQUITY";
-    }
+    spec.instrument_type = 'EQUITY';
 
     // Execute FastAPI vectorbt simulation after 1.5s loader
     setTimeout(async () => {
@@ -2681,6 +2961,7 @@
         
         // Render the actual VectorBT results
         renderActualResults(data, symbol);
+        saveBacktestToHistory(data, symbol, strategyText || activeTemplate?.name || 'Custom Strategy');
         lucide.createIcons();
         
       } catch (err) {
@@ -2908,8 +3189,8 @@
     
     // Draw Shaded Gradient under Curve
     const grad = ctx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, 'rgba(124, 58, 237, 0.25)');
-    grad.addColorStop(1, 'rgba(124, 58, 237, 0.0)');
+    grad.addColorStop(0, 'rgba(37, 99, 235, 0.25)');
+    grad.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
     
     ctx.fillStyle = grad;
     ctx.beginPath();
@@ -2920,7 +3201,7 @@
     ctx.fill();
     
     // Draw Line path
-    ctx.strokeStyle = '#7c3aed';
+    ctx.strokeStyle = '#3b82f6';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(coords[0].x, coords[0].y);
@@ -2931,7 +3212,7 @@
     
     // Circle Indicator at End Point
     const lastPoint = coords[coords.length - 1];
-    ctx.fillStyle = '#7c3aed';
+    ctx.fillStyle = '#3b82f6';
     ctx.beginPath();
     ctx.arc(lastPoint.x, lastPoint.y, 4, 0, Math.PI * 2);
     ctx.fill();

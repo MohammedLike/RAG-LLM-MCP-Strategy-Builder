@@ -12,6 +12,8 @@ import {
   Settings,
   Zap,
 } from 'lucide-react';
+import '../dashboard/Dashboard.css';
+import { ThemeToggle } from './ThemeToggle';
 
 export type AppView =
   | 'dashboard'
@@ -41,7 +43,7 @@ const navItems: { id: AppView; label: string; icon: ReactNode; section?: string 
 
 export const Sidebar = ({ activeView, onNavigate, tradingMode, onTradingModeChange }: SidebarProps) => {
   return (
-    <aside className="w-[220px] min-w-[220px] h-full bg-[#0a0e17] border-r border-slate-800/60 flex flex-col">
+    <div className="w-[220px] min-w-[220px] h-full dashboard-sidebar-accent border-r border-brand/20 flex flex-col">
       <div className="px-5 py-5 border-b border-slate-800/60">
         <div className="flex items-center gap-1">
           <span className="text-xl font-bold text-white tracking-tight">Stryke</span>
@@ -58,7 +60,7 @@ export const Sidebar = ({ activeView, onNavigate, tradingMode, onTradingModeChan
               onClick={() => onNavigate(item.id)}
               className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-brand text-[#06090f] shadow-sm'
+                  ? 'bg-brand text-white shadow-sm shadow-brand/30'
                   : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-100'
               }`}
             >
@@ -73,7 +75,8 @@ export const Sidebar = ({ activeView, onNavigate, tradingMode, onTradingModeChan
       </nav>
 
       <div className="p-3 space-y-3 border-t border-slate-800/60">
-        <div className="rounded-xl bg-gradient-to-br from-[#00d09c]/20 to-[#00b386]/10 p-4 border border-brand/20">
+        <ThemeToggle />
+        <div className="rounded-xl bg-gradient-to-br from-brand/20 to-brand-light/10 p-4 border border-brand/20">
           <div className="flex items-center gap-2 mb-3">
             <Zap size={16} className="text-brand" />
             <span className="text-sm font-semibold text-slate-100">Trading Mode</span>
@@ -84,7 +87,7 @@ export const Sidebar = ({ activeView, onNavigate, tradingMode, onTradingModeChan
                 key={mode}
                 onClick={() => onTradingModeChange(mode)}
                 className={`flex-1 py-1.5 text-xs font-semibold rounded-md capitalize transition ${
-                  tradingMode === mode ? 'bg-brand text-[#06090f]' : 'text-slate-500 hover:text-slate-300'
+                  tradingMode === mode ? 'bg-brand text-white' : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
                 {mode}
@@ -104,7 +107,7 @@ export const Sidebar = ({ activeView, onNavigate, tradingMode, onTradingModeChan
         </div>
 
         <div className="flex items-center gap-2 px-2 py-1">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand to-blue-400 flex items-center justify-center text-[#06090f] text-xs font-bold">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand to-brand-light flex items-center justify-center text-white text-xs font-bold">
             ML
           </div>
           <div className="flex-1 min-w-0">
@@ -112,6 +115,6 @@ export const Sidebar = ({ activeView, onNavigate, tradingMode, onTradingModeChan
           </div>
         </div>
       </div>
-    </aside>
+    </div>
   );
 };
