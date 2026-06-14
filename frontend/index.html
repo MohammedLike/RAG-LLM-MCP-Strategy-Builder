@@ -2227,6 +2227,46 @@
       display: none;
     }
 
+    .pipeline-results-panel {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .pipeline-results-panel.visible {
+      display: block;
+    }
+
+    .pipeline-results-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .pipeline-results-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pipeline-results-body .stats-grid {
+      margin-bottom: 16px;
+    }
+
+    .pipeline-results-body .chart-card {
+      margin-bottom: 16px;
+    }
+
+    .pipeline-results-body .table-wrap {
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
     .pipeline-prompt-suggestions {
       padding: 0 14px 12px;
       border-top: 1px solid var(--card-border);
@@ -3921,6 +3961,16 @@
             <div class="pipeline-backtest-metrics" id="pipelineAiBacktestMetrics" style="padding:0 14px 12px;"></div>
           </div>
         </div>
+
+        <div class="pipeline-results-panel" id="pipelineResultsPanel">
+          <div class="pipeline-results-head">
+            <div class="pipeline-results-title">
+              <i data-lucide="bar-chart-3"></i>
+              <span id="pipelineResultsTitle">Backtest Results</span>
+            </div>
+          </div>
+          <div class="pipeline-results-body" id="pipelineResultsBody"></div>
+        </div>
       </div>
 
       <!-- 5. RESULTS HISTORY VIEW -->
@@ -4074,7 +4124,7 @@
 
   let selectedModalYear = new Date().getFullYear().toString();
   let lastBacktestReport = null;
-  let lastChartPayload = null;
+  let lastChartPayloadByPrefix = {};
   let activeResultsChartTab = 'candles';
   const tvChartRegistry = {};
 
@@ -4148,8 +4198,10 @@
     updateThemeButtons(next);
     lucide.createIcons();
     window.dispatchEvent(new Event('strykex-theme-change'));
-    if (lastChartPayload) {
-      renderTradingViewCharts(lastChartPayload.data, lastChartPayload.symbol);
+    if (lastChartPayloadByPrefix) {
+      Object.entries(lastChartPayloadByPrefix).forEach(([prefix, payload]) => {
+        if (payload) renderTradingViewCharts(payload.data, payload.symbol, prefix);
+      });
     }
   }
 
@@ -5192,8 +5244,13 @@
   }
 
   // Populate dynamic vectorbt metrics, canvases, and log tables
-  function renderActualResults(data, symbol) {
+  function renderActualResults(data, symbol, options = {}) {
     if (!data) return;
+
+    const bodyId = options.bodyId || 'resultsBody';
+    const chartPrefix = options.chartPrefix || 'tvChart';
+    const reportLabel = options.reportLabel || 'Backtest';
+    const maxTrades = options.maxTrades ?? 30;
     
     try {
       const totalReturn = data.total_return !== undefined ? data.total_return.toFixed(2) : '0.00';
@@ -5203,15 +5260,16 @@
       const totalTrades = data.trades ? data.trades.length : 0;
       const profitFactor = data.profit_factor !== undefined ? data.profit_factor.toFixed(2) : '0.00';
       const sortino = data.sortino !== undefined ? data.sortino.toFixed(2) : '0.00';
+      const cagr = data.cagr !== undefined ? data.cagr.toFixed(2) : '0.00';
+      const calmar = data.calmar !== undefined ? data.calmar.toFixed(2) : '0.00';
+      const expectancy = data.expectancy !== undefined ? data.expectancy.toFixed(2) : '0.00';
       
-      // Calculate average trade P&L percentage return
       let avgTrade = '0.00';
       if (totalTrades > 0) {
         const sumPnlPct = data.trades.reduce((sum, t) => sum + (t.pnl_pct || 0), 0);
         avgTrade = (sumPnlPct / totalTrades).toFixed(2);
       }
       
-      // Count winning/losing sessions
       const wins = data.trades ? data.trades.filter(t => (t.pnl_pct || 0) >= 0).length : 0;
       const losses = totalTrades - wins;
 
@@ -5222,14 +5280,34 @@
       const resultsYear = pickDefaultHeatmapYear(monthlyByYear);
       const monthlyReturns = monthlyByYear[resultsYear] || Array(12).fill(null);
 
-      const body = document.getElementById('resultsBody');
+      const body = document.getElementById(bodyId);
       if (!body) return;
+
+      const tradeRows = data.trades && data.trades.length > 0
+        ? (maxTrades ? data.trades.slice(0, maxTrades) : data.trades).map(t => {
+            const ep = t.entry_price !== undefined ? t.entry_price : 0;
+            const xp = t.exit_price !== undefined ? t.exit_price : 0;
+            const pnl = t.pnl !== undefined ? t.pnl : 0;
+            const pnl_pct = t.pnl_pct !== undefined ? t.pnl_pct : 0;
+            return `
+              <tr>
+                <td>#${t.id}</td>
+                <td>${t.entry_date || '—'}</td>
+                <td>${t.exit_date || '—'}</td>
+                <td>₹${ep.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td>₹${xp.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td class="${pnl >= 0 ? 'trade-pos' : 'trade-neg'}">${pnl >= 0 ? '+' : ''}₹${pnl.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                <td><span class="${pnl_pct >= 0 ? 'side-buy' : 'side-sell'}">${pnl_pct >= 0 ? '+' : ''}${pnl_pct.toFixed(2)}%</span></td>
+              </tr>`;
+          }).join('')
+        : `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No trades executed by strategy parameters.</td></tr>`;
 
       body.innerHTML = `
         <div class="report-actions">
           <div class="report-meta">
-            <strong>Data source:</strong> ${data.data_source === 'postgres' ? 'Your Postgres database (stored OHLCV)' : (data.data_source || 'Database')}
-            ${data.data_rows ? ` · <strong>${data.data_rows}</strong> daily bars` : ''}
+            <strong>${reportLabel}</strong>
+            · <strong>Data source:</strong> ${data.data_source === 'postgres' ? 'Your Postgres database (stored OHLCV)' : (data.data_source || 'Database')}
+            ${data.data_rows ? ` · <strong>${data.data_rows}</strong> bars` : ''}
             ${data.data_start && data.data_end ? ` · ${data.data_start} → ${data.data_end}` : ''}
             ${data.cached ? ' · Cached result' : ''}
           </div>
@@ -5246,6 +5324,11 @@
             <div class="stat-label">Total Return</div>
             <div class="stat-value ${parseFloat(totalReturn) >= 0 ? 'green' : 'red'}">${parseFloat(totalReturn) >= 0 ? '+' : ''}${totalReturn}%</div>
             <div class="stat-sub">Active Ticker: ${symbol}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">CAGR</div>
+            <div class="stat-value ${parseFloat(cagr) >= 0 ? 'green' : 'red'}">${parseFloat(cagr) >= 0 ? '+' : ''}${cagr}%</div>
+            <div class="stat-sub">Annualized growth</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Sharpe Ratio</div>
@@ -5278,13 +5361,23 @@
             <div class="stat-sub">Downside-adjusted metric</div>
           </div>
           <div class="stat-card">
+            <div class="stat-label">Calmar Ratio</div>
+            <div class="stat-value yellow">${calmar}</div>
+            <div class="stat-sub">CAGR / Max DD</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Expectancy</div>
+            <div class="stat-value ${parseFloat(expectancy) >= 0 ? 'green' : 'red'}">${expectancy}</div>
+            <div class="stat-sub">Avg P&L per trade</div>
+          </div>
+          <div class="stat-card">
             <div class="stat-label">Avg Trade</div>
             <div class="stat-value ${parseFloat(avgTrade) >= 0 ? 'green' : 'red'}">${parseFloat(avgTrade) >= 0 ? '+' : ''}${avgTrade}%</div>
             <div class="stat-sub">Per session return</div>
           </div>
         </div>
 
-        <div class="chart-card">
+        <div class="chart-card" data-chart-prefix="${chartPrefix}">
           <div class="chart-title-row">
             <div class="chart-title">
               <i data-lucide="chart-column"></i>
@@ -5296,9 +5389,9 @@
               <button type="button" class="chart-type-tab" data-chart-tab="drawdown" onclick="setResultsChartTab('drawdown', this)">Drawdown</button>
             </div>
           </div>
-          <div id="tvChartCandles" class="tv-chart-container tv-chart-panel active"></div>
-          <div id="tvChartEquity" class="tv-chart-container tv-chart-panel"></div>
-          <div id="tvChartDrawdown" class="tv-chart-container tv-chart-panel"></div>
+          <div id="${chartPrefix}Candles" class="tv-chart-container tv-chart-panel active"></div>
+          <div id="${chartPrefix}Equity" class="tv-chart-container tv-chart-panel"></div>
+          <div id="${chartPrefix}Drawdown" class="tv-chart-container tv-chart-panel"></div>
         </div>
 
         <div class="chart-card">
@@ -5329,7 +5422,7 @@
         <div class="chart-card">
           <div class="chart-title">
             <i data-lucide="list"></i>
-            Executed Order Log (VectorBT Simulation)
+            Trade Log (${totalTrades} trades)${maxTrades && totalTrades > maxTrades ? ` — showing first ${maxTrades}` : ''}
           </div>
           <div class="table-wrap">
             <table>
@@ -5338,47 +5431,45 @@
                   <th>ID</th>
                   <th>Entry Date</th>
                   <th>Exit Date</th>
-                  <th>Avg Entry Price</th>
-                  <th>Avg Exit Price</th>
+                  <th>Entry Price</th>
+                  <th>Exit Price</th>
                   <th>Trade P&L</th>
-                  <th>Change P&L %</th>
+                  <th>P&L %</th>
                 </tr>
               </thead>
-              <tbody>
-                ${data.trades && data.trades.length > 0 
-                  ? data.trades.slice(0, 30).map(t => {
-                      const ep = t.entry_price !== undefined ? t.entry_price : 0;
-                      const xp = t.exit_price !== undefined ? t.exit_price : 0;
-                      const pnl = t.pnl !== undefined ? t.pnl : 0;
-                      const pnl_pct = t.pnl_pct !== undefined ? t.pnl_pct : 0;
-                      return `
-                        <tr>
-                          <td>#${t.id}</td>
-                          <td>${t.entry_date}</td>
-                          <td>${t.exit_date}</td>
-                          <td>₹${ep.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                          <td>₹${xp.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                          <td class="${pnl >= 0 ? 'trade-pos' : 'trade-neg'}">${pnl >= 0 ? '+' : ''}₹${pnl.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                          <td><span class="${pnl_pct >= 0 ? 'side-buy' : 'side-sell'}">${pnl_pct >= 0 ? '+' : ''}${pnl_pct.toFixed(2)}%</span></td>
-                        </tr>
-                      `;
-                    }).join('')
-                  : `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No trades executed by strategy parameters.</td></tr>`
-                }
-              </tbody>
+              <tbody>${tradeRows}</tbody>
             </table>
           </div>
         </div>
       `;
 
-      // TradingView Lightweight Charts
       setTimeout(() => {
-        renderTradingViewCharts(data, symbol);
+        renderTradingViewCharts(data, symbol, chartPrefix);
         lucide.createIcons();
       }, 100);
     } catch (err) {
       console.error("Error rendering backtest results", err);
     }
+  }
+
+  function renderPipelineFullResults(data, symbol, label) {
+    if (!data || data.error) return;
+    const panel = document.getElementById('pipelineResultsPanel');
+    const title = document.getElementById('pipelineResultsTitle');
+    if (panel) {
+      panel.classList.add('visible');
+      panel.style.display = 'block';
+    }
+    if (title) title.textContent = label || 'Backtest Results';
+    renderActualResults(data, symbol, {
+      bodyId: 'pipelineResultsBody',
+      chartPrefix: 'pipelineTvChart',
+      reportLabel: label || 'Quant Pipeline Backtest',
+      maxTrades: null,
+    });
+    setTimeout(() => {
+      panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
   }
 
   /* TRADINGVIEW LIGHTWEIGHT CHARTS */
@@ -5437,18 +5528,28 @@
 
   function setResultsChartTab(tab, btn) {
     activeResultsChartTab = tab;
-    document.querySelectorAll('.chart-type-tab').forEach(el => el.classList.toggle('active', el.dataset.chartTab === tab));
-    document.querySelectorAll('.tv-chart-panel').forEach(el => {
-      el.classList.toggle('active', el.id === `tvChart${tab.charAt(0).toUpperCase()}${tab.slice(1)}`);
-    });
-    if (lastChartPayload) {
-      renderTradingViewCharts(lastChartPayload.data, lastChartPayload.symbol);
+    const card = btn?.closest('.chart-card[data-chart-prefix]');
+    const prefix = card?.dataset?.chartPrefix || 'tvChart';
+    if (card) {
+      card.querySelectorAll('.chart-type-tab').forEach(el => el.classList.toggle('active', el.dataset.chartTab === tab));
+      card.querySelectorAll('.tv-chart-panel').forEach(el => {
+        el.classList.toggle('active', el.id === `${prefix}${tab.charAt(0).toUpperCase()}${tab.slice(1)}`);
+      });
+    } else {
+      document.querySelectorAll('.chart-type-tab').forEach(el => el.classList.toggle('active', el.dataset.chartTab === tab));
+      document.querySelectorAll('.tv-chart-panel').forEach(el => {
+        el.classList.toggle('active', el.id === `tvChart${tab.charAt(0).toUpperCase()}${tab.slice(1)}`);
+      });
+    }
+    const payload = lastChartPayloadByPrefix[prefix];
+    if (payload) {
+      renderTradingViewCharts(payload.data, payload.symbol, prefix);
     }
   }
 
-  function renderTradingViewCharts(data, symbol) {
+  function renderTradingViewCharts(data, symbol, chartPrefix = 'tvChart') {
     if (typeof LightweightCharts === 'undefined') return;
-    lastChartPayload = { data, symbol };
+    lastChartPayloadByPrefix[chartPrefix] = { data, symbol };
 
     const candles = (data.ohlcv || []).map(b => ({
       time: toTvTime(b.time),
@@ -5469,9 +5570,9 @@
       color: Number(p.value) <= 0 ? 'rgba(239, 68, 68, 0.55)' : 'rgba(34, 197, 94, 0.55)',
     })).filter(p => p.time && !Number.isNaN(p.value));
 
-    renderTvCandlestickChart('tvChartCandles', candles, buildTradeMarkers(data.trades));
-    renderTvAreaChart('tvChartEquity', equity, '#2962FF');
-    renderTvHistogramChart('tvChartDrawdown', drawdown);
+    renderTvCandlestickChart(`${chartPrefix}Candles`, candles, buildTradeMarkers(data.trades));
+    renderTvAreaChart(`${chartPrefix}Equity`, equity, '#2962FF');
+    renderTvHistogramChart(`${chartPrefix}Drawdown`, drawdown);
   }
 
   function mountTvChart(containerId, buildSeries) {
@@ -5681,6 +5782,8 @@
     renderPipelineBacktestMetrics('pipelineAiBacktestMetrics', r, 'AI Backtest');
     if (r.error) return;
 
+    renderPipelineFullResults(r, r.symbol || getPipelineAiParams().symbol, 'AI Pine Backtest');
+
     lastBacktestReport = {
       symbol: r.symbol,
       period: r.period,
@@ -5862,6 +5965,7 @@
       pipelineStrategySpec = data.strategy_spec;
       pipelineBacktestResult = r;
       renderPipelineBacktestMetrics('pipelineUploadBacktestMetrics', r, 'Upload Backtest');
+      renderPipelineFullResults(r, r.symbol || symbol, 'Upload Pine Backtest');
       lastBacktestReport = {
         symbol: r.symbol || symbol,
         period: r.period || period,
