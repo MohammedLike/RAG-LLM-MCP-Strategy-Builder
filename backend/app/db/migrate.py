@@ -9,6 +9,7 @@ from .session import async_session, is_db_available
 _MIGRATION_FILES = (
     Path(__file__).resolve().parents[3] / "infra" / "postgres" / "migrations" / "002_pine_scripts_backtests.sql",
     Path(__file__).resolve().parents[3] / "infra" / "postgres" / "migrations" / "003_ohlcv_pk_ingest_jobs.sql",
+    Path(__file__).resolve().parents[3] / "infra" / "postgres" / "migrations" / "005_options_chain_unique.sql",
 )
 
 
