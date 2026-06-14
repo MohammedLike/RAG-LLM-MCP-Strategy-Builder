@@ -2137,17 +2137,165 @@
       align-self: center;
     }
 
-    .pipeline-layout {
+    .pipeline-layout,
+    .pipeline-simple-layout {
       display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-      gap: 16px;
-      align-items: start;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 20px;
+      align-items: stretch;
     }
 
     @media (max-width: 1100px) {
-      .pipeline-layout {
+      .pipeline-layout,
+      .pipeline-simple-layout {
         grid-template-columns: 1fr;
       }
+    }
+
+    .pipeline-upload-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-card);
+      display: flex;
+      flex-direction: column;
+      min-height: 520px;
+      overflow: hidden;
+    }
+
+    .pipeline-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--card-border);
+      background: var(--surface-elevated);
+      flex-shrink: 0;
+    }
+
+    .pipeline-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .pipeline-panel-title svg {
+      width: 16px;
+      height: 16px;
+      color: var(--primary-light);
+    }
+
+    .pipeline-upload-body {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .pipeline-upload-body textarea {
+      flex: 1;
+      min-height: 280px;
+      font-family: var(--mono-family);
+      font-size: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      resize: vertical;
+    }
+
+    .pipeline-upload-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pipeline-backtest-metrics {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      padding-top: 4px;
+      min-height: 1.4em;
+    }
+
+    .pipeline-backtest-metrics:empty {
+      display: none;
+    }
+
+    .pipeline-prompt-suggestions {
+      padding: 0 14px 12px;
+      border-top: 1px solid var(--card-border);
+      background: var(--surface-elevated);
+      flex-shrink: 0;
+    }
+
+    .pipeline-prompt-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin: 10px 0 8px;
+    }
+
+    .pipeline-prompt-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pipeline-prompt-chip {
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--transition);
+      line-height: 1.3;
+      text-align: left;
+    }
+
+    .pipeline-prompt-chip:hover {
+      border-color: rgba(59, 130, 246, 0.45);
+      color: var(--primary-light);
+      background: var(--primary-tint);
+    }
+
+    .pipeline-flow-inline,
+    .pipeline-workflow-title,
+    .pipeline-live-bridge {
+      display: none !important;
+    }
+
+    .pipeline-ai-panel {
+      min-height: 520px;
+    }
+
+    .pipeline-ai-messages {
+      flex: 1;
+      max-height: none;
+      min-height: 200px;
+    }
+
+    .pipeline-ai-msg.pine-preview {
+      font-family: var(--mono-family);
+      font-size: 11px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .pipeline-ai-msg.loading {
+      opacity: 0.75;
+      font-style: italic;
     }
 
     .pipeline-grid {
@@ -3692,13 +3840,10 @@
       <div id="view-pipeline" class="view view-padded">
         <div class="page-header">
           <div class="page-title">Quant Pipeline</div>
-          <div class="page-sub">Convert TradingView Pine into live automated strategies — backtest on your database, deploy paper or broker execution.</div>
+          <div class="page-sub">Upload TradingView Pine and backtest on your database, or describe a strategy and let AI generate Pine Script.</div>
         </div>
 
         <div class="pipeline-toolbar">
-          <div class="pipeline-flow-inline" id="pipelineFlowBar">
-            <span class="active">INPUT</span> → <span>AI LAYER</span> → <span>EXECUTION</span> → <span>ANALYSIS</span> → <span>OUTPUT</span> → <span>LIVE</span>
-          </div>
           <div class="pipeline-settings">
             <div class="pipeline-setting">
               <label for="pipelineSymbol">Symbol</label>
@@ -3730,18 +3875,40 @@
           <div class="pipeline-data-hint" id="ohlcvStoreInfo">Loading data store…</div>
         </div>
 
-        <div class="pipeline-layout">
-          <!-- AI Pine Quant Builder -->
+        <div class="pipeline-simple-layout">
+          <div class="pipeline-upload-panel">
+            <div class="pipeline-panel-head">
+              <div class="pipeline-panel-title">
+                <i data-lucide="upload"></i>
+                Upload Pine &amp; Backtest
+              </div>
+            </div>
+            <div class="pipeline-upload-body">
+              <span class="pipeline-field-label">TradingView Pine Script v5</span>
+              <input type="file" id="pineUploadInput" accept=".pine,.txt" style="font-size:12px;width:100%;">
+              <textarea id="pipelinePineScript" placeholder="Paste //@version=5 Pine Script here, or choose a .pine file above…"></textarea>
+              <div class="pipeline-upload-actions">
+                <button type="button" class="pipeline-btn primary" onclick="uploadPineScript()">Upload</button>
+                <button type="button" class="pipeline-btn success" onclick="backtestUploadedPine()">Backtest</button>
+              </div>
+              <div class="pipeline-backtest-metrics" id="pipelineUploadBacktestMetrics"></div>
+            </div>
+          </div>
+
           <div class="pipeline-ai-panel">
             <div class="pipeline-ai-head">
               <div class="pipeline-ai-title">
                 <i data-lucide="bot"></i>
-                AI Pine Quant Builder
-                <span class="pipeline-ai-badge">Ollama · DB backtest</span>
+                AI Pine Strategy Builder
+                <span class="pipeline-ai-badge">Ollama · Indicator catalog</span>
               </div>
             </div>
             <div class="pipeline-ai-messages" id="pipelineAiMessages">
-              <div class="pipeline-ai-msg assistant">Describe a strategy — I'll generate Pine Script and backtest on Postgres OHLCV. Example: RSI mean reversion on NIFTY, buy below 30.</div>
+              <div class="pipeline-ai-msg assistant">Describe a strategy — I'll generate Pine Script using TradingView indicators and backtest on Postgres OHLCV. Example: RSI mean reversion on NIFTY, buy below 30.</div>
+            </div>
+            <div class="pipeline-prompt-suggestions">
+              <div class="pipeline-prompt-label">Try a pre-built prompt</div>
+              <div class="pipeline-prompt-grid" id="pipelinePromptSuggestions"></div>
             </div>
             <div class="pipeline-ai-input-row">
               <textarea id="pipelineAiInput" placeholder="e.g. Golden cross EMA 50/200 on NIFTY, 2% stop loss…" rows="2"></textarea>
@@ -3751,128 +3918,7 @@
                 <button type="button" class="pipeline-btn success" onclick="generateAndBacktestPipeline()">Generate &amp; Backtest</button>
               </div>
             </div>
-          </div>
-
-          <!-- Manual workflow steps -->
-          <div>
-            <div class="pipeline-workflow-title">Manual workflow</div>
-            <div class="pipeline-grid">
-              <div class="pipeline-stage">
-                <div class="pipeline-stage-head">
-                  <span class="pipeline-stage-num">1</span>
-                  <span class="pipeline-stage-title">Input</span>
-                </div>
-                <div class="pipeline-stage-body">
-                  <span class="pipeline-field-label">Pine Script (.pine)</span>
-                  <input type="file" id="pineUploadInput" accept=".pine,.txt" style="font-size:11px;width:100%;">
-                  <div id="pineScriptList" class="pipeline-field-hint">No scripts uploaded</div>
-                </div>
-                <div class="pipeline-btn-row">
-                  <button type="button" class="pipeline-btn primary" onclick="uploadPineScript()">Upload</button>
-                  <button type="button" class="pipeline-btn" onclick="cacheOhlcvToParquet()">Cache Parquet</button>
-                </div>
-              </div>
-
-              <div class="pipeline-stage pipeline-stage-wide">
-                <div class="pipeline-stage-head">
-                  <span class="pipeline-stage-num">2</span>
-                  <span class="pipeline-stage-title">AI Layer</span>
-                </div>
-                <div class="pipeline-stage-body">
-                  <select class="form-select" id="pipelineSourceType">
-                    <option value="text">Natural language</option>
-                    <option value="pine">Pine Script</option>
-                  </select>
-                  <textarea class="form-textarea" id="pipelineInputText" rows="3" placeholder="Paste Pine Script or describe strategy…"></textarea>
-                  <div class="pipeline-json-preview" id="pipelineJsonPreview">Strategy JSON appears after interpretation.</div>
-                </div>
-                <div class="pipeline-btn-row">
-                  <button type="button" class="pipeline-btn primary" onclick="interpretPipelineStrategy()">Interpret</button>
-                </div>
-              </div>
-
-              <div class="pipeline-stage">
-                <div class="pipeline-stage-head">
-                  <span class="pipeline-stage-num">3</span>
-                  <span class="pipeline-stage-title">Execution</span>
-                </div>
-                <div class="pipeline-stage-body">
-                  <div id="pipelineValidationStatus" class="pipeline-field-hint">Awaiting interpretation</div>
-                  <div id="pipelineExecMetrics" class="pipeline-field-hint">VectorBT metrics after approval</div>
-                </div>
-                <div class="pipeline-btn-row">
-                  <button type="button" class="pipeline-btn success" onclick="validatePipeline('approve')">Approve &amp; Run</button>
-                  <button type="button" class="pipeline-btn danger" onclick="validatePipeline('reject')">Reject</button>
-                </div>
-              </div>
-
-              <div class="pipeline-stage">
-                <div class="pipeline-stage-head">
-                  <span class="pipeline-stage-num">4</span>
-                  <span class="pipeline-stage-title">Analysis</span>
-                </div>
-                <div class="pipeline-stage-body">
-                  <ul class="pipeline-suggestions" id="pipelineSuggestions">
-                    <li>Run a backtest to get suggestions</li>
-                  </ul>
-                </div>
-                <div class="pipeline-btn-row">
-                  <button type="button" class="pipeline-btn" onclick="analyzePipelineResults()">Analyze</button>
-                  <button type="button" class="pipeline-btn" onclick="optimizePipelineStrategy()">Optimize</button>
-                </div>
-              </div>
-
-              <div class="pipeline-stage">
-                <div class="pipeline-stage-head">
-                  <span class="pipeline-stage-num">5</span>
-                  <span class="pipeline-stage-title">Output</span>
-                </div>
-                <div class="pipeline-stage-body">
-                  <span class="pipeline-field-hint">Export report, trade log, optimization.</span>
-                  <div id="pipelineExportStatus" class="pipeline-field-hint">No results yet</div>
-                </div>
-                <div class="pipeline-btn-row">
-                  <button type="button" class="pipeline-btn" onclick="exportPipeline('csv')">CSV</button>
-                  <button type="button" class="pipeline-btn" onclick="exportPipeline('xlsx')">Excel</button>
-                  <button type="button" class="pipeline-btn" onclick="exportPipeline('json')">JSON</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pine → Live Execution Bridge -->
-        <div class="pipeline-live-bridge">
-          <div class="pipeline-live-head">
-            <h3>Pine → Live Execution</h3>
-            <p>Convert any TradingView Pine Script into a live, automated trading strategy. Bridge chart ideas into real market execution — backtest on Postgres OHLCV, then deploy paper trading (or connect broker for live).</p>
-          </div>
-          <div class="pipeline-live-body">
-            <div class="pipeline-live-pine">
-              <span class="pipeline-field-label">TradingView Pine Script</span>
-              <textarea id="pineLiveScript" placeholder="Paste your //@version=5 Pine Script from TradingView…"></textarea>
-              <div class="pipeline-live-actions">
-                <button type="button" class="pipeline-btn" onclick="convertPineLive()">Convert Pine</button>
-                <button type="button" class="pipeline-btn primary" onclick="pineToLiveFull()">Convert · Backtest · Deploy</button>
-                <select id="pipelineLiveMode" class="form-select" style="width:auto;padding:7px 10px;font-size:12px;">
-                  <option value="paper">Paper trading</option>
-                  <option value="live">Live broker</option>
-                </select>
-              </div>
-              <div id="pineLiveConvertStatus" class="pipeline-field-hint">Paste Pine from TradingView → convert → validate on DB → automate signals</div>
-            </div>
-            <div class="pipeline-live-status">
-              <div class="pipeline-live-card">
-                <div class="pipeline-live-card-title">Deployed strategies</div>
-                <div class="pipeline-live-list" id="pipelineLiveList">
-                  <div class="pipeline-field-hint">No live strategies yet</div>
-                </div>
-              </div>
-              <div class="pipeline-live-card">
-                <div class="pipeline-live-card-title">Last execution log</div>
-                <div class="pipeline-live-log" id="pipelineLiveLog">Run a signal check or deploy to see orders.</div>
-              </div>
-            </div>
+            <div class="pipeline-backtest-metrics" id="pipelineAiBacktestMetrics" style="padding:0 14px 12px;"></div>
           </div>
         </div>
       </div>
@@ -5520,6 +5566,84 @@
   let pipelineBacktestResult = null;
   let pipelineOptimizationResult = null;
   let pipelineAiHistory = [];
+  let pipelineUploadedScriptId = null;
+
+  const PIPELINE_PROMPT_SUGGESTIONS = [
+    { label: 'RSI Mean Reversion', prompt: 'RSI mean reversion on NIFTY: buy when RSI(14) crosses below 30, exit when RSI crosses above 70. Daily, 2 years.' },
+    { label: 'Golden Cross EMA', prompt: 'Golden cross on NIFTY: enter long when EMA(50) crosses above EMA(200), exit when EMA(50) crosses below EMA(200). Add 2% stop loss. Daily, 2 years.' },
+    { label: 'MACD Momentum', prompt: 'MACD momentum on BANKNIFTY: buy when MACD histogram turns positive and price is above SMA(50). Exit when histogram turns negative. Daily, 2 years.' },
+    { label: 'EMA Pullback', prompt: 'EMA pullback on RELIANCE: buy when price is above EMA(50) and RSI(14) pulls back to 40–55 near EMA(21). Exit when RSI crosses above 70. Daily, 2 years.' },
+    { label: 'Bollinger Bounce', prompt: 'Bollinger bounce on NIFTY: buy when close touches lower Bollinger Band(20,2) and RSI(14) is below 35. Exit at middle band or RSI above 65. Daily, 1 year.' },
+    { label: 'ADX Trend', prompt: 'ADX trend on NIFTY: buy when ADX(14) is above 25 and +DI crosses above -DI. Exit when +DI crosses below -DI. 2% stop loss. Daily, 2 years.' },
+    { label: 'RSI + EMA Filter', prompt: 'Buy NIFTY when RSI(14) is below 30 and close is above EMA(200). Sell when RSI crosses above 60. Daily, 2 years.' },
+    { label: 'Death Cross Short', prompt: 'Death cross on BANKNIFTY: short when EMA(50) crosses below EMA(200), cover when EMA(50) crosses above EMA(200). Daily, 2 years.' },
+  ];
+
+  function initPipelinePromptSuggestions() {
+    const el = document.getElementById('pipelinePromptSuggestions');
+    if (!el || el.dataset.ready) return;
+    el.dataset.ready = '1';
+    el.innerHTML = PIPELINE_PROMPT_SUGGESTIONS.map((s, i) =>
+      `<button type="button" class="pipeline-prompt-chip" onclick="applyPipelinePromptByIndex(${i})" title="${escapeHtml(s.prompt)}">${escapeHtml(s.label)}</button>`
+    ).join('');
+  }
+
+  function applyPipelinePromptByIndex(index) {
+    const s = PIPELINE_PROMPT_SUGGESTIONS[index];
+    if (!s) return;
+    const input = document.getElementById('pipelineAiInput');
+    if (input) input.value = s.prompt;
+    input?.focus();
+  }
+
+  function renderPipelineBacktestMetrics(elId, r, label) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (!r || r.error) {
+      el.innerHTML = r?.error ? `<span style="color:var(--red)">${escapeHtml(r.error)}</span>` : '';
+      return;
+    }
+    el.innerHTML =
+      `<strong>${label || 'Backtest'}</strong> — ` +
+      `Return <strong>${(r.total_return || 0).toFixed(2)}%</strong> · ` +
+      `Sharpe ${(r.sharpe || 0).toFixed(2)} · ` +
+      `DD ${(r.max_drawdown || 0).toFixed(2)}% · ` +
+      `${(r.trades || []).length} trades · ` +
+      `<em>${r.data_source || 'postgres'} (${r.data_rows || 0} bars)</em>`;
+  }
+
+  function setPipelineAiLoading(text) {
+    clearPipelineAiLoading();
+    const box = document.getElementById('pipelineAiMessages');
+    if (!box) return;
+    const div = document.createElement('div');
+    div.className = 'pipeline-ai-msg assistant loading';
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function clearPipelineAiLoading() {
+    document.querySelector('#pipelineAiMessages .pipeline-ai-msg.loading')?.remove();
+  }
+
+  async function pipelineFetch(url, body, timeoutMs = 90000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || data.error || `HTTP ${res.status}`);
+      return data;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 
   function appendPipelineAiMessage(role, text) {
     const box = document.getElementById('pipelineAiMessages');
@@ -5542,15 +5666,9 @@
   function applyPipelineGenerated(data) {
     pipelineStrategySpec = data.strategy_spec;
     if (data.pine_script) {
-      document.getElementById('pipelineSourceType').value = 'pine';
-      document.getElementById('pipelineInputText').value = data.pine_script;
-    } else if (data.explanation) {
-      document.getElementById('pipelineInputText').value = data.explanation;
+      const editor = document.getElementById('pipelinePineScript');
+      if (editor) editor.value = data.pine_script;
     }
-    document.getElementById('pipelineJsonPreview').textContent = JSON.stringify(data.strategy_spec, null, 2);
-    document.getElementById('pipelineValidationStatus').textContent =
-      `${data.explanation || 'AI strategy ready'} · source: ${data.source || 'ai'}`;
-    setPipelineFlowStep(2);
     loadPipelineStatus();
   }
 
@@ -5560,20 +5678,9 @@
     pipelineSessionId = data.session_id;
 
     const r = data.backtest_result || {};
-    if (r.error) {
-      document.getElementById('pipelineExecMetrics').innerHTML =
-        `<span style="color:var(--red)">${r.error}</span>`;
-      return;
-    }
+    renderPipelineBacktestMetrics('pipelineAiBacktestMetrics', r, 'AI Backtest');
+    if (r.error) return;
 
-    document.getElementById('pipelineValidationStatus').textContent = 'AI generated & backtested on database';
-    document.getElementById('pipelineExecMetrics').innerHTML =
-      `Return <strong>${(r.total_return || 0).toFixed(2)}%</strong> · Sharpe ${(r.sharpe || 0).toFixed(2)} · ` +
-      `DD ${(r.max_drawdown || 0).toFixed(2)}% · ${(r.trades || []).length} trades · ` +
-      `<em>${r.data_source || 'postgres'} (${r.data_rows || 0} bars)</em>`;
-    document.getElementById('pipelineExportStatus').textContent = 'Ready to export';
-    if (data.analysis) renderPipelineSuggestions(data.analysis);
-    setPipelineFlowStep(3);
     lastBacktestReport = {
       symbol: r.symbol,
       period: r.period,
@@ -5609,61 +5716,66 @@
   }
 
   async function generatePipelinePine() {
-    const prompt = document.getElementById('pipelineAiInput')?.value?.trim()
-      || document.getElementById('pipelineInputText')?.value?.trim();
+    const prompt = document.getElementById('pipelineAiInput')?.value?.trim();
     if (!prompt) {
       alert('Describe your strategy in the AI assistant box');
       return;
     }
     const params = getPipelineAiParams();
     appendPipelineAiMessage('user', `Generate Pine: ${prompt}`);
-    appendPipelineAiMessage('assistant', 'Generating Pine Script and strategy JSON…');
+    setPipelineAiLoading('Generating Pine Script… (uses instant rules when possible)');
 
     try {
-      const res = await fetch(`${API_BASE}/pipeline/ai/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, ...params, save_pine: true }),
-      });
-      const data = await res.json();
-      if (data.detail || data.error) throw new Error(data.detail || data.error);
-
+      const data = await pipelineFetch(`${API_BASE}/pipeline/ai/generate`, { prompt, ...params, save_pine: true });
+      clearPipelineAiLoading();
       applyPipelineGenerated(data);
-      const msg = data.llm_error
-        ? `Generated (rule fallback — Ollama: ${data.llm_error})`
-        : `Pine Script ready${data.script_id ? ` · saved as ${data.script_id}` : ''}`;
+      const src = data.source || 'ai';
+      let msg = data.llm_error
+        ? `Generated via rules (Ollama: ${data.llm_error})`
+        : src === 'nl_parser'
+          ? 'Pine Script ready (instant rule-based generation)'
+          : `Pine Script ready${data.script_id ? ` · saved as ${data.script_id}` : ''}`;
+      if (data.explanation) msg += ` — ${data.explanation}`;
       appendPipelineAiMessage('assistant', msg);
+      if (data.pine_script) {
+        const preview = data.pine_script.length > 600
+          ? data.pine_script.slice(0, 600) + '\n// … (see Upload Pine panel for full script)'
+          : data.pine_script;
+        const div = document.createElement('div');
+        div.className = 'pipeline-ai-msg assistant pine-preview';
+        div.textContent = preview;
+        document.getElementById('pipelineAiMessages')?.appendChild(div);
+      }
     } catch (e) {
-      appendPipelineAiMessage('assistant', e.message || 'Generation failed');
+      clearPipelineAiLoading();
+      let msg = e.message || 'Generation failed';
+      if (e.name === 'AbortError') msg = 'Request timed out.';
+      else if (msg === 'Failed to fetch') msg = `Cannot reach backend at ${API_BASE}. Run: docker compose up -d backend`;
+      appendPipelineAiMessage('assistant', msg);
     }
   }
 
   async function generateAndBacktestPipeline() {
-    const prompt = document.getElementById('pipelineAiInput')?.value?.trim()
-      || document.getElementById('pipelineInputText')?.value?.trim();
+    const prompt = document.getElementById('pipelineAiInput')?.value?.trim();
     if (!prompt) {
       alert('Describe your strategy in the AI assistant box');
       return;
     }
     const params = getPipelineAiParams();
     appendPipelineAiMessage('user', `Backtest: ${prompt}`);
-    appendPipelineAiMessage('assistant', 'Generating strategy and running VectorBT on your database…');
+    setPipelineAiLoading('Building strategy and running backtest on database…');
 
     try {
-      const res = await fetch(`${API_BASE}/pipeline/ai/backtest`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, ...params, save_pine: true }),
-      });
-      const data = await res.json();
+      const data = await pipelineFetch(`${API_BASE}/pipeline/ai/backtest`, { prompt, ...params, save_pine: true }, 120000);
+      clearPipelineAiLoading();
       if (data.backtest_result?.error) throw new Error(data.backtest_result.error);
-
       applyPipelineBacktestResult(data);
       const r = data.backtest_result;
       appendPipelineAiMessage('assistant',
         `Done — ${(r.total_return || 0).toFixed(2)}% return, ${(r.trades || []).length} trades on ${params.symbol} (${r.data_rows || '?'} bars from ${r.data_source || 'database'}).`);
     } catch (e) {
-      appendPipelineAiMessage('assistant', e.message || 'Backtest failed');
+      clearPipelineAiLoading();
+      appendPipelineAiMessage('assistant', e.name === 'AbortError' ? 'Backtest timed out — check backend and OHLCV data.' : (e.message || 'Backtest failed'));
     }
   }
 
@@ -5675,40 +5787,35 @@
   });
 
   async function loadPipelineStatus() {
+    initPipelinePromptSuggestions();
     try {
-      const [statusRes, ohlcvRes, pineRes] = await Promise.all([
+      const [statusRes, ohlcvRes] = await Promise.all([
         fetch(`${API_BASE}/pipeline/status`),
         fetch(`${API_BASE}/pipeline/ohlcv/resolutions`),
-        fetch(`${API_BASE}/pipeline/pine`),
       ]);
       const status = await statusRes.json();
       const ohlcv = await ohlcvRes.json();
-      const pine = await pineRes.json();
-
       const info = document.getElementById('ohlcvStoreInfo');
       if (info) {
-        const avail = (ohlcv.available || []).length;
-        info.textContent = `${avail} Parquet dataset(s) · ${(status.supported_resolutions || []).join(', ')}`;
+        const ind = status.pine_indicators || 0;
+        const scripts = status.pine_scripts || 0;
+        info.textContent = `${scripts} saved Pine scripts · ${ind} indicators in catalog · ${(ohlcv.available || []).length} Parquet datasets`;
       }
-
-      const list = document.getElementById('pineScriptList');
-      if (list) {
-        const scripts = pine.scripts || [];
-        list.textContent = scripts.length
-          ? scripts.map(s => s.filename).join(', ')
-          : 'No scripts uploaded';
-      }
-      await loadPipelineLiveStrategies();
     } catch (_) {
       const info = document.getElementById('ohlcvStoreInfo');
-      if (info) info.textContent = 'Backend unavailable';
+      if (info) info.textContent = 'Backend unavailable — start docker compose up -d backend';
     }
   }
 
   async function uploadPineScript() {
     const input = document.getElementById('pineUploadInput');
+    const editor = document.getElementById('pipelinePineScript');
     if (!input?.files?.length) {
-      alert('Choose a .pine file first');
+      if (!editor?.value?.trim()) {
+        alert('Choose a .pine file or paste Pine Script first');
+        return;
+      }
+      alert('File uploaded to editor — click Backtest to run on database');
       return;
     }
     const form = new FormData();
@@ -5717,17 +5824,63 @@
       const res = await fetch(`${API_BASE}/pipeline/pine/upload`, { method: 'POST', body: form });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      document.getElementById('pipelineSourceType').value = 'pine';
-      document.getElementById('pipelineInputText').value = `(Uploaded: ${data.filename})`;
       pipelineUploadedScriptId = data.id;
+      const text = await input.files[0].text();
+      if (editor) editor.value = text;
       await loadPipelineStatus();
-      alert(`Uploaded ${data.filename}`);
+      renderPipelineBacktestMetrics('pipelineUploadBacktestMetrics', null, '');
+      document.getElementById('pipelineUploadBacktestMetrics').textContent = `Uploaded ${data.filename}`;
     } catch (e) {
       alert(e.message || 'Upload failed');
     }
   }
 
-  let pipelineUploadedScriptId = null;
+  async function backtestUploadedPine() {
+    const pine_script = document.getElementById('pipelinePineScript')?.value?.trim();
+    if (!pine_script) {
+      alert('Paste or upload Pine Script first');
+      return;
+    }
+    const symbol = document.getElementById('pipelineSymbol')?.value || 'NIFTY';
+    const period = document.getElementById('pipelinePeriod')?.value || '2y';
+    const interval = document.getElementById('pipelineInterval')?.value || '1d';
+    const metrics = document.getElementById('pipelineUploadBacktestMetrics');
+    if (metrics) metrics.textContent = 'Running backtest on database…';
+
+    try {
+      const data = await pipelineFetch(`${API_BASE}/pipeline/pine/convert`, {
+        pine_script,
+        symbol,
+        period,
+        interval,
+        use_ai: true,
+        run_backtest: true,
+      }, 120000);
+      if (data.error && !data.backtest_result) throw new Error(data.error);
+      const r = data.backtest_result;
+      if (r?.error) throw new Error(r.error);
+      pipelineStrategySpec = data.strategy_spec;
+      pipelineBacktestResult = r;
+      renderPipelineBacktestMetrics('pipelineUploadBacktestMetrics', r, 'Upload Backtest');
+      lastBacktestReport = {
+        symbol: r.symbol || symbol,
+        period: r.period || period,
+        strategy_label: 'Uploaded Pine Strategy',
+        strategy_text: pine_script.slice(0, 200),
+        result: r,
+      };
+    } catch (e) {
+      renderPipelineBacktestMetrics('pipelineUploadBacktestMetrics', { error: e.message || 'Backtest failed' }, '');
+    }
+  }
+
+  document.getElementById('pineUploadInput')?.addEventListener('change', async e => {
+    const file = e.target.files?.[0];
+    const editor = document.getElementById('pipelinePineScript');
+    if (file && editor) {
+      try { editor.value = await file.text(); } catch (_) {}
+    }
+  });
 
   async function cacheOhlcvToParquet() {
     const symbol = document.getElementById('pipelineSymbol')?.value || 'NIFTY';
