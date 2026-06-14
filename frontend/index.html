@@ -2355,6 +2355,140 @@
       #view-pipeline { padding: 20px 16px; }
     }
 
+    /* ── Option Backtesting (Quantman-style) ── */
+    #view-options { padding: 24px 28px 40px; }
+    .obt-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-card);
+      padding: 16px 18px;
+      margin-bottom: 16px;
+    }
+    .obt-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .obt-topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .obt-mode-pill {
+      display: inline-flex;
+      background: var(--surface-elevated);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-pill);
+      padding: 3px;
+      gap: 2px;
+    }
+    .obt-mode-pill span {
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .obt-mode-pill span.active {
+      background: var(--green);
+      color: #fff;
+    }
+    .obt-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .obt-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 900px) {
+      .obt-grid-2, .obt-grid-3 { grid-template-columns: 1fr; }
+    }
+    .obt-field label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .obt-field input, .obt-field select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: var(--surface);
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+    .obt-unit-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .obt-unit-btns {
+      display: inline-flex;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .obt-unit-btns button {
+      border: none;
+      background: var(--surface);
+      color: var(--text-muted);
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .obt-unit-btns button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .obt-case-box {
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px;
+      background: var(--surface-elevated);
+    }
+    .obt-entry-box { border-left: 3px solid var(--green); }
+    .obt-exit-box { border-left: 3px solid var(--red); }
+    .obt-case-label { font-size: 11px; font-weight: 700; margin-bottom: 8px; }
+    .obt-entry-box .obt-case-label { color: var(--green); }
+    .obt-exit-box .obt-case-label { color: var(--red); }
+    .obt-status {
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 8px 12px;
+      background: var(--surface-elevated);
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+    .obt-submit-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .obt-submit-btn {
+      padding: 10px 28px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+    .obt-submit-btn:disabled { opacity: 0.6; cursor: wait; }
+    .obt-results-body .stats-grid { margin-bottom: 16px; }
+
     .pipeline-stage {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -3620,6 +3754,10 @@
         <span class="nav-icon"><i data-lucide="activity"></i></span>
         <span class="nav-label">Backtest Engine</span>
       </a>
+      <a class="nav-item" id="nav-options" onclick="showView('options')">
+        <span class="nav-icon"><i data-lucide="layers"></i></span>
+        <span class="nav-label">Option Backtest</span>
+      </a>
       <a class="nav-item" id="nav-pipeline" onclick="showView('pipeline')">
         <span class="nav-icon"><i data-lucide="workflow"></i></span>
         <span class="nav-label">Quant Pipeline</span>
@@ -3973,6 +4111,163 @@
         </div>
       </div>
 
+      <!-- OPTION BACKTESTING VIEW -->
+      <div id="view-options" class="view view-padded">
+        <div class="page-header">
+          <div class="page-title">Option Backtesting</div>
+          <div class="page-sub">Backtest NIFTY options on historical chain data from your database — strikes, OI, premiums, and underlying signals.</div>
+        </div>
+
+        <div class="obt-topbar">
+          <div class="obt-mode-pill"><span class="active">Backtest</span><span title="Coming soon">Live</span></div>
+          <div class="obt-status" id="obtDataStatus">Loading options chain status…</div>
+        </div>
+
+        <div class="obt-card">
+          <div class="obt-grid-3">
+            <div class="obt-field"><label>Start Date</label><input type="date" id="obtStartDate"></div>
+            <div class="obt-field"><label>End Date</label><input type="date" id="obtEndDate"></div>
+            <div class="obt-field"><label>Run Name</label><input type="text" id="obtRunName" placeholder="NIFTY ATM CE test"></div>
+          </div>
+        </div>
+
+        <div class="obt-card">
+          <div class="obt-card-title"><i data-lucide="target"></i> Instrument &amp; Leg</div>
+          <div class="obt-grid-3">
+            <div class="obt-field">
+              <label>Symbol</label>
+              <select id="obtSymbol"><option value="NIFTY" selected>NIFTY</option><option value="BANKNIFTY">BANKNIFTY</option></select>
+            </div>
+            <div class="obt-field">
+              <label>Option Type</label>
+              <select id="obtOptionType"><option value="CE">CE (Call)</option><option value="PE">PE (Put)</option></select>
+            </div>
+            <div class="obt-field">
+              <label>Strike</label>
+              <select id="obtStrike">
+                <option value="ATM" selected>ATM</option>
+                <option value="OTM">OTM (+1 step)</option>
+                <option value="OTM+1">OTM+1</option>
+                <option value="OTM+2">OTM+2</option>
+                <option value="ITM">ITM (-1 step)</option>
+                <option value="ITM-1">ITM-1</option>
+              </select>
+            </div>
+            <div class="obt-field">
+              <label>Expiry</label>
+              <select id="obtExpiryMode">
+                <option value="nearest_weekly" selected>Nearest Weekly</option>
+                <option value="nearest_monthly">Nearest Monthly</option>
+              </select>
+            </div>
+            <div class="obt-field">
+              <label>Lot Size</label>
+              <input type="number" id="obtLotSize" value="50" min="1">
+            </div>
+            <div class="obt-field">
+              <label>Position</label>
+              <select id="obtPosition"><option value="long">Long Option</option><option value="short">Short Option (Credit)</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="obt-card">
+          <div class="obt-card-title"><i data-lucide="git-branch"></i> Case 1 — Entry &amp; Exit</div>
+          <div class="obt-grid-2">
+            <div class="obt-case-box obt-entry-box">
+              <div class="obt-case-label">Entry When</div>
+              <select id="obtEntryCondition">
+                <option value="always">Immediate (first bar)</option>
+                <option value="rsi_below_30">Underlying RSI(14) &lt; 30</option>
+                <option value="rsi_above_70">Underlying RSI(14) &gt; 70</option>
+                <option value="ema_cross_up">EMA 50 crosses above EMA 200</option>
+                <option value="ema_cross_down">EMA 50 crosses below EMA 200</option>
+              </select>
+            </div>
+            <div class="obt-case-box obt-exit-box">
+              <div class="obt-case-label">Exit When</div>
+              <select id="obtExitCondition">
+                <option value="rsi_above_70">Underlying RSI(14) &gt; 70</option>
+                <option value="rsi_below_30">Underlying RSI(14) &lt; 30</option>
+                <option value="expiry">On Expiry Date</option>
+                <option value="sl_tp">SL / TP only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="obt-grid-2">
+          <div class="obt-card">
+            <div class="obt-card-title">Transaction Targets</div>
+            <div class="obt-field" style="margin-bottom:12px;">
+              <label>Stop Loss</label>
+              <div class="obt-unit-row">
+                <div class="obt-unit-btns" data-obt-unit-group="txnSlUnit">
+                  <button type="button" class="active" data-unit="%">%</button>
+                  <button type="button" data-unit="₹">₹</button>
+                  <button type="button" data-unit="pts">Pts</button>
+                </div>
+                <input type="number" id="obtTxnSl" placeholder="25" step="0.1">
+              </div>
+            </div>
+            <div class="obt-field">
+              <label>Take Profit</label>
+              <div class="obt-unit-row">
+                <div class="obt-unit-btns" data-obt-unit-group="txnTpUnit">
+                  <button type="button" class="active" data-unit="%">%</button>
+                  <button type="button" data-unit="₹">₹</button>
+                  <button type="button" data-unit="pts">Pts</button>
+                </div>
+                <input type="number" id="obtTxnTp" placeholder="50" step="0.1">
+              </div>
+            </div>
+          </div>
+          <div class="obt-card">
+            <div class="obt-card-title">Daily Targets</div>
+            <div class="obt-field" style="margin-bottom:12px;">
+              <label>Stop Loss (₹)</label>
+              <input type="number" id="obtDailySl" placeholder="5000">
+            </div>
+            <div class="obt-field">
+              <label>Take Profit (₹)</label>
+              <input type="number" id="obtDailyTp" placeholder="10000">
+            </div>
+          </div>
+        </div>
+
+        <div class="obt-card">
+          <div class="obt-card-title"><i data-lucide="clock"></i> Expiry &amp; Timing</div>
+          <div class="obt-grid-3">
+            <div class="obt-field">
+              <label>Trade Type</label>
+              <select id="obtTradeType">
+                <option value="positional" selected>Positional (EOD chain)</option>
+                <option value="intraday" disabled>Intraday (not available on daily chain)</option>
+              </select>
+            </div>
+            <div class="obt-field"><label>Trade During</label><input type="time" id="obtTradeStart" value="09:15"></div>
+            <div class="obt-field"><label>To</label><input type="time" id="obtTradeEnd" value="15:25"></div>
+            <div class="obt-field">
+              <label>Max Transactions / Day</label>
+              <input type="number" id="obtMaxTrades" value="1" min="1" max="10">
+            </div>
+          </div>
+          <div class="obt-submit-row">
+            <span style="font-size:12px;color:var(--text-muted);">Uses NSE bhavcopy option premiums stored in Postgres</span>
+            <button type="button" class="obt-submit-btn" id="obtSubmitBtn" onclick="runOptionsBacktest()">Run Option Backtest</button>
+          </div>
+        </div>
+
+        <div class="pipeline-results-panel visible" id="obtResultsPanel" style="display:block;">
+          <div class="pipeline-results-head">
+            <div class="pipeline-results-title"><i data-lucide="bar-chart-3"></i><span id="obtResultsTitle">Option Backtest Results</span></div>
+          </div>
+          <div class="obt-results-body" id="obtResultsBody">
+            <div style="padding:24px;color:var(--text-muted);text-align:center;">Configure your strategy and click Run Option Backtest.</div>
+          </div>
+        </div>
+      </div>
+
       <!-- 5. RESULTS HISTORY VIEW -->
       <div id="view-history" class="view view-padded">
         <div class="page-header">
@@ -4271,12 +4566,13 @@
     const titleMap = {
       home: ['Research Home', 'StrykeX / Home'],
       backtest: ['Backtest Engine', 'StrykeX / Backtest'],
+      options: ['Option Backtesting', 'StrykeX / Options'],
       pipeline: ['Quant Pipeline', 'StrykeX / Pipeline'],
       templates: ['Strategy Library', 'StrykeX / Templates'],
       history: ['Results History', 'StrykeX / History']
     };
 
-    const scrollableViews = new Set(['home', 'pipeline', 'templates', 'history']);
+    const scrollableViews = new Set(['home', 'pipeline', 'templates', 'history', 'options']);
     const contentEl = document.querySelector('.content');
     if (contentEl) {
       contentEl.classList.toggle('content-scrollable', scrollableViews.has(viewId));
@@ -4288,6 +4584,10 @@
 
     if (viewId === 'pipeline') {
       loadPipelineStatus();
+      lucide.createIcons();
+    }
+    if (viewId === 'options') {
+      initOptionsBacktestView();
       lucide.createIcons();
     }
     if (viewId === 'history') {
@@ -6352,6 +6652,125 @@
     bar.innerHTML = labels.map((l, i) =>
       `<span class="${i + 1 <= step ? 'active' : ''}">${l}</span>${i < labels.length - 1 ? ' → ' : ''}`
     ).join('');
+  }
+
+  /* OPTION BACKTESTING */
+  const obtUnitState = { txnSlUnit: '%', txnTpUnit: '%' };
+
+  function initOptionsBacktestView() {
+    document.querySelectorAll('[data-obt-unit-group]').forEach(group => {
+      if (group.dataset.bound) return;
+      group.dataset.bound = '1';
+      const key = group.dataset.obtUnitGroup;
+      group.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          group.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          obtUnitState[key] = btn.dataset.unit;
+        });
+      });
+    });
+    const end = new Date();
+    end.setDate(end.getDate() - 1);
+    const start = new Date(end);
+    start.setMonth(start.getMonth() - 3);
+    const fmt = d => d.toISOString().slice(0, 10);
+    const startEl = document.getElementById('obtStartDate');
+    const endEl = document.getElementById('obtEndDate');
+    if (startEl && !startEl.value) startEl.value = fmt(start);
+    if (endEl && !endEl.value) endEl.value = fmt(end);
+    loadOptionsChainStatus();
+  }
+
+  async function loadOptionsChainStatus() {
+    const el = document.getElementById('obtDataStatus');
+    const symbol = document.getElementById('obtSymbol')?.value || 'NIFTY';
+    try {
+      const res = await fetch(`${API_BASE}/options-backtest/status?symbol=${symbol}`);
+      const data = await res.json();
+      if (!data.available) {
+        if (el) el.textContent = 'No options chain data — run ingest_nifty_options_history.py';
+        return;
+      }
+      if (el) {
+        el.textContent = `${data.rows.toLocaleString()} contracts · ${data.trading_days} days · ${data.from_date} to ${data.to_date}`;
+      }
+    } catch (_) {
+      if (el) el.textContent = 'Backend unavailable';
+    }
+  }
+
+  document.getElementById('obtSymbol')?.addEventListener('change', loadOptionsChainStatus);
+
+  async function runOptionsBacktest() {
+    const btn = document.getElementById('obtSubmitBtn');
+    const body = document.getElementById('obtResultsBody');
+    const start = document.getElementById('obtStartDate')?.value;
+    const end = document.getElementById('obtEndDate')?.value;
+    if (!start || !end) {
+      alert('Select start and end dates');
+      return;
+    }
+    const payload = {
+      run_name: document.getElementById('obtRunName')?.value || 'Option Backtest',
+      symbol: document.getElementById('obtSymbol')?.value || 'NIFTY',
+      start_date: start,
+      end_date: end,
+      option_type: document.getElementById('obtOptionType')?.value || 'CE',
+      strike: document.getElementById('obtStrike')?.value || 'ATM',
+      expiry_mode: document.getElementById('obtExpiryMode')?.value || 'nearest_weekly',
+      entry_condition: document.getElementById('obtEntryCondition')?.value || 'always',
+      exit_condition: document.getElementById('obtExitCondition')?.value || 'sl_tp',
+      is_credit: document.getElementById('obtPosition')?.value === 'short',
+      trade_type: document.getElementById('obtTradeType')?.value || 'positional',
+      trade_start: document.getElementById('obtTradeStart')?.value || '09:15',
+      trade_end: document.getElementById('obtTradeEnd')?.value || '15:25',
+      max_trades_per_day: Number(document.getElementById('obtMaxTrades')?.value || 1),
+      txn_stop_loss: parseFloat(document.getElementById('obtTxnSl')?.value) || null,
+      txn_stop_loss_unit: obtUnitState.txnSlUnit,
+      txn_take_profit: parseFloat(document.getElementById('obtTxnTp')?.value) || null,
+      txn_take_profit_unit: obtUnitState.txnTpUnit,
+      daily_stop_loss: parseFloat(document.getElementById('obtDailySl')?.value) || null,
+      daily_take_profit: parseFloat(document.getElementById('obtDailyTp')?.value) || null,
+      lot_size: Number(document.getElementById('obtLotSize')?.value || 50),
+    };
+
+    if (btn) { btn.disabled = true; btn.textContent = 'Running…'; }
+    if (body) body.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);">Running option backtest on database chain…</div>';
+
+    try {
+      const res = await fetch(`${API_BASE}/options-backtest/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.error || `HTTP ${res.status}`);
+
+      lastBacktestReport = {
+        symbol: data.symbol,
+        period: data.period,
+        strategy_label: payload.run_name,
+        strategy_text: `Option ${payload.option_type} ${payload.strike}`,
+        result: data,
+      };
+
+      const title = document.getElementById('obtResultsTitle');
+      if (title) title.textContent = payload.run_name || 'Option Backtest Results';
+
+      renderActualResults(data, data.symbol, {
+        bodyId: 'obtResultsBody',
+        chartPrefix: 'optionsTvChart',
+        reportLabel: `Option Backtest · ${payload.option_type} ${payload.strike}`,
+        maxTrades: null,
+      });
+      document.getElementById('obtResultsPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      if (body) body.innerHTML = `<div style="padding:24px;color:var(--red);text-align:center;">${escapeHtml(e.message || 'Backtest failed')}</div>`;
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Run Option Backtest'; }
+      lucide.createIcons();
+    }
   }
 
   function downloadBacktestJson() {
