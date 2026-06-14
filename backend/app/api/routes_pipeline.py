@@ -503,6 +503,8 @@ async def ai_generate_pine(request: PineAiGenerateRequest):
         period=request.period,
         interval=request.interval,
     )
+    if result.get("error"):
+        raise HTTPException(422, result["error"])
     if request.save_pine and result.get("pine_script"):
         saved = await save_pine_script(
             result["pine_script"],

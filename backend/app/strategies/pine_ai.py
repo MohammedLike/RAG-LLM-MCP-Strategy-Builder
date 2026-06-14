@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import uuid
+import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -12,9 +13,10 @@ import ollama
 
 from ..config import settings
 from ..nl_parser import nl_parser
-from .pine_parser import parse_pine_script
+from .pine_parser import parse_pine_script, _summarize_spec
 
 _client = ollama.AsyncClient(host=settings.OLLAMA_BASE_URL)
+_LLM_TIMEOUT_SEC = 30
 
 PINE_BUILDER_SYSTEM = """You are StrykeX Pine Quant Builder AI for Indian markets (NSE/BSE).
 
@@ -94,33 +96,155 @@ def _normalize_spec(spec: dict) -> dict:
     return spec
 
 
-def _fallback_from_nl(prompt: str, symbol: str, period: str) -> dict[str, Any]:
+def _indicator_var(indicator: str, params: dict, name: str) -> tuple[str, list[str]]:
+    ind = (indicator or "RSI").upper()
+    period = (params or {}).get("timeperiod", 14)
+    lines: list[str] = []
+    if ind == "RSI":
+        lines.append(f"{name} = ta.rsi(close, {period})")
+    elif ind == "SMA":
+        lines.append(f"{name} = ta.sma(close, {period})")
+    elif ind == "EMA":
+        lines.append(f"{name} = ta.ema(close, {period})")
+    elif ind == "PLUS_DI":
+        return "plusDI", []
+    elif ind == "MINUS_DI":
+        return "minusDI", []
+    elif ind == "ADX":
+        return "adxVal", []
+    elif ind == "CLOSE":
+        lines.append(f"{name} = close")
+    else:
+        lines.append(f"{name} = close  // {ind} not transpiled")
+    return name, lines
+
+
+def _dmi_period(spec: dict) -> int | None:
+    for section in (spec.get("entry") or {}, spec.get("exit") or {}):
+        for c in section.get("conditions") or []:
+            for node in (c, c.get("value") if isinstance(c.get("value"), dict) else {}):
+                if not isinstance(node, dict):
+                    continue
+                if (node.get("indicator") or "").upper() in ("ADX", "PLUS_DI", "MINUS_DI"):
+                    return (node.get("params") or {}).get("timeperiod", 14)
+    return None
+
+
+def _condition_expr(cond: dict, prefix: str) -> tuple[str, list[str]]:
+    defs: list[str] = []
+    ind = cond.get("indicator", "RSI")
+    params = cond.get("params") or {}
+    op = cond.get("operator", ">")
+    val = cond.get("value")
+
+    var, ind_lines = _indicator_var(ind, params, f"{prefix}Ind")
+    defs.extend(ind_lines)
+
+    if isinstance(val, dict) and val.get("indicator"):
+        var2, ind2_lines = _indicator_var(val["indicator"], val.get("params") or {}, f"{prefix}Ref")
+        defs.extend(ind2_lines)
+        if op in ("crosses_above", "crossover"):
+            return f"ta.crossover({var}, {var2})", defs
+        if op in ("crosses_below", "crossunder"):
+            return f"ta.crossunder({var}, {var2})", defs
+        if op in (">", ">="):
+            return f"{var} > {var2}", defs
+        return f"{var} < {var2}", defs
+
+    num = val
+    if op in ("crosses_below", "crossunder"):
+        return f"ta.crossunder({var}, {num})", defs
+    if op in ("crosses_above", "crossover"):
+        return f"ta.crossover({var}, {num})", defs
+    if op in ("<", "<="):
+        return f"{var} < {num}", defs
+    if op in (">", ">="):
+        return f"{var} > {num}", defs
+    return f"{var} == {num}", defs
+
+
+def _pine_from_spec(spec: dict, symbol: str, prompt: str = "") -> str:
+    sl = spec.get("stop_loss", 2.0)
+    tp = spec.get("take_profit", 5.0)
+    lines = [
+        "//@version=5",
+        f'strategy("StrykeX {symbol}", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=100)',
+    ]
+    if prompt:
+        lines.append(f"// {prompt[:120]}")
+    lines.append(f"// Stop loss {sl}% · Take profit {tp}%")
+
+    dmi_p = _dmi_period(spec)
+    if dmi_p:
+        lines.append(f"[plusDI, minusDI, adxVal] = ta.dmi({dmi_p}, {dmi_p})")
+
+    defs: list[str] = []
+    entry_conds = spec.get("entry", {}).get("conditions", [])
+    exit_conds = (spec.get("exit") or {}).get("conditions", [])
+
+    entry_exprs: list[str] = []
+    for i, c in enumerate(entry_conds):
+        expr, d = _condition_expr(c, f"entry{i}")
+        defs.extend(d)
+        entry_exprs.append(expr)
+
+    exit_exprs: list[str] = []
+    for i, c in enumerate(exit_conds):
+        expr, d = _condition_expr(c, f"exit{i}")
+        defs.extend(d)
+        exit_exprs.append(expr)
+
+    seen = set()
+    for d in defs:
+        if d not in seen:
+            lines.append(d)
+            seen.add(d)
+
+    joiner = " and " if spec.get("entry", {}).get("logical_operator", "AND") == "AND" else " or "
+    lines.append(f"longCondition = {joiner.join(entry_exprs) if entry_exprs else 'false'}")
+    lines.append("if longCondition")
+    lines.append('    strategy.entry("Long", strategy.long)')
+    if exit_exprs:
+        exit_join = " or " if (spec.get("exit") or {}).get("logical_operator", "OR") == "OR" else " and "
+        lines.append(f"exitCondition = {exit_join.join(exit_exprs)}")
+        lines.append("if exitCondition")
+        lines.append('    strategy.close("Long")')
+    return "\n".join(lines)
+
+
+def _try_rule_based(prompt: str, symbol: str, period: str, interval: str) -> dict[str, Any] | None:
+    parsed = nl_parser.parse(prompt)
+    if not parsed or not parsed.get("strategy_spec"):
+        return None
+    spec = _normalize_spec(parsed["strategy_spec"])
+    sym = parsed.get("symbol") or symbol
+    per = parsed.get("period") or period
+    return {
+        "pine_script": _pine_from_spec(spec, sym, prompt),
+        "strategy_spec": spec,
+        "explanation": _summarize_spec(spec),
+        "symbol": sym,
+        "period": per,
+        "interval": interval,
+        "source": "nl_parser",
+    }
+
+
+def _fallback_from_nl(prompt: str, symbol: str, period: str) -> dict[str, Any] | None:
     parsed = nl_parser.parse(prompt)
     if parsed and parsed.get("strategy_spec"):
         spec = _normalize_spec(parsed["strategy_spec"])
-        pine_lines = [
-            "//@version=5",
-            f'strategy("StrykeX {symbol}", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=100)',
-            f"// Generated fallback from: {prompt[:120]}",
-            "// Auto-transpile limited — edit in TradingView as needed",
-        ]
-        for i, c in enumerate(spec.get("entry", {}).get("conditions", [])[:2]):
-            ind = c.get("indicator", "RSI")
-            p = (c.get("params") or {}).get("timeperiod", 14)
-            op = c.get("operator", ">")
-            val = c.get("value", 30)
-            pine_lines.append(f"// Entry {i + 1}: {ind}({p}) {op} {val}")
-        pine_lines.append("longCondition = true  // placeholder — refine in TradingView")
-        pine_lines.append("if longCondition\n    strategy.entry(\"Long\", strategy.long)")
+        sym = parsed.get("symbol") or symbol
+        per = parsed.get("period") or period
         return {
-            "pine_script": "\n".join(pine_lines),
+            "pine_script": _pine_from_spec(spec, sym, prompt),
             "strategy_spec": spec,
             "explanation": "Built from rule-based parser (LLM unavailable).",
-            "symbol": parsed.get("symbol") or symbol,
-            "period": parsed.get("period") or period,
+            "symbol": sym,
+            "period": per,
             "source": "nl_fallback",
         }
-    raise ValueError("Could not build strategy from prompt. Try clearer RSI/SMA/EMA rules.")
+    return None
 
 
 async def generate_pine_strategy(
@@ -129,18 +253,25 @@ async def generate_pine_strategy(
     period: str = "2y",
     interval: str = "1d",
 ) -> dict[str, Any]:
+    fast = _try_rule_based(prompt, symbol, period, interval)
+    if fast:
+        return fast
+
     user_msg = (
         f"Symbol: {symbol}\nPeriod: {period}\nInterval: {interval}\n\n"
         f"Strategy request:\n{prompt}"
     )
     try:
-        response = await _client.chat(
-            model=settings.LLM_MODEL_NAME,
-            messages=[
-                {"role": "system", "content": PINE_BUILDER_SYSTEM},
-                {"role": "user", "content": user_msg},
-            ],
-            options={"temperature": 0.15},
+        response = await asyncio.wait_for(
+            _client.chat(
+                model=settings.LLM_MODEL_NAME,
+                messages=[
+                    {"role": "system", "content": PINE_BUILDER_SYSTEM},
+                    {"role": "user", "content": user_msg},
+                ],
+                options={"temperature": 0.15},
+            ),
+            timeout=_LLM_TIMEOUT_SEC,
         )
         content = response.get("message", {}).get("content", "")
         data = _extract_json(content)
@@ -166,9 +297,21 @@ async def generate_pine_strategy(
     except Exception as exc:
         print(f"Pine AI LLM error: {exc}")
         fallback = _fallback_from_nl(prompt, symbol, period)
-        fallback["interval"] = interval
-        fallback["llm_error"] = str(exc)
-        return fallback
+        if fallback:
+            fallback["interval"] = interval
+            fallback["llm_error"] = str(exc)
+            return fallback
+        return {
+            "pine_script": "",
+            "strategy_spec": None,
+            "explanation": "Could not build strategy from prompt.",
+            "symbol": symbol,
+            "period": period,
+            "interval": interval,
+            "source": "error",
+            "error": f"Could not build strategy. Try clearer RSI/SMA/EMA/ADX rules. ({exc})",
+            "llm_error": str(exc),
+        }
 
 
 async def chat_pine_assistant(
@@ -184,10 +327,13 @@ async def chat_pine_assistant(
     messages.append({"role": "user", "content": message})
 
     try:
-        response = await _client.chat(
-            model=settings.LLM_MODEL_NAME,
-            messages=messages,
-            options={"temperature": 0.3},
+        response = await asyncio.wait_for(
+            _client.chat(
+                model=settings.LLM_MODEL_NAME,
+                messages=messages,
+                options={"temperature": 0.3},
+            ),
+            timeout=_LLM_TIMEOUT_SEC,
         )
         reply = response.get("message", {}).get("content", "").strip()
         return {"reply": reply, "model": settings.LLM_MODEL_NAME}
